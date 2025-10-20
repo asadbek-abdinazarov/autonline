@@ -5,16 +5,24 @@
 
 # next.js
 /.next/
+/.next/cache/
 /out/
 
 # production
 /build
+
+# build artifacts
+dist/
+coverage/
+.turbo/
+.eslintcache
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files
 .env*
@@ -25,3 +33,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE/editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# misc
+.cache/
+*.swp
+*.swo
