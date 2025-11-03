@@ -30,6 +30,13 @@ export function useNews() {
       })
       
       if (!response.ok) {
+        // Handle 429 errors
+        if (response.status === 429) {
+          const { handleApiError } = await import('@/lib/api-utils')
+          await handleApiError({ status: 429 })
+          throw new Error("Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing.")
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       

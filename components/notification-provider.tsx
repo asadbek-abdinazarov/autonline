@@ -4,11 +4,12 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { logout, setCurrentUser } from "@/lib/auth"
-import { setGlobalNotificationHandler } from "@/lib/api-utils"
+import { setGlobalNotificationHandler, setGlobal429ErrorHandler } from "@/lib/api-utils"
 
 interface NotificationContextType {
   showNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void
   show401Error: (message?: string) => void
+  show429Error: (message?: string) => void
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -45,13 +46,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     toast.error(errorMessage, { duration: 4500 })
   }, [router])
 
-  // Set global notification handler
+  const show429Error = useCallback(async (message?: string) => {
+    const errorMessage = message || "Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing."
+    
+    // Show toast notification as warning
+    toast.warning(errorMessage, { duration: 5000 })
+  }, [])
+
+  // Set global notification handlers
   useEffect(() => {
     setGlobalNotificationHandler(show401Error)
-  }, [show401Error])
+    setGlobal429ErrorHandler(show429Error)
+  }, [show401Error, show429Error])
 
   return (
-    <NotificationContext.Provider value={{ showNotification, show401Error }}>
+    <NotificationContext.Provider value={{ showNotification, show401Error, show429Error }}>
       {children}
     </NotificationContext.Provider>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
@@ -9,16 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Clock, FileQuestion, Play, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface TopicClientProps {
   topicId: string
 }
 
 export default function TopicClient({ topicId }: TopicClientProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasFetchedRef = useRef<string | null>(null)
 
   useEffect(() => {
     const user = getCurrentUser()
@@ -26,6 +29,13 @@ export default function TopicClient({ topicId }: TopicClientProps) {
       router.push("/login")
       return
     }
+
+    // Prevent duplicate requests for the same topicId
+    if (hasFetchedRef.current === topicId) {
+      return
+    }
+
+    hasFetchedRef.current = topicId
 
     // Fetch lesson data
     const fetchData = async () => {
@@ -36,14 +46,15 @@ export default function TopicClient({ topicId }: TopicClientProps) {
         setLessonData(data)
       } catch (err) {
         console.error('Error fetching lesson data:', err)
-        setError(err instanceof Error ? err.message : 'Mavzu ma\'lumotlari yuklanmadi')
+        setError(err instanceof Error ? err.message : t.home.topics.error)
+        hasFetchedRef.current = null // Reset on error to allow retry
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchData()
-  }, [router, topicId])
+  }, [topicId])
 
   // Loading state
   if (isLoading) {
@@ -54,7 +65,7 @@ export default function TopicClient({ topicId }: TopicClientProps) {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Mavzu ma'lumotlari yuklanmoqda...</p>
+              <p className="text-muted-foreground">{t.home.topics.loading}</p>
             </div>
           </div>
         </main>
@@ -71,14 +82,14 @@ export default function TopicClient({ topicId }: TopicClientProps) {
           <Card>
             <CardContent className="py-8 text-center">
               <p className="text-lg text-muted-foreground mb-4">
-                {error || "Mavzu ma'lumotlari yuklanmadi. Iltimos, qayta urinib ko'ring."}
+                {error || t.home.topics.error}
               </p>
               <div className="flex gap-4 justify-center">
                 <Button onClick={() => window.location.reload()}>
-                  Qayta urinish
+                  {t.common.retry}
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/home">Bosh sahifaga qaytish</Link>
+                  <Link href="/home">{t.common.back}</Link>
                 </Button>
               </div>
             </CardContent>
@@ -91,86 +102,93 @@ export default function TopicClient({ topicId }: TopicClientProps) {
   const timeInMinutes = Math.ceil(lessonData.questions.length * 1.2) // 1.2 minutes per question
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 sm:mb-6">
-          <Link href="/home">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Orqaga
+      <main className="container mx-auto px-4 py-8 sm:py-12">
+        <Button variant="ghost" size="lg" asChild className="mb-6 sm:mb-8 hover:scale-105 transition-transform">
+          <Link href="/home" className="flex items-center gap-2">
+            <ArrowLeft className="h-5 w-5" />
+            {t.common.back}
           </Link>
         </Button>
 
         <div className="max-w-4xl mx-auto">
-          <Card className="mb-6 sm:mb-8">
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                <div className="text-5xl sm:text-6xl">{lessonData.lessonIcon || "📚"}</div>
+          <Card className="mb-8 sm:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-6">
+              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                <div className="text-6xl sm:text-7xl filter drop-shadow-lg">{lessonData.lessonIcon || "📚"}</div>
                 <div className="flex-1">
-                  <CardTitle className="text-2xl sm:text-3xl mb-2 text-balance">{lessonData.lessonName}</CardTitle>
-                  <CardDescription className="text-sm sm:text-base text-pretty">
+                  <CardTitle className="text-3xl sm:text-4xl md:text-5xl mb-3 text-balance bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
+                    {lessonData.lessonName}
+                  </CardTitle>
+                  <CardDescription className="text-base sm:text-lg text-pretty leading-relaxed">
                     {lessonData.lessonDescription || "Test mavzusi"}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted rounded-lg">
-                  <FileQuestion className="h-7 w-7 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20 hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <FileQuestion className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Savollar soni</p>
-                    <p className="text-xl sm:text-2xl font-bold">{lessonData.questions.length}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.questionsCount}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-primary">{lessonData.questions.length}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted rounded-lg">
-                  <Clock className="h-7 w-7 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20 hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Vaqt</p>
-                    <p className="text-xl sm:text-2xl font-bold">{timeInMinutes} daqiqa</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.time}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-primary">{timeInMinutes} {t.topics.minutes}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-muted rounded-lg">
-                  <Play className="h-7 w-7 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20 hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <Play className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Har bir savol</p>
-                    <p className="text-xl sm:text-2xl font-bold">1.2 daq</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.timePerQuestion}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-primary">1.2 {t.topics.minutesShort}</p>
                   </div>
                 </div>
               </div>
 
-              <Button size="lg" className="w-full" asChild>
-                <Link href={`/quiz/${topicId}`}>
-                  <Play className="mr-2 h-5 w-5" />
-                  Testni boshlash
+              <Button size="lg" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-lg py-6" asChild>
+                <Link href={`/quiz/${topicId}`} className="flex items-center justify-center gap-2">
+                  <Play className="h-5 w-5" />
+                  {t.topics.startTest}
                 </Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 shadow-lg bg-card/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Test haqida ma'lumot</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl font-bold flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FileQuestion className="h-5 w-5 text-primary" />
+                </div>
+                {t.topics.testInfo}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2 text-sm sm:text-base">Qoidalar:</h4>
-                <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-muted-foreground">
-                  <li>Har bir savol uchun {(timeInMinutes / lessonData.questions.length).toFixed(1)} daqiqa vaqt beriladi</li>
-                  <li>To'g'ri javoblar yashil rangda ko'rsatiladi</li>
-                  <li>Noto'g'ri javoblar qizil rangda ko'rsatiladi</li>
-                  <li>Javob bergandan keyin avtomatik keyingi savolga o'tiladi</li>
-                  <li>Test tugagandan so'ng natijalaringizni ko'rishingiz mumkin</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 text-sm sm:text-base">Maslahatlar:</h4>
-                <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-muted-foreground">
-                  <li>Savolni diqqat bilan o'qing</li>
-                  <li>Barcha variantlarni ko'rib chiqing</li>
-                  <li>Ishonchingiz komil bo'lmasa, mantiqiy fikrlang</li>
-                  <li>Vaqtni to'g'ri taqsimlang</li>
+                <h4 className="font-semibold mb-4 text-lg sm:text-xl">{t.topics.tips}</h4>
+                <ul className="list-none space-y-3">
+                  {t.topics.tipsList.map((tip, index) => (
+                    <li key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-primary text-xs font-bold">{index + 1}</span>
+                      </div>
+                      <span className="text-base leading-relaxed">{tip}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </CardContent>

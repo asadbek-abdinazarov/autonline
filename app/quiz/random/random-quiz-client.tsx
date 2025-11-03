@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { fetchQuestionsByLessonId, submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
+import { fetchRandomQuestions, submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
@@ -20,11 +20,7 @@ interface UserAnswer {
   isCorrect: boolean
 }
 
-interface QuizClientProps {
-  topicId: string
-}
-
-export default function QuizClient({ topicId }: QuizClientProps) {
+export default function RandomQuizClient() {
   const { t } = useTranslation()
   const router = useRouter()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
@@ -41,7 +37,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
-  const hasFetchedRef = useRef<string | null>(null)
+  const hasFetchedRef = useRef(false)
   const hasSubmittedHistoryRef = useRef(false)
 
   const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
@@ -53,33 +49,32 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       return
     }
 
-    // Prevent duplicate requests for the same topicId
-    if (hasFetchedRef.current === topicId) {
+    // Prevent duplicate requests
+    if (hasFetchedRef.current) {
       return
     }
 
-    hasFetchedRef.current = topicId
+    hasFetchedRef.current = true
 
-    // Fetch lesson data (with cache support - will use cache if available from topic page)
+    // Fetch random questions
     const fetchData = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        // Use cache by default - if data was loaded on topic page, it will be reused
-        const data = await fetchQuestionsByLessonId(topicId, { useCache: true })
+        const data = await fetchRandomQuestions(20)
         setLessonData(data)
         setQuestions(data.questions)
       } catch (err) {
-        console.error('Error fetching lesson data:', err)
+        console.error('Error fetching random questions:', err)
         setError(err instanceof Error ? err.message : t.quiz.notFound)
-        hasFetchedRef.current = null // Reset on error to allow retry
+        hasFetchedRef.current = false // Reset on error to allow retry
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchData()
-  }, [topicId])
+  }, [router])
 
   useEffect(() => {
     const currentAnswer = userAnswers.get(currentQuestionIndex)
@@ -99,24 +94,10 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }, [autoSkipTimeout])
 
-  // Submit lesson history when results are shown
+  // Submit lesson history when results are shown (skip for random test as lessonId is 0)
   useEffect(() => {
-    if (showResults && lessonData && lessonData.lessonId && questions.length > 0 && !hasSubmittedHistoryRef.current) {
-      const percentage = Math.round((score / questions.length) * 100)
-      const correctAnswersCount = score
-      const notCorrectAnswersCount = questions.length - score
-      
-      submitLessonHistory({
-        lessonId: Number(lessonData.lessonId),
-        percentage,
-        allQuestionsCount: questions.length,
-        correctAnswersCount,
-        notCorrectAnswersCount,
-      })
-      
-      hasSubmittedHistoryRef.current = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Random test doesn't submit history as lessonId is 0
+    // History is only for specific topics
   }, [showResults, lessonData, score, questions.length])
 
   // Loading state
@@ -128,7 +109,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">{t.quiz.loading}</p>
+              <p className="text-muted-foreground">{t.quiz.randomLoading}</p>
             </div>
           </div>
         </main>
@@ -207,8 +188,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       clearTimeout(autoSkipTimeout)
     }
 
-    // API da to'g'ri javob status field da saqlanadi (1 = birinchi javob, 2 = ikkinchi javob, va h.k.)
-    // status 1 bo'lsa, index 0 to'g'ri, status 2 bo'lsa, index 1 to'g'ri
     const correctAnswerIndex = currentQuestion.answers.status - 1
     const isCorrect = answerIndex === correctAnswerIndex
 
@@ -226,7 +205,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       setScore((prev) => prev + 1)
     }
 
-    // Set auto-skip timeout only for the current question
+    // Set auto-skip timeout
     const timeout = setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex((prev) => prev + 1)
@@ -239,7 +218,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   }
 
   const handleQuestionClick = (index: number) => {
-    // Clear auto-skip timeout when user manually navigates
     if (autoSkipTimeout) {
       clearTimeout(autoSkipTimeout)
       setAutoSkipTimeout(null)
@@ -258,7 +236,25 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     setIsAnswered(false)
     setShowResults(false)
     setScore(0)
-    hasSubmittedHistoryRef.current = false // Reset so history can be submitted again on retry
+    hasFetchedRef.current = false
+    hasSubmittedHistoryRef.current = false
+    
+    // Reload random questions
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const data = await fetchRandomQuestions(20)
+        setLessonData(data)
+        setQuestions(data.questions)
+      } catch (err) {
+        console.error('Error fetching random questions:', err)
+        setError(err instanceof Error ? err.message : t.quiz.notFound)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
   }
 
   if (showResults) {
@@ -312,7 +308,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                     <Link href="/home">{t.quiz.homePage}</Link>
                   </Button>
                   <Button className="flex-1" onClick={handleRetry}>
-                    {t.common.retry}
+                    {t.quiz.newRandomTest}
                   </Button>
                 </div>
               </CardContent>
@@ -338,7 +334,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
             </Button>
             <div className="flex items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                {lessonData?.lessonIcon} {lessonData?.lessonName}
+                🎲 {lessonData?.lessonName || t.quiz.randomTest}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -402,7 +398,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
               </CardHeader>
             </Card>
 
-            {/* Single Column Layout - Question and Image Combined */}
             <Card className="shadow-xl border-0 bg-gradient-to-br from-background via-background to-muted/10">
               <CardHeader className="pb-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -415,7 +410,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                         {t.quiz.question} {currentQuestionIndex + 1} {t.quiz.of} {questions.length}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1 font-medium">
-                        {lessonData?.lessonName}
+                        {t.quiz.randomTest}
                       </p>
                     </div>
                   </div>
@@ -440,14 +435,12 @@ export default function QuizClient({ topicId }: QuizClientProps) {
               </CardHeader>
               
               <CardContent className="space-y-4">
-                {/* Question Text - Larger */}
                 <div className="text-center p-4 bg-muted/20 rounded-xl border border-muted/50 shadow-sm">
                   <h3 className="text-xl sm:text-2xl font-semibold leading-relaxed text-balance max-w-3xl mx-auto">
                     {currentQuestion.questionText[selectedLanguage]}
                   </h3>
                 </div>
 
-                {/* Image - Above Answer Options */}
                 {currentQuestion.photo && (
                   <div className="flex justify-center">
                     <div className="relative group max-w-lg w-full">
@@ -459,7 +452,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                             e.preventDefault()
                             e.stopPropagation()
                             const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                            console.log('Opening image modal with URL:', imageUrl)
                             setCurrentImageUrl(imageUrl)
                             setIsImageModalOpen(true)
                           }}
@@ -470,7 +462,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                           e.preventDefault()
                           e.stopPropagation()
                           const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                          console.log('Opening image modal with URL:', imageUrl)
                           setCurrentImageUrl(imageUrl)
                           setIsImageModalOpen(true)
                         }}
@@ -484,7 +475,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   </div>
                 )}
 
-                {/* Answer Options - Clean minimalist design with borders */}
                 <div className="space-y-3">
                   <h4 className="text-base font-semibold text-center mb-3 text-muted-foreground">
                     {t.quiz.selectAnswer}
@@ -514,7 +504,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                           )}
                         >
                           <div className="flex items-start gap-3">
-                            {/* Answer Letter - Uppercase A, B, C */}
                             <span
                               className={cn(
                                 "text-lg font-bold flex-shrink-0 mt-0.5",
@@ -527,7 +516,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                               {String.fromCharCode(65 + index)}
                             </span>
                             
-                            {/* Answer Text - Larger and more visible */}
                             <span
                               className={cn(
                                 "text-lg leading-relaxed flex-1 text-left font-medium",
@@ -541,7 +529,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                               {option}
                             </span>
 
-                            {/* Status Icon - More visible checkmark or X */}
                             {isAnswered && (showCorrect || showIncorrect) && (
                               <div className="flex-shrink-0 mt-0.5">
                                 {showCorrect ? (
@@ -563,11 +550,9 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         </div>
       </main>
 
-      {/* Image Modal */}
       <ImageModal
         isOpen={isImageModalOpen}
         onClose={() => {
-          console.log('Closing image modal')
           setIsImageModalOpen(false)
         }}
         imageUrl={currentImageUrl}
@@ -576,3 +561,4 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     </div>
   )
 }
+

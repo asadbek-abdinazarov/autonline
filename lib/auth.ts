@@ -1,8 +1,20 @@
+export type SubscriptionType = 'BASIC' | 'PRO' | 'FULL' | 'FREE'
+
+export type Permission =
+  | 'VIEW_PAYMENTS'
+  | 'VIEW_ALL_TOPICS'
+  | 'VIEW_RANDOM'
+  | 'LIMITED_TOPICS'
+  | 'VIEW_NEWS'
+  | 'VIEW_TEST_HISTORY'
+
 export interface User {
   id: number
   username: string
   phoneNumber: string
   isActive: boolean
+  subscription?: SubscriptionType
+  permissions?: Permission[]
 }
 
 export interface LoginResponse {
@@ -12,6 +24,8 @@ export interface LoginResponse {
   username: string
   phoneNumber: string
   isActive: boolean
+  subscription?: SubscriptionType
+  permissions?: Permission[]
 }
 
 export async function login(username: string, password: string): Promise<User> {
@@ -29,6 +43,13 @@ export async function login(username: string, password: string): Promise<User> {
     })
 
     if (!response.ok) {
+      // Handle 429 errors
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        throw new Error("Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing.")
+      }
+      
       // Try to get error details from response body
       let errorMessage = 'Tizimga kirishda xatolik yuz berdi'
       
@@ -72,6 +93,8 @@ export async function login(username: string, password: string): Promise<User> {
       username: data.username,
       phoneNumber: data.phoneNumber,
       isActive: data.isActive,
+      subscription: data.subscription ?? 'FREE',
+      permissions: Array.isArray(data.permissions) ? data.permissions : [],
     }
   } catch (error) {
     // If it's already an Error with a message, re-throw it
@@ -86,6 +109,70 @@ export async function login(username: string, password: string): Promise<User> {
     
     // Fallback for any other errors
     throw new Error('Tizimga kirishda kutilmagan xatolik yuz berdi')
+  }
+}
+
+export async function register(username: string, password: string, phoneNumber: string): Promise<User> {
+  try {
+    const { buildApiUrl } = await import('./api-utils')
+    const response = await fetch(buildApiUrl('/api/v1/auth/register'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password, phoneNumber }),
+    })
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        throw new Error("Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing.")
+      }
+
+      let errorMessage = 'Ro\'yxatdan o\'tishda xatolik yuz berdi'
+      try {
+        const errorData = await response.json()
+        if (errorData.message) {
+          errorMessage = errorData.message
+        } else if (errorData.error) {
+          errorMessage = errorData.error
+        }
+      } catch (_) {
+        if (response.status >= 500) {
+          errorMessage = 'Server xatoligi. Iltimos, keyinroq urinib ko\'ring'
+        }
+      }
+
+      throw new Error(errorMessage)
+    }
+
+    const data: LoginResponse = await response.json()
+
+    if (!data.isActive) {
+      throw new Error('Foydalanuvchi faol emas')
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('accessToken', data.token)
+    }
+
+    return {
+      id: data.id,
+      username: data.username,
+      phoneNumber: data.phoneNumber,
+      isActive: data.isActive,
+      subscription: data.subscription ?? 'FREE',
+      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error
+    }
+    if (error instanceof TypeError && (error as any).message?.includes('fetch')) {
+      throw new Error('Internet aloqasi yo\'q. Iltimos, internetingizni tekshiring')
+    }
+    throw new Error('Ro\'yxatdan o\'tishda kutilmagan xatolik yuz berdi')
   }
 }
 

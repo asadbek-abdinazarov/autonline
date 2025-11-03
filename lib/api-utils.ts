@@ -4,9 +4,14 @@ import { logout, setCurrentUser } from "@/lib/auth"
 
 // Global notification function - will be set by the notification provider
 let globalShow401Error: ((message?: string) => void) | null = null
+let globalShow429Error: ((message?: string) => void) | null = null
 
 export function setGlobalNotificationHandler(show401Error: (message?: string) => void) {
   globalShow401Error = show401Error
+}
+
+export function setGlobal429ErrorHandler(show429Error: (message?: string) => void) {
+  globalShow429Error = show429Error
 }
 
 // Centralized API base URL helpers
@@ -40,7 +45,22 @@ export async function handleApiError(error: any): Promise<boolean> {
     }
     return true // Indicates 401 was handled
   }
-  return false // Not a 401 error
+  // Check if it's a 429 error
+  if (error?.message?.includes('429') || error?.status === 429) {
+    const errorMessage = "Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing."
+    if (globalShow429Error) {
+      await globalShow429Error(errorMessage)
+    } else {
+      // Fallback: show console warning
+      console.warn(errorMessage)
+      if (typeof window !== 'undefined') {
+        // Try to show alert as fallback
+        alert(errorMessage)
+      }
+    }
+    return true // Indicates 429 was handled
+  }
+  return false // Not a 401 or 429 error
 }
 
 export async function makeAuthenticatedRequest(url: string, options: RequestInit = {}) {
@@ -69,14 +89,19 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
         return null
       }
       
+      if (response.status === 429) {
+        await handleApiError({ status: 429 })
+        return null
+      }
+      
       const errorText = await response.text()
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
     }
     
     return response
   } catch (error) {
-    const is401Handled = await handleApiError(error)
-    if (!is401Handled) {
+    const isHandled = await handleApiError(error)
+    if (!isHandled) {
       throw error
     }
     return null

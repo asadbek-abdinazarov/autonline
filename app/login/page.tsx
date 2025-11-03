@@ -12,8 +12,10 @@ import { login, setCurrentUser } from "@/lib/auth"
 import { Loader2, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useTranslation, interpolate } from "@/hooks/use-translation"
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -40,16 +42,23 @@ export default function LoginPage() {
         router.push("/home")
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login yoki parol noto'g'ri")
+      const message = err instanceof Error ? err.message : t.login.defaultError
+      setError(message)
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 relative overflow-hidden">
+      {/* Background gradient blobs */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
       <div className="w-full max-w-md">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4">
+        <div className="text-center mb-8 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-6">
             <Image
               src="/autonline.svg"
               alt="AutOnline Logo"
@@ -58,25 +67,38 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-balance">AutOnline</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Haydovchilik guvohnomasini olish uchun tayyorgarlik platformasi
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3 text-balance bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {t.common.appName}
+          </h1>
+          <p className="text-lg sm:text-xl text-muted-foreground">
+            {t.login.subtitle}
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl sm:text-2xl">Kirish</CardTitle>
-            <CardDescription className="text-sm">Hisobingizga kirish uchun ma'lumotlaringizni kiriting</CardDescription>
+        <Card className="border-2 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl sm:text-3xl font-bold">{t.login.title}</CardTitle>
+            <CardDescription className="text-base">{t.login.description}</CardDescription>
           </CardHeader>
+          
           <CardContent>
+          {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-4 rounded-md border border-red-200 mb-4">
+                  <div className="flex items-start gap-2">
+                    <div className="text-red-500 mt-0.5">⚠️</div>
+                    <div>
+                      {error}
+                    </div>
+                  </div>
+                </div>
+              )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Foydalanuvchi nomi</Label>
+                <Label htmlFor="username">{t.login.username}</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Foydalanuvchi nomingizni kiriting"
+                  placeholder={t.login.usernamePlaceholder}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -85,11 +107,11 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Parol</Label>
+                <Label htmlFor="password">{t.login.password}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Parolingizni kiriting"
+                  placeholder={t.login.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -97,53 +119,51 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-4 rounded-md border border-red-200 mb-4">
-                  <div className="flex items-start gap-2">
-                    <div className="text-red-500 mt-0.5">⚠️</div>
-                    <div>
-                      <strong>Xatolik:</strong> {error}
-                    </div>
-                  </div>
-                </div>
-              )}
+              
               
               {isSuccess && (
                 <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded-md flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Bosh sahifaga yo'naltirilmoqda...</span>
+                  <span>{t.login.redirecting}</span>
                 </div>
               )}
 
-              <Button 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button asChild variant="outline" size="lg" className="w-full">
+                  <Link href="/">{t.common.home}</Link>
+                </Button>
+
+                <Button 
                 type="submit" 
-                className={`w-full transition-all duration-300 ${
+                size="lg"
+                className={`w-full transition-all duration-300 shadow-lg hover:shadow-xl ${
                   isSuccess 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white' 
                     : isLoading 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : ''
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white' 
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
                 }`}
                 disabled={isLoading || isSuccess}
               >
                 {isSuccess ? (
                   <>
                     <CheckCircle className="mr-2 h-4 w-4 animate-pulse" />
-                    Muvaffaqiyatli kirdingiz!
+                    {t.login.success}
                   </>
                 ) : isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Tizimga kirilmoqda...
+                    {t.login.logging}
                   </>
                 ) : (
-                  "Kirish"
+                  t.login.submit
                 )}
               </Button>
+              </div>
             </form>
 
             <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-              <p>Sizda kirish uchun hisobingiz yo'qmi? <Link href="https://t.me/AsadbekAbdinazarov" className="text-primary underline">Ro'yxatdan o'tish</Link></p>
+              <p>{t.login.noAccount} <Link href="/register" className="text-primary underline">{t.login.register}</Link></p>
             </div>
           </CardContent>
         </Card>

@@ -1,23 +1,26 @@
 "use client"
 
+import { useCallback } from "react"
 import { useNotification } from "@/components/notification-provider"
-import { logout, setCurrentUser } from "@/lib/auth"
-import { useRouter } from "next/navigation"
 
 export function useApi() {
-  const { show401Error } = useNotification()
-  const router = useRouter()
+  const { show401Error, show429Error } = useNotification()
 
-  const handleApiError = async (error: any) => {
+  const handleApiError = useCallback(async (error: any) => {
     // Check if it's a 401 error
     if (error?.message?.includes('401') || error?.status === 401) {
       await show401Error("Sizning sessiyangiz tugagan. Qaytadan kirish kerak.")
       return true // Indicates 401 was handled
     }
-    return false // Not a 401 error
-  }
+    // Check if it's a 429 error
+    if (error?.message?.includes('429') || error?.status === 429) {
+      await show429Error("Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing.")
+      return true // Indicates 429 was handled
+    }
+    return false // Not a 401 or 429 error
+  }, [show401Error, show429Error])
 
-  const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  const makeAuthenticatedRequest = useCallback(async (url: string, options: RequestInit = {}) => {
     try {
       // Get access token
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
@@ -43,19 +46,24 @@ export function useApi() {
           return null
         }
         
+        if (response.status === 429) {
+          await show429Error("Juda ko'p so'rovlar yuborildi. Iltimos, biroz kutib turing.")
+          return null
+        }
+        
         const errorText = await response.text()
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
       
       return response
     } catch (error) {
-      const is401Handled = await handleApiError(error)
-      if (!is401Handled) {
+      const isHandled = await handleApiError(error)
+      if (!isHandled) {
         throw error
       }
       return null
     }
-  }
+  }, [handleApiError])
 
   return {
     handleApiError,

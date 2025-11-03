@@ -2,16 +2,19 @@
 
 import { useEffect, useState, ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { getCurrentUser, logout, setCurrentUser } from "@/lib/auth"
+import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { useNotification } from "@/components/notification-provider"
+import { Forbidden } from "@/components/forbidden"
 
 interface AuthGuardProps {
   children: ReactNode
   fallback?: ReactNode
+  requiredPermission?: Permission
 }
 
-export function AuthGuard({ children, fallback }: AuthGuardProps) {
+export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [hasRequiredPermission, setHasRequiredPermission] = useState<boolean | null>(null)
   const router = useRouter()
   const { show401Error } = useNotification()
 
@@ -33,10 +36,17 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
       })
       return
     }
-  }, [router])
+
+    if (requiredPermission) {
+      const ok = Array.isArray(user?.permissions) && user!.permissions!.includes(requiredPermission)
+      setHasRequiredPermission(ok)
+    } else {
+      setHasRequiredPermission(true)
+    }
+  }, [router, requiredPermission])
 
   // Show loading state while checking authentication
-  if (isAuthenticated === null) {
+  if (isAuthenticated === null || hasRequiredPermission === null) {
     return fallback || (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -50,6 +60,10 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
   // Don't render children if not authenticated (will redirect)
   if (!isAuthenticated) {
     return null
+  }
+
+  if (!hasRequiredPermission) {
+    return <Forbidden />
   }
 
   return <>{children}</>

@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { NotificationProvider } from '@/components/notification-provider'
+import { TranslationProvider } from '@/hooks/use-translation'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -29,10 +30,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+        <TranslationProvider>
         <NotificationProvider>
           {children}
           <Toaster position="top-right" richColors />
         </NotificationProvider>
+        </TranslationProvider>
         <Analytics />
       </body>
     </html>

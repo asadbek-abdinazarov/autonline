@@ -1,3 +1,5 @@
+import { randomInt } from 'crypto'
+
 export interface NewsItem {
   id: string
   title: string
@@ -12,6 +14,7 @@ export interface Topic {
   description: string
   questionCount: number
   icon: string
+  lessonViewsCount?: number
 }
 
 // API Response interfaces
@@ -21,6 +24,7 @@ export interface LessonApiResponse {
   lessonId: number
   lessonName: string
   lessonQuestionCount: number
+  lessonViewsCount?: number
 }
 
 export interface QuestionApiResponse {
@@ -326,6 +330,13 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
         return topicsData // Return fallback data
       }
       
+      // Handle 429 errors globally
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        return topicsData // Return fallback data
+      }
+      
       console.error(`API request failed with status: ${response.status}`)
       const errorText = await response.text()
       console.error('Error response:', errorText)
@@ -341,6 +352,7 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       description: lesson.lessonDescription,
       questionCount: lesson.lessonQuestionCount,
       icon: lesson.lessonIcon,
+      lessonViewsCount: lesson.lessonViewsCount,
     }))
   } catch (error) {
     console.error('Error fetching topics from API:', error)
@@ -349,7 +361,137 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
   }
 }
 
-export async function fetchQuestionsByLessonId(lessonId: string): Promise<QuestionApiResponse> {
+// Cache key for lesson data
+const getLessonCacheKey = (lessonId: string) => `lesson_data_${lessonId}`
+
+// Cache expiration time (10 minutes)
+const CACHE_EXPIRATION_MS = 10 * 60 * 1000
+
+interface CachedLessonData {
+  data: QuestionApiResponse
+  timestamp: number
+}
+
+// Get cached lesson data
+function getCachedLessonData(lessonId: string): QuestionApiResponse | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const cacheKey = getLessonCacheKey(lessonId)
+    const cached = sessionStorage.getItem(cacheKey)
+    
+    if (!cached) {
+      return null
+    }
+
+    const cachedData: CachedLessonData = JSON.parse(cached)
+    const now = Date.now()
+    
+    // Check if cache is expired
+    if (now - cachedData.timestamp > CACHE_EXPIRATION_MS) {
+      sessionStorage.removeItem(cacheKey)
+      return null
+    }
+
+    return cachedData.data
+  } catch (error) {
+    console.error('Error reading cached lesson data:', error)
+    return null
+  }
+}
+
+// Save lesson data to cache
+function setCachedLessonData(lessonId: string, data: QuestionApiResponse): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const cacheKey = getLessonCacheKey(lessonId)
+    const cachedData: CachedLessonData = {
+      data,
+      timestamp: Date.now(),
+    }
+    sessionStorage.setItem(cacheKey, JSON.stringify(cachedData))
+  } catch (error) {
+    console.error('Error saving lesson data to cache:', error)
+    // If storage is full, try to clear old cache entries
+    try {
+      clearExpiredLessonCache()
+      sessionStorage.setItem(getLessonCacheKey(lessonId), JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      }))
+    } catch (retryError) {
+      console.error('Failed to save lesson data to cache after cleanup:', retryError)
+    }
+  }
+}
+
+// Clear expired cache entries
+function clearExpiredLessonCache(): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const now = Date.now()
+    const keysToRemove: string[] = []
+
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i)
+      if (key && key.startsWith('lesson_data_')) {
+        try {
+          const cached = sessionStorage.getItem(key)
+          if (cached) {
+            const cachedData: CachedLessonData = JSON.parse(cached)
+            if (now - cachedData.timestamp > CACHE_EXPIRATION_MS) {
+              keysToRemove.push(key)
+            }
+          }
+        } catch {
+          keysToRemove.push(key)
+        }
+      }
+    }
+
+    keysToRemove.forEach(key => sessionStorage.removeItem(key))
+  } catch (error) {
+    console.error('Error clearing expired cache:', error)
+  }
+}
+
+// Clear specific lesson cache
+export function clearLessonCache(lessonId: string): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    sessionStorage.removeItem(getLessonCacheKey(lessonId))
+  } catch (error) {
+    console.error('Error clearing lesson cache:', error)
+  }
+}
+
+export async function fetchQuestionsByLessonId(
+  lessonId: string,
+  options?: { useCache?: boolean; forceRefresh?: boolean }
+): Promise<QuestionApiResponse> {
+  const useCache = options?.useCache !== false // Default to true
+  const forceRefresh = options?.forceRefresh === true
+
+  // Try to get from cache first (if not forcing refresh)
+  if (useCache && !forceRefresh) {
+    const cachedData = getCachedLessonData(lessonId)
+    if (cachedData) {
+      console.log(`Using cached data for lesson ${lessonId}`)
+      return cachedData
+    }
+  }
+
   try {
     // Get access token - only on client side
     let token: string | null = null
@@ -382,6 +524,13 @@ export async function fetchQuestionsByLessonId(lessonId: string): Promise<Questi
         throw new Error('Authentication required')
       }
       
+      // Handle 429 errors globally
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        throw new Error('Too many requests')
+      }
+      
       console.error(`API request failed with status: ${response.status}`)
       const errorText = await response.text()
       console.error('Error response:', errorText)
@@ -390,9 +539,174 @@ export async function fetchQuestionsByLessonId(lessonId: string): Promise<Questi
     
     const apiData: QuestionApiResponse = await response.json()
     
+    // Save to cache
+    if (useCache) {
+      setCachedLessonData(lessonId, apiData)
+    }
+    
     return apiData
   } catch (error) {
     console.error('Error fetching questions from API:', error)
     throw error
+  }
+}
+
+export interface LessonHistoryRequest {
+  lessonId: number
+  percentage: number
+  allQuestionsCount: number
+  correctAnswersCount: number
+  notCorrectAnswersCount: number
+}
+
+// Random test functions
+export async function fetchRandomQuestions(count: number = 20): Promise<QuestionApiResponse> {
+  try {
+    // Get all topics
+    const topics = await fetchTopicsFromApi()
+    
+    if (topics.length === 0) {
+      throw new Error('Mavzular topilmadi')
+    }
+
+    // Fetch questions from all topics in parallel
+    const allQuestionsPromises = topics.map(topic => 
+      fetchQuestionsByLessonId(topic.id, { useCache: true }).catch(err => {
+        console.warn(`Failed to fetch questions for topic ${topic.id}:`, err)
+        return null
+      })
+    )
+
+    const allQuestionsResponses = await Promise.all(allQuestionsPromises)
+    
+    // Collect all questions from all topics
+    const allQuestions: QuestionData[] = []
+    for (const response of allQuestionsResponses) {
+      if (response && response.questions) {
+        allQuestions.push(...response.questions)
+      }
+    }
+
+    if (allQuestions.length === 0) {
+      throw new Error('Savollar topilmadi')
+    }
+
+    // Shuffle array and take first N questions
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5)
+    const randomQuestions = shuffled.slice(0, Math.min(count, allQuestions.length))
+
+    // Create a synthetic QuestionApiResponse for random test
+    const randomResponse: QuestionApiResponse = {
+      lessonId: randomInt(500, 10000), // Special ID for random test
+      lessonName: 'Tasodify test',
+      lessonDescription: 'Har hil mavzulardan tayyorlangan tasodify savollar',
+      lessonIcon: '🎲',
+      lessonQuestionCount: randomQuestions.length,
+      questions: randomQuestions,
+    }
+
+    return randomResponse
+  } catch (error) {
+    console.error('Error fetching random questions:', error)
+    throw error
+  }
+}
+
+export async function submitLessonHistory(data: LessonHistoryRequest): Promise<void> {
+  try {
+    // Validate data before sending
+    if (!data || data.lessonId === undefined || data.lessonId === null) {
+      console.error('Invalid lesson history data: lessonId is missing', data)
+      return
+    }
+    
+    if (data.allQuestionsCount === undefined || data.allQuestionsCount === null || data.allQuestionsCount === 0) {
+      console.error('Invalid lesson history data: allQuestionsCount is missing or zero', data)
+      return
+    }
+    
+    // Ensure all values are numbers, not null/undefined
+    const lessonId = Number(data.lessonId)
+    const percentage = Number(data.percentage)
+    const allQuestionsCount = Number(data.allQuestionsCount)
+    const correctAnswersCount = Number(data.correctAnswersCount)
+    const notCorrectAnswersCount = Number(data.notCorrectAnswersCount)
+    
+    // Validate that all numbers are valid (not NaN)
+    if (isNaN(lessonId) || isNaN(percentage) || isNaN(allQuestionsCount) || isNaN(correctAnswersCount) || isNaN(notCorrectAnswersCount)) {
+      console.error('Invalid lesson history data: Some values are NaN', {
+        originalData: data,
+        lessonId,
+        percentage,
+        allQuestionsCount,
+        correctAnswersCount,
+        notCorrectAnswersCount,
+      })
+      return
+    }
+    
+    // Create request body with explicit number types
+    const requestBody = {
+      lessonId: lessonId,
+      percentage: percentage,
+      allQuestionsCount: allQuestionsCount,
+      correctAnswersCount: correctAnswersCount,
+      notCorrectAnswersCount: notCorrectAnswersCount,
+    }
+    
+    // Validate body is not empty
+    const bodyString = JSON.stringify(requestBody)
+    if (!bodyString || bodyString === '{}' || bodyString === 'null') {
+      console.error('Invalid request body: body is empty or null', requestBody)
+      return
+    }
+    
+    // Get access token - only on client side
+    let token: string | null = null
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('accessToken')
+    }
+    
+    // Call backend API through centralized base URL
+    const { buildApiUrl } = await import('./api-utils')
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(buildApiUrl('/api/v1/lesson-history/add'), {
+      method: 'POST',
+      headers,
+      body: bodyString,
+    })
+    
+    if (!response.ok) {
+      // Handle 401 errors globally
+      if (response.status === 401) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 401 })
+        return
+      }
+      
+      // Handle 429 errors globally
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        return
+      }
+      
+      console.error(`API request failed with status: ${response.status}`)
+      const errorText = await response.text()
+      console.error('Error response:', errorText)
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+  } catch (error) {
+    console.error('Error submitting lesson history:', error)
+    // Don't throw - we don't want to block the UI if history submission fails
   }
 }
