@@ -133,8 +133,11 @@ export function HistoryClient() {
                       <CardHeader className="pb-3 sm:pb-4">
                         <div className="flex items-start justify-between gap-3 sm:gap-4">
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg sm:text-xl font-bold mb-2 line-clamp-2">
-                              {history.lessonName}
+                            <CardTitle className="text-lg sm:text-xl font-bold mb-2 line-clamp-2 flex items-center gap-2 sm:gap-3">
+                              <span>{history.lessonName}</span>
+                              <span className="text-2xl sm:text-3xl flex-shrink-0" role="img" aria-label="lesson icon">
+                                {history.lessonIcon || '📚'}
+                              </span>
                             </CardTitle>
                             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                               <Badge 

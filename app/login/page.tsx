@@ -118,8 +118,6 @@ export default function LoginPage() {
                   disabled={isLoading || isSuccess}
                 />
               </div>
-
-              
               
               {isSuccess && (
                 <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded-md flex items-center gap-2">

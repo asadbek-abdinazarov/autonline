@@ -345,8 +345,11 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
     
     const apiData: LessonApiResponse[] = await response.json()
     
+    // Filter out lesson with ID 43 (random quiz special ID)
+    const filteredData = apiData.filter((lesson) => lesson.lessonId !== 43)
+    
     // Map API data to Topic interface
-    return apiData.map((lesson): Topic => ({
+    return filteredData.map((lesson): Topic => ({
       id: lesson.lessonId.toString(),
       title: lesson.lessonName,
       description: lesson.lessonDescription,
@@ -557,59 +560,6 @@ export interface LessonHistoryRequest {
   allQuestionsCount: number
   correctAnswersCount: number
   notCorrectAnswersCount: number
-}
-
-// Random test functions
-export async function fetchRandomQuestions(count: number = 20): Promise<QuestionApiResponse> {
-  try {
-    // Get all topics
-    const topics = await fetchTopicsFromApi()
-    
-    if (topics.length === 0) {
-      throw new Error('Mavzular topilmadi')
-    }
-
-    // Fetch questions from all topics in parallel
-    const allQuestionsPromises = topics.map(topic => 
-      fetchQuestionsByLessonId(topic.id, { useCache: true }).catch(err => {
-        console.warn(`Failed to fetch questions for topic ${topic.id}:`, err)
-        return null
-      })
-    )
-
-    const allQuestionsResponses = await Promise.all(allQuestionsPromises)
-    
-    // Collect all questions from all topics
-    const allQuestions: QuestionData[] = []
-    for (const response of allQuestionsResponses) {
-      if (response && response.questions) {
-        allQuestions.push(...response.questions)
-      }
-    }
-
-    if (allQuestions.length === 0) {
-      throw new Error('Savollar topilmadi')
-    }
-
-    // Shuffle array and take first N questions
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5)
-    const randomQuestions = shuffled.slice(0, Math.min(count, allQuestions.length))
-
-    // Create a synthetic QuestionApiResponse for random test
-    const randomResponse: QuestionApiResponse = {
-      lessonId: randomInt(500, 10000), // Special ID for random test
-      lessonName: 'Tasodify test',
-      lessonDescription: 'Har hil mavzulardan tayyorlangan tasodify savollar',
-      lessonIcon: '🎲',
-      lessonQuestionCount: randomQuestions.length,
-      questions: randomQuestions,
-    }
-
-    return randomResponse
-  } catch (error) {
-    console.error('Error fetching random questions:', error)
-    throw error
-  }
 }
 
 export async function submitLessonHistory(data: LessonHistoryRequest): Promise<void> {

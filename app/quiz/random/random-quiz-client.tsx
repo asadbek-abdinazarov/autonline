@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { fetchRandomQuestions, submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
+import { submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
@@ -14,15 +14,28 @@ import { ArrowLeft, CheckCircle2, ZoomIn } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
+import { useApi } from "@/hooks/use-api"
+import { buildApiUrl } from "@/lib/api-utils"
 
 interface UserAnswer {
   selectedAnswer: number
   isCorrect: boolean
 }
 
+interface RandomQuizApiResponse {
+  lessonId: number
+  lessonName: string
+  lessonDescription: string
+  lessonIcon: string
+  lessonQuestionCount: number
+  lessonViewsCount: number
+  questions: QuestionData[]
+}
+
 export default function RandomQuizClient() {
   const { t } = useTranslation()
   const router = useRouter()
+  const { makeAuthenticatedRequest } = useApi()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -42,6 +55,56 @@ export default function RandomQuizClient() {
 
   const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
 
+  // Fetch random questions from API
+  const fetchRandomQuiz = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/random-quiz'), {
+        method: 'GET',
+      })
+
+      if (!response) {
+        throw new Error('Network error or authentication failed')
+      }
+
+      const apiData: RandomQuizApiResponse[] = await response.json()
+
+      // Flatten questions from all lessons into a single array
+      const allQuestions: QuestionData[] = []
+      apiData.forEach((lesson) => {
+        if (lesson.questions && lesson.questions.length > 0) {
+          allQuestions.push(...lesson.questions)
+        }
+      })
+
+      if (allQuestions.length === 0) {
+        throw new Error('Savollar topilmadi')
+      }
+
+      // Create a synthetic QuestionApiResponse for compatibility
+      const syntheticResponse: QuestionApiResponse = {
+        lessonId: 43, // Random quiz doesn't have a specific lesson ID
+        lessonName: 'Tasodify test',
+        lessonDescription: 'Har hil mavzulardan tayyorlangan tasodify savollar',
+        lessonIcon: '🎲',
+        lessonQuestionCount: allQuestions.length,
+        questions: allQuestions,
+      }
+
+      setLessonData(syntheticResponse)
+      setQuestions(allQuestions)
+    } catch (err) {
+      console.error('Error fetching random quiz:', err)
+      setError(err instanceof Error ? err.message : t.quiz.notFound)
+      hasFetchedRef.current = false // Reset on error to allow retry
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [makeAuthenticatedRequest, t.quiz.notFound])
+
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
@@ -56,25 +119,8 @@ export default function RandomQuizClient() {
 
     hasFetchedRef.current = true
 
-    // Fetch random questions
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const data = await fetchRandomQuestions(20)
-        setLessonData(data)
-        setQuestions(data.questions)
-      } catch (err) {
-        console.error('Error fetching random questions:', err)
-        setError(err instanceof Error ? err.message : t.quiz.notFound)
-        hasFetchedRef.current = false // Reset on error to allow retry
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [router])
+    fetchRandomQuiz()
+  }, [router, fetchRandomQuiz])
 
   useEffect(() => {
     const currentAnswer = userAnswers.get(currentQuestionIndex)
@@ -94,10 +140,27 @@ export default function RandomQuizClient() {
     }
   }, [autoSkipTimeout])
 
-  // Submit lesson history when results are shown (skip for random test as lessonId is 0)
+  // Submit lesson history when results are shown for random test as well
   useEffect(() => {
-    // Random test doesn't submit history as lessonId is 0
-    // History is only for specific topics
+    if (showResults && lessonData && lessonData.lessonId !== undefined && lessonData.lessonId !== null && questions.length > 0 && !hasSubmittedHistoryRef.current) {
+      const percentage = Math.round((score / questions.length) * 100)
+      const correctAnswersCount = score
+      const notCorrectAnswersCount = questions.length - score
+      const lessonId = Number(lessonData.lessonId)
+
+      if (!isNaN(lessonId) && lessonId > 0) {
+        submitLessonHistory({
+          lessonId,
+          percentage,
+          allQuestionsCount: questions.length,
+          correctAnswersCount,
+          notCorrectAnswersCount,
+        })
+
+        hasSubmittedHistoryRef.current = true
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showResults, lessonData, score, questions.length])
 
   // Loading state
@@ -239,22 +302,7 @@ export default function RandomQuizClient() {
     hasFetchedRef.current = false
     hasSubmittedHistoryRef.current = false
     
-    // Reload random questions
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const data = await fetchRandomQuestions(20)
-        setLessonData(data)
-        setQuestions(data.questions)
-      } catch (err) {
-        console.error('Error fetching random questions:', err)
-        setError(err instanceof Error ? err.message : t.quiz.notFound)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
+    fetchRandomQuiz()
   }
 
   if (showResults) {

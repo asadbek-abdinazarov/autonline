@@ -96,18 +96,18 @@ export default function RegisterPage() {
                 React.createElement(Label as any, { htmlFor: 'username' }, 'Foydalanuvchi nomi'),
                 React.createElement(Input as any, { id: 'username', type: 'text', placeholder: 'Foydalanuvchi nomingizni yarating', value: username, onChange: (e: any) => setUsername(e.target.value), required: true, disabled: isLoading || isSuccess }),
               ),
+              React.createElement(
+                'div',
+                { className: "space-y-2" },
+                React.createElement(Label as any, { htmlFor: 'phone' }, 'Telefon raqam'),
+                React.createElement(Input as any, { id: 'phone', type: 'tel', placeholder: '(+998) 90 123 45 67', value: phone, onChange: (e: any) => setPhone(e.target.value), required: true, disabled: isLoading || isSuccess }),
+              ),
             React.createElement(
                 'div',
                 { className: 'space-y-2' },
                 React.createElement(Label as any, { htmlFor: 'password' }, 'Foydalanuvchi paroli'),
                 React.createElement(Input as any, { id: 'password', type: 'password', placeholder: 'Yangi parol yarating', value: password, onChange: (e: any) => setPassword(e.target.value), required: true, disabled: isLoading || isSuccess }),
               ),
-            React.createElement(
-              'div',
-              { className: "space-y-2" },
-              React.createElement(Label as any, { htmlFor: 'phone' }, 'Telefon raqam'),
-              React.createElement(Input as any, { id: 'phone', type: 'tel', placeholder: '(+998) 90 123 45 67', value: phone, onChange: (e: any) => setPhone(e.target.value), required: true, disabled: isLoading || isSuccess }),
-            ),
             React.createElement(
               'div',
               { className: "grid grid-cols-1 sm:grid-cols-2 gap-3" },
@@ -139,7 +139,7 @@ export default function RegisterPage() {
             React.createElement(
               'p',
               null,
-              'Allaqachon hisob bormi? ',
+              'Sizda allaqachon foydalanuvchi hisob mavjudmi? ',
               React.createElement(Link as any, { href: '/login', className: 'text-primary underline' }, 'Kirish')
             )
           ),

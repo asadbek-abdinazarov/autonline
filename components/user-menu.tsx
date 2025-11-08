@@ -101,44 +101,40 @@ export function UserMenu() {
         <DropdownMenuLabel>
           <div className="flex items-center justify-between">
             <span className="text-sm">{user?.username || t.userMenu.user}</span>
-            {user?.isActive ? (
-              <span className="text-xs px-2 py-1 rounded-full bg-success/20 text-success">{t.userMenu.active}</span>
-            ) : (
-              <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{t.userMenu.inactive}</span>
-            )}
+            <div className="flex items-center gap-2">
+              {user?.subscription && (() => {
+                const getSubMeta = () => {
+                  switch (user.subscription) {
+                    case 'FULL':
+                      return { label: 'FULL', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
+                    case 'PRO':
+                      return { label: 'PRO', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                    case 'BASIC':
+                      return { label: 'BASIC', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                    default:
+                      return { label: 'FREE', Icon: Ban, classes: 'from-muted to-muted text-muted-foreground border border-border' }
+                  }
+                }
+                const { label, Icon, classes } = getSubMeta()
+                return (
+                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? 'bg-transparent' : ''}`}>
+                    <Icon className={`h-3 w-3 ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`} />
+                    <span className={`text-xs font-semibold ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`}>{label}</span>
+                  </div>
+                )
+              })()}
+              {user?.isActive ? (
+                <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">{t.userMenu.active}</span>
+              ) : (
+                <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{t.userMenu.inactive}</span>
+              )}
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
           {user?.phoneNumber || t.userMenu.phoneNotFound}
         </DropdownMenuLabel>
-
-        {user?.subscription && (
-          <div className="px-3 pb-2">
-            {(() => {
-              const getSubMeta = () => {
-                switch (user.subscription) {
-                  case 'FULL':
-                    return { label: 'FULL', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
-                  case 'PRO':
-                    return { label: 'PRO', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
-                  case 'BASIC':
-                    return { label: 'BASIC', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
-                  default:
-                    return { label: 'FREE', Icon: Ban, classes: 'from-muted to-muted text-muted-foreground border border-border' }
-                }
-              }
-              const { label, Icon, classes } = getSubMeta()
-              return (
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? 'bg-transparent' : ''}`}>
-                  <span className={`inline-flex items-center justify-center rounded-full ${label === 'FREE' ? 'bg-muted' : 'bg-white/20'} p-1`}> 
-                    <Icon className={`h-3.5 w-3.5 ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`} />
-                  </span>
-                  <span className={`text-xs font-semibold ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`}>{label}</span>
-                </div>
-              )
-            })()}
-          </div>
-        )}
+        
 
         {showPaymentHistory && hasPermission('VIEW_PAYMENTS') && paymentHistory.length > 0 && (
           <>

@@ -299,7 +299,6 @@ export function SubscriptionClient() {
                         )}
                         size="sm"
                         onClick={() => handleSubscribe(plan.id)}
-                        disabled={isProcessing}
                       >
                         {isProcessing ? (
                           <>
