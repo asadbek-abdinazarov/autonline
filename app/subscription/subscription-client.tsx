@@ -12,6 +12,7 @@ import { useNotification } from "@/components/notification-provider"
 import { useApi } from "@/hooks/use-api"
 import { buildApiUrl } from "@/lib/api-utils"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface SubscriptionPlan {
   id: number
@@ -25,6 +26,7 @@ interface SubscriptionPlan {
 }
 
 export function SubscriptionClient() {
+  const { t } = useTranslation()
   const [isProcessing, setIsProcessing] = useState(false)
   const { showNotification } = useNotification()
   const { makeAuthenticatedRequest } = useApi()
@@ -104,7 +106,13 @@ export function SubscriptionClient() {
       })
 
       if (response) {
-        const data = await response.json()
+        const { safeJsonParse } = await import('@/lib/api-utils')
+        const data = await safeJsonParse<{ paymentUrl?: string }>(response)
+        
+        if (!data) {
+          showNotification('To\'lov tizimi bilan bog\'lanildi', 'info')
+          return
+        }
         
         // If payment URL is provided, redirect to payment gateway
         if (data.paymentUrl) {
@@ -126,46 +134,50 @@ export function SubscriptionClient() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-        </div>
-
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
         <Header />
 
-        <main className="container mx-auto px-4 py-8 sm:py-12 flex-1 relative z-10">
-          <div className="max-w-6xl mx-auto">
-            {/* Back Button */}
-            <div className="mb-8">
-              <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50">
-                <Link href="/home" className="flex items-center gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Orqaga</span>
-                </Link>
-              </Button>
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 mb-8 sm:mb-12">
+            {/* Background gradient blobs */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 dark:bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
             </div>
 
-            {/* Hero Section */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center gap-3 mb-6 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 backdrop-blur-sm border border-primary/20 shadow-lg">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 shadow-md transform rotate-[-5deg] hover:rotate-0 transition-transform duration-300">
-                  <Crown className="h-8 w-8 sm:h-9 sm:w-9 text-white" />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
-                    Premium Obuna
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                  <Link href="/home" className="flex items-center gap-2">
+                    <ArrowLeft className="h-5 w-5" />
+                    {t.common.back}
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="text-center">
+                <div className="max-w-4xl mx-auto space-y-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    <span>Premium Obuna</span>
+                  </div>
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent">
+                      Premium Obuna
+                    </span>
                   </h1>
-                  <p className="text-muted-foreground text-xs sm:text-sm font-medium">
-                    Cheksiz imkoniyatlar sizni kutmoqda
+                  <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    Barcha funksiyalardan foydalanish va imtihonga mukammal tayyorlanish uchun obuna sotib oling
                   </p>
                 </div>
               </div>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Barcha funksiyalardan foydalanish va imtihonga mukammal tayyorlanish uchun obuna sotib oling
-              </p>
             </div>
+          </section>
+
+          {/* Content Section */}
+          <section className="container mx-auto px-4 py-8 sm:py-12">
+            <div className="max-w-6xl mx-auto">
 
             {/* Pricing Cards */}
             <div className={cn(

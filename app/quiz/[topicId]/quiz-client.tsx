@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { fetchQuestionsByLessonId, submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
+import { fetchQuestionsByLessonId, submitLessonHistory, type QuestionApiResponse, type QuestionData, getLocalizedLessonName, clearLessonCache } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
@@ -25,7 +25,7 @@ interface QuizClientProps {
 }
 
 export default function QuizClient({ topicId }: QuizClientProps) {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
@@ -37,15 +37,66 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [isAnswered, setIsAnswered] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
-  const [selectedLanguage, setSelectedLanguage] = useState<'oz' | 'uz' | 'ru'>('oz')
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    userAnswersRef.current = userAnswers
+  }, [userAnswers])
+  
+  useEffect(() => {
+    answeredQuestionsRef.current = answeredQuestions
+  }, [answeredQuestions])
+  
+  useEffect(() => {
+    currentQuestionIndexRef.current = currentQuestionIndex
+  }, [currentQuestionIndex])
+  
+  useEffect(() => {
+    scoreRef.current = score
+  }, [score])
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
   const hasFetchedRef = useRef<string | null>(null)
   const hasSubmittedHistoryRef = useRef(false)
+  const previousLanguageRef = useRef<string | null>(null)
+  const userAnswersRef = useRef<Map<number, UserAnswer>>(new Map())
+  const answeredQuestionsRef = useRef<Map<number, boolean>>(new Map())
+  const currentQuestionIndexRef = useRef<number>(0)
+  const scoreRef = useRef<number>(0)
+
+  // Map header language to question language
+  // Header: uz (lotincha) -> API: uz (lotincha)
+  // Header: cyr (kirilcha) -> API: oz (kirilcha)  
+  // Header: ru (ruscha) -> API: ru (ruscha)
+  const selectedLanguage = useMemo(() => {
+    // Debug: log to identify the issue
+    console.log('[Quiz] Header language:', language, 'Type:', typeof language)
+    
+    // Force check: ensure we're using the correct mapping
+    let result: 'oz' | 'uz' | 'ru'
+    if (language === 'uz') {
+      result = 'uz' // Lotincha o'zbekcha - API da uz key
+      console.log('[Quiz] Mapped to uz (lotincha)')
+    } else if (language === 'cyr') {
+      result = 'oz' // Kirilcha o'zbekcha - API da oz key
+      console.log('[Quiz] Mapped to oz (kirilcha)')
+    } else if (language === 'ru') {
+      result = 'ru' // Ruscha - API da ru key
+      console.log('[Quiz] Mapped to ru (ruscha)')
+    } else {
+      // Default to lotincha o'zbekcha
+      result = 'uz'
+      console.log('[Quiz] Default mapped to uz (lotincha)')
+    }
+    
+    console.log('[Quiz] Final selectedLanguage:', result)
+    return result
+  }, [language])
 
   const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
 
+  // Fetch lesson data when topicId changes or language changes
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
@@ -53,22 +104,55 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       return
     }
 
-    // Prevent duplicate requests for the same topicId
-    if (hasFetchedRef.current === topicId) {
-      return
+    // Check if language has changed
+    const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+    
+    // If language changed, clear cache and reset fetch ref to force new fetch
+    if (languageChanged) {
+      clearLessonCache(topicId)
+      hasFetchedRef.current = null
+      previousLanguageRef.current = language
+    } else {
+      // Prevent duplicate requests for the same topicId and language
+      if (hasFetchedRef.current === topicId && !languageChanged) {
+        return
+      }
+      previousLanguageRef.current = language
     }
 
     hasFetchedRef.current = topicId
 
-    // Fetch lesson data (with cache support - will use cache if available from topic page)
+    // Fetch lesson data (force refresh if language changed)
     const fetchData = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        // Use cache by default - if data was loaded on topic page, it will be reused
-        const data = await fetchQuestionsByLessonId(topicId, { useCache: true })
+        
+        // Save current userAnswers before refetching (to preserve user's answers when language changes)
+        // Use refs to get the latest values without causing dependency issues
+        const savedUserAnswers = languageChanged ? new Map(userAnswersRef.current) : new Map()
+        const savedAnsweredQuestions = languageChanged ? new Map(answeredQuestionsRef.current) : new Map()
+        const savedCurrentIndex = languageChanged ? currentQuestionIndexRef.current : 0
+        const savedScore = languageChanged ? scoreRef.current : 0
+        
+        // Force refresh if language changed, otherwise use cache
+        const data = await fetchQuestionsByLessonId(topicId, { 
+          useCache: !languageChanged,
+          forceRefresh: languageChanged 
+        })
         setLessonData(data)
         setQuestions(data.questions)
+        
+        // Restore userAnswers if language changed (preserve user's progress)
+        if (languageChanged) {
+          setUserAnswers(savedUserAnswers)
+          setAnsweredQuestions(savedAnsweredQuestions)
+          setCurrentQuestionIndex(savedCurrentIndex)
+          setScore(savedScore)
+          // Update isAnswered state based on current question
+          const currentAnswer = savedUserAnswers.get(savedCurrentIndex)
+          setIsAnswered(!!currentAnswer)
+        }
       } catch (err) {
         console.error('Error fetching lesson data:', err)
         setError(err instanceof Error ? err.message : t.quiz.notFound)
@@ -79,7 +163,8 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
 
     fetchData()
-  }, [topicId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topicId, language])
 
   useEffect(() => {
     const currentAnswer = userAnswers.get(currentQuestionIndex)
@@ -324,48 +409,43 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
       <Header />
 
-      <main className="container mx-auto px-4 py-4 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/home">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t.quiz.back}
-              </Link>
-            </Button>
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-muted-foreground">
-                {lessonData?.lessonIcon} {lessonData?.lessonName}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedLanguage === 'oz' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('oz')}
-                >
-                  O'Z
-                </Button>
-                <Button
-                  variant={selectedLanguage === 'uz' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('uz')}
-                >
-                  УЗ
-                </Button>
-                <Button
-                  variant={selectedLanguage === 'ru' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('ru')}
-                >
-                  РУ
-                </Button>
+      <main className="flex-1">
+        {/* Minimal Hero Section */}
+        <section className="relative overflow-hidden pt-4 sm:pt-6 pb-4 sm:pb-6 mb-4 sm:mb-6">
+          {/* Background gradient blobs */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
+
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <Link href="/home" className="flex items-center gap-2">
+                  <ArrowLeft className="h-5 w-5" />
+                  {t.quiz.back}
+                </Link>
+              </Button>
+              <div className="flex items-center gap-4">
+                <div className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300">
+                  {lessonData?.lessonIcon} {lessonData ? getLocalizedLessonName(lessonData, language) : ''}
+                </div>
+                <div className="flex gap-2">
+                  <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm font-medium border border-primary/20">
+                    {selectedLanguage === 'uz' ? "O'Z" : selectedLanguage === 'oz' ? 'УЗ' : 'РУ'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </section>
 
+        {/* Quiz Content */}
+        <section className="container mx-auto px-4 py-4 sm:py-8">
+          <div className="max-w-5xl mx-auto">
           <div className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
@@ -415,7 +495,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                         {t.quiz.question} {currentQuestionIndex + 1} {t.quiz.of} {questions.length}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1 font-medium">
-                        {lessonData?.lessonName}
+                        {lessonData ? getLocalizedLessonName(lessonData, language) : ''}
                       </p>
                     </div>
                   </div>
@@ -443,7 +523,22 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                 {/* Question Text - Larger */}
                 <div className="text-center p-4 bg-muted/20 rounded-xl border border-muted/50 shadow-sm">
                   <h3 className="text-xl sm:text-2xl font-semibold leading-relaxed text-balance max-w-3xl mx-auto">
-                    {currentQuestion.questionText[selectedLanguage]}
+                    {(() => {
+                      const questionText = currentQuestion.questionText[selectedLanguage]
+                      // Debug: log actual content to see if it's cyrillic or latin
+                      if (questionText) {
+                        const firstChar = questionText.charAt(0)
+                        const isCyrillic = /[\u0400-\u04FF]/.test(firstChar)
+                        console.log('[Quiz] Question text first char:', firstChar, 'Is Cyrillic:', isCyrillic)
+                        console.log('[Quiz] Question text preview:', questionText.substring(0, 50))
+                      }
+                      console.log('[Quiz] All question texts:', {
+                        uz: currentQuestion.questionText.uz?.substring(0, 30),
+                        oz: currentQuestion.questionText.oz?.substring(0, 30),
+                        ru: currentQuestion.questionText.ru?.substring(0, 30)
+                      })
+                      return questionText || currentQuestion.questionText.uz
+                    })()}
                   </h3>
                 </div>
 
@@ -490,7 +585,18 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                     {t.quiz.selectAnswer}
                   </h4>
                   <div className="max-w-3xl mx-auto space-y-3">
-                    {currentQuestion.answers.answerText[selectedLanguage].map((option, index) => {
+                    {(() => {
+                      const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
+                      // Debug: log to check if answers are in correct language
+                      if (answerOptions && answerOptions.length > 0) {
+                        const firstAnswer = answerOptions[0]
+                        const firstChar = firstAnswer?.charAt(0)
+                        const isCyrillic = firstChar && /[\u0400-\u04FF]/.test(firstChar)
+                        console.log('[Quiz] First answer first char:', firstChar, 'Is Cyrillic:', isCyrillic)
+                        console.log('[Quiz] First answer preview:', firstAnswer?.substring(0, 30))
+                      }
+                      return answerOptions
+                    })().map((option, index) => {
                       const correctAnswerIndex = currentQuestion.answers.status - 1
                       const isCorrect = index === correctAnswerIndex
                       const isSelected = currentUserAnswer?.selectedAnswer === index
@@ -561,6 +667,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
             </Card>
           </div>
         </div>
+        </section>
       </main>
 
       {/* Image Modal */}

@@ -1,4 +1,5 @@
 import { randomInt } from 'crypto'
+import type { Language } from './locales'
 
 export interface NewsItem {
   id: string
@@ -15,22 +16,47 @@ export interface Topic {
   questionCount: number
   icon: string
   lessonViewsCount?: number
+  // Localized fields from API
+  nameUz?: string
+  nameOz?: string
+  nameRu?: string
+  descriptionUz?: string
+  descriptionOz?: string
+  descriptionRu?: string
 }
 
 // API Response interfaces
 export interface LessonApiResponse {
-  lessonDescription: string
+  descriptionUz: string
+  descriptionOz: string
+  descriptionRu: string
   lessonIcon: string
   lessonId: number
-  lessonName: string
+  nameUz: string
+  nameOz: string
+  nameRu: string
   lessonQuestionCount: number
   lessonViewsCount?: number
 }
 
+// New API Response format (localized)
+export interface LessonApiResponseNew {
+  id: number
+  lessonQuestionCount: number
+  description: string
+  icon: string
+  viewCount: number
+  name: string
+}
+
 export interface QuestionApiResponse {
   lessonId: number
-  lessonName: string
-  lessonDescription: string | null
+  nameUz: string
+  nameOz: string
+  nameRu: string
+  descriptionUz: string | null
+  descriptionOz: string | null
+  descriptionRu: string | null
   lessonIcon: string | null
   lessonQuestionCount: number | null
   questions: QuestionData[]
@@ -54,6 +80,29 @@ export interface QuestionData {
       ru: string[]
     }
   }
+}
+
+// New API Response format (localized)
+export interface QuestionApiResponseNew {
+  id: number
+  icon: string
+  viewsCount: number
+  name: string
+  description: string
+  questions: QuestionDataNew[]
+}
+
+export interface QuestionDataNew {
+  questionId: number
+  photo: string | null
+  questionText: string
+  variants: VariantNew[]
+}
+
+export interface VariantNew {
+  variantId: number
+  isCorrect: boolean
+  text: string
 }
 
 export const newsData: NewsItem[] = [
@@ -245,6 +294,78 @@ export const questionsData: Question[] = [
   },
 ]
 
+// Helper functions to get localized name and description
+export function getLocalizedName(topic: Topic, language: Language): string {
+  switch (language) {
+    case 'uz':
+      return topic.nameUz || topic.title
+    case 'cyr':
+      return topic.nameOz || topic.nameUz || topic.title
+    case 'ru':
+      return topic.nameRu || topic.nameUz || topic.title
+    default:
+      return topic.title
+  }
+}
+
+export function getLocalizedDescription(topic: Topic, language: Language): string {
+  switch (language) {
+    case 'uz':
+      return topic.descriptionUz || topic.description
+    case 'cyr':
+      return topic.descriptionOz || topic.descriptionUz || topic.description
+    case 'ru':
+      return topic.descriptionRu || topic.descriptionUz || topic.description
+    default:
+      return topic.description
+  }
+}
+
+// Helper functions for API response objects
+export function getLocalizedLessonName(
+  lesson: { nameUz?: string; nameOz?: string; nameRu?: string; name?: string }, 
+  language: Language
+): string {
+  // New format - name is already localized
+  if ('name' in lesson && lesson.name) {
+    return lesson.name
+  }
+  
+  // Old format - use localized fields
+  switch (language) {
+    case 'uz':
+      return lesson.nameUz || ''
+    case 'cyr':
+      return lesson.nameOz || lesson.nameUz || ''
+    case 'ru':
+      return lesson.nameRu || lesson.nameUz || ''
+    default:
+      return lesson.nameUz || ''
+  }
+}
+
+export function getLocalizedLessonDescription(
+  lesson: { descriptionUz?: string | null; descriptionOz?: string | null; descriptionRu?: string | null; description?: string },
+  language: Language
+): string {
+  // New format - description is already localized
+  if ('description' in lesson && lesson.description) {
+    return lesson.description
+  }
+  
+  // Old format - use localized fields
+  switch (language) {
+    case 'uz':
+      return lesson.descriptionUz || ''
+    case 'cyr':
+      return lesson.descriptionOz || lesson.descriptionUz || ''
+    case 'ru':
+      return lesson.descriptionRu || lesson.descriptionUz || ''
+    default:
+      return lesson.descriptionUz || ''
+  }
+}
+
 export interface PaymentHistory {
   id: string
   month: string
@@ -306,10 +427,10 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
     }
     
     // Call backend API through centralized base URL
-    const { buildApiUrl } = await import('./api-utils')
+    const { buildApiUrl, safeJsonParse, getDefaultHeaders } = await import('./api-utils')
     
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...getDefaultHeaders(),
     }
     
     // Add Authorization header if token exists
@@ -323,6 +444,13 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
     })
     
     if (!response.ok) {
+      // Handle server errors (500-599)
+      if (response.status >= 500 && response.status < 600) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: response.status })
+        return topicsData // Return fallback data
+      }
+      
       // Handle 401 errors globally
       if (response.status === 401) {
         const { handleApiError } = await import('./api-utils')
@@ -343,22 +471,68 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
-    const apiData: LessonApiResponse[] = await response.json()
+    // Parse response - try new format first, then fallback to old format
+    const responseText = await response.clone().text()
+    let parsedData: any = null
     
-    // Filter out lesson with ID 43 (random quiz special ID)
-    const filteredData = apiData.filter((lesson) => lesson.lessonId !== 43)
+    try {
+      parsedData = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError)
+      return topicsData
+    }
     
-    // Map API data to Topic interface
-    return filteredData.map((lesson): Topic => ({
-      id: lesson.lessonId.toString(),
-      title: lesson.lessonName,
-      description: lesson.lessonDescription,
-      questionCount: lesson.lessonQuestionCount,
-      icon: lesson.lessonIcon,
-      lessonViewsCount: lesson.lessonViewsCount,
-    }))
+    if (!parsedData || !Array.isArray(parsedData) || parsedData.length === 0) {
+      console.warn('Invalid response format, returning fallback data')
+      return topicsData
+    }
+    
+    // Check if it's new format (has 'id' and 'name' fields)
+    const isNewFormat = parsedData[0]?.id !== undefined && parsedData[0]?.name !== undefined
+    
+    if (isNewFormat) {
+      // New format - already localized
+      const apiDataNew = parsedData as LessonApiResponseNew[]
+      // Filter out lesson with ID 43 (random quiz special ID)
+      const filteredData = apiDataNew.filter((lesson) => lesson.id !== 43)
+      
+      // Map API data to Topic interface
+      return filteredData.map((lesson): Topic => ({
+        id: lesson.id.toString(),
+        title: lesson.name,
+        description: lesson.description,
+        questionCount: lesson.lessonQuestionCount,
+        icon: lesson.icon,
+        lessonViewsCount: lesson.viewCount,
+      }))
+    } else {
+      // Old format - backward compatibility
+      const apiData = parsedData as LessonApiResponse[]
+      // Filter out lesson with ID 43 (random quiz special ID)
+      const filteredData = apiData.filter((lesson) => lesson.lessonId !== 43)
+      
+      // Map API data to Topic interface
+      return filteredData.map((lesson): Topic => ({
+        id: lesson.lessonId.toString(),
+        title: lesson.nameUz, // Default to Uz for backward compatibility
+        description: lesson.descriptionUz, // Default to Uz for backward compatibility
+        questionCount: lesson.lessonQuestionCount,
+        icon: lesson.lessonIcon,
+        lessonViewsCount: lesson.lessonViewsCount,
+        // Store localized fields
+        nameUz: lesson.nameUz,
+        nameOz: lesson.nameOz,
+        nameRu: lesson.nameRu,
+        descriptionUz: lesson.descriptionUz,
+        descriptionOz: lesson.descriptionOz,
+        descriptionRu: lesson.descriptionRu,
+      }))
+    }
   } catch (error) {
     console.error('Error fetching topics from API:', error)
+    // Check if it's a network error
+    const { handleApiError } = await import('./api-utils')
+    const isHandled = await handleApiError(error)
     // Fallback to static data if API fails
     return topicsData
   }
@@ -503,10 +677,10 @@ export async function fetchQuestionsByLessonId(
     }
     
     // Call backend API through centralized base URL
-    const { buildApiUrl } = await import('./api-utils')
+    const { buildApiUrl, safeJsonParse, getDefaultHeaders } = await import('./api-utils')
     
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...getDefaultHeaders(),
     }
     
     // Add Authorization header if token exists
@@ -520,6 +694,13 @@ export async function fetchQuestionsByLessonId(
     })
     
     if (!response.ok) {
+      // Handle server errors (500-599)
+      if (response.status >= 500 && response.status < 600) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: response.status })
+        throw new Error('Server error')
+      }
+      
       // Handle 401 errors globally
       if (response.status === 401) {
         const { handleApiError } = await import('./api-utils')
@@ -540,7 +721,69 @@ export async function fetchQuestionsByLessonId(
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
-    const apiData: QuestionApiResponse = await response.json()
+    // Parse response - try new format first, then fallback to old format
+    const responseText = await response.clone().text()
+    let parsedData: any = null
+    
+    try {
+      parsedData = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError)
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
+    
+    if (!parsedData) {
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
+    
+    // Check if it's new format (has 'id' and 'name' fields at top level, and 'variants' in questions)
+    const isNewFormat = parsedData.id !== undefined && parsedData.name !== undefined && 
+                        parsedData.questions?.[0]?.variants !== undefined
+    
+    let apiData: QuestionApiResponse
+    
+    if (isNewFormat) {
+      // New format - convert to old format for compatibility
+      const newData = parsedData as QuestionApiResponseNew
+      
+      apiData = {
+        lessonId: newData.id,
+        nameUz: newData.name,
+        nameOz: newData.name,
+        nameRu: newData.name,
+        descriptionUz: newData.description,
+        descriptionOz: newData.description,
+        descriptionRu: newData.description,
+        lessonIcon: newData.icon,
+        lessonQuestionCount: newData.questions.length,
+        questions: newData.questions.map((q): QuestionData => ({
+          questionId: q.questionId,
+          photo: q.photo,
+          questionText: {
+            uz: q.questionText,
+            oz: q.questionText,
+            ru: q.questionText,
+          },
+          answers: {
+            answerId: q.variants.find(v => v.isCorrect)?.variantId || 0,
+            questionId: q.questionId,
+            status: q.variants.find(v => v.isCorrect) ? 1 : 0,
+            answerText: {
+              uz: q.variants.map(v => v.text),
+              oz: q.variants.map(v => v.text),
+              ru: q.variants.map(v => v.text),
+            },
+          },
+        })),
+      }
+    } else {
+      // Old format
+      apiData = parsedData as QuestionApiResponse
+      
+      if (!apiData.lessonId || !apiData.questions) {
+        throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+      }
+    }
     
     // Save to cache
     if (useCache) {
@@ -550,6 +793,9 @@ export async function fetchQuestionsByLessonId(
     return apiData
   } catch (error) {
     console.error('Error fetching questions from API:', error)
+    // Check if it's a network error
+    const { handleApiError } = await import('./api-utils')
+    await handleApiError(error)
     throw error
   }
 }

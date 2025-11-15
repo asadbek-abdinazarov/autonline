@@ -3,7 +3,7 @@
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, HelpCircle, Mail, Phone, MessageCircle, BookOpen, Info, ExternalLink, CheckCircle } from "lucide-react"
+import { ArrowLeft, HelpCircle, Mail, Phone, MessageCircle, BookOpen, Info, ExternalLink, CheckCircle, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Footer } from "@/components/footer"
 import { AuthGuard } from "@/components/auth-guard"
@@ -13,44 +13,50 @@ export function HelpCenterClient() {
   const { t } = useTranslation()
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
         <Header />
 
         <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 mb-8 sm:mb-12">
+            {/* Background gradient blobs */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            </div>
+
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                  <Link href="/home" className="flex items-center gap-2">
+                    <ArrowLeft className="h-5 w-5" />
+                    {t.common.back}
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="text-center">
+                <div className="max-w-4xl mx-auto space-y-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                    <Sparkles className="h-4 w-4 text-blue-500" />
+                    <span>{t.helpCenter.title}</span>
+                  </div>
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      {t.helpCenter.title}
+                    </span>
+                  </h1>
+                  <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    {t.helpCenter.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Content Section */}
           <div className="container mx-auto px-4 py-8 sm:py-12">
             <div className="max-w-5xl mx-auto">
-              {/* Hero Section */}
-              <section className="relative overflow-hidden mb-12 sm:mb-16">
-                <div className="absolute inset-0 -z-10">
-                  <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-                  <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                </div>
-
-            {/* Back Button */}
-                <div className="mb-8">
-                  <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform">
-                    <Link href="/home" className="flex items-center gap-2">
-                      <ArrowLeft className="h-5 w-5" />
-                      {t.common.back}
-                </Link>
-              </Button>
-            </div>
-
-            {/* Header */}
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center gap-4 mb-6">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                      <HelpCircle className="h-8 w-8 text-white" />
-                </div>
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {t.helpCenter.title}
-                    </h1>
-              </div>
-                  <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl mx-auto">
-                    {t.helpCenter.description}
-              </p>
-            </div>
-              </section>
 
             {/* About the Application */}
               <Card className="mb-8 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
@@ -103,7 +109,7 @@ export function HelpCenterClient() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   {/* Email */}
                   <a 
-                    href="mailto:support@autonline.uz" 
+                    href="mailto:a.abdinazarov@student.pdp.university" 
                       className="flex items-center gap-4 p-5 rounded-xl border-2 hover:border-primary/50 hover:scale-105 transition-all duration-300 bg-card hover:shadow-lg"
                   >
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
@@ -111,14 +117,14 @@ export function HelpCenterClient() {
                     </div>
                     <div className="flex-1">
                         <p className="font-bold text-base mb-1">{t.helpCenter.contact.email}</p>
-                      <p className="text-sm text-muted-foreground">support@autonline.uz</p>
+                      <p className="text-sm text-muted-foreground">a.abdinazarov@student.pdp.university</p>
                     </div>
                       <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </a>
 
                   {/* Phone */}
                   <a 
-                    href="tel:+998901234567" 
+                    href="tel:+998770108060" 
                       className="flex items-center gap-4 p-5 rounded-xl border-2 hover:border-primary/50 hover:scale-105 transition-all duration-300 bg-card hover:shadow-lg"
                   >
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
@@ -126,7 +132,7 @@ export function HelpCenterClient() {
                     </div>
                     <div className="flex-1">
                         <p className="font-bold text-base mb-1">{t.helpCenter.contact.phone}</p>
-                      <p className="text-sm text-muted-foreground">+998 90 123 45 67</p>
+                      <p className="text-sm text-muted-foreground">+998 77 010 80 60</p>
                     </div>
                       <ExternalLink className="h-5 w-5 text-muted-foreground" />
                   </a>

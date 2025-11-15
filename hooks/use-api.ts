@@ -2,14 +2,17 @@
 
 import { useCallback } from "react"
 import { useNotification } from "@/components/notification-provider"
+import { getDefaultHeaders } from "@/lib/api-utils"
+import { useTranslation } from "@/hooks/use-translation"
 
 export function useApi() {
   const { show401Error, show429Error } = useNotification()
+  const { language } = useTranslation()
 
   const handleApiError = useCallback(async (error: any) => {
     // Check if it's a 401 error
     if (error?.message?.includes('401') || error?.status === 401) {
-      await show401Error("Sizning sessiyangiz tugagan. Qaytadan kirish kerak.")
+      await show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
       return true // Indicates 401 was handled
     }
     // Check if it's a 429 error
@@ -26,11 +29,10 @@ export function useApi() {
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
       
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        ...getDefaultHeaders(),
         ...(options.headers as Record<string, string>),
       }
       
-      // Add Authorization header if token exists
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
@@ -42,7 +44,7 @@ export function useApi() {
       
       if (!response.ok) {
         if (response.status === 401) {
-          await show401Error("Sizning sessiyangiz tugagan. Qaytadan kirish kerak.")
+          await show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
           return null
         }
         
@@ -63,7 +65,7 @@ export function useApi() {
       }
       return null
     }
-  }, [handleApiError])
+  }, [handleApiError, language])
 
   return {
     handleApiError,

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { login, setCurrentUser } from "@/lib/auth"
-import { Loader2, CheckCircle } from "lucide-react"
+import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -49,11 +50,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-4 relative overflow-hidden transition-colors duration-300">
       {/* Background gradient blobs */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="w-full max-w-md">
@@ -67,25 +68,25 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-3 text-balance bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3 text-balance bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
             {t.common.appName}
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground">
+          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400">
             {t.login.subtitle}
           </p>
         </div>
 
-        <Card className="border-2 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-card/80 backdrop-blur-sm">
+        <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl transition-colors duration-300">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl sm:text-3xl font-bold">{t.login.title}</CardTitle>
-            <CardDescription className="text-base">{t.login.description}</CardDescription>
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{t.login.title}</CardTitle>
+            <CardDescription className="text-base text-slate-600 dark:text-slate-400">{t.login.description}</CardDescription>
           </CardHeader>
           
           <CardContent>
           {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-4 rounded-md border border-red-200 mb-4">
+                <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-4 rounded-md border border-red-200 dark:border-red-800/50 mb-4 transition-colors duration-300">
                   <div className="flex items-start gap-2">
-                    <div className="text-red-500 mt-0.5">⚠️</div>
+                    <div className="text-red-500 dark:text-red-400 mt-0.5">⚠️</div>
                     <div>
                       {error}
                     </div>
@@ -108,26 +109,41 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">{t.login.password}</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={t.login.passwordPlaceholder}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading || isSuccess}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t.login.passwordPlaceholder}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading || isSuccess}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading || isSuccess}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               
               {isSuccess && (
-                <div className="text-sm text-green-600 bg-green-50 border border-green-200 p-3 rounded-md flex items-center gap-2">
+                <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 p-3 rounded-md flex items-center gap-2 transition-colors duration-300">
                   <CheckCircle className="h-4 w-4" />
                   <span>{t.login.redirecting}</span>
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button asChild variant="outline" size="lg" className="w-full">
+                <Button asChild variant="outline" size="lg" className="w-full border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300">
                   <Link href="/">{t.common.home}</Link>
                 </Button>
 
@@ -144,10 +160,10 @@ export default function LoginPage() {
                 disabled={isLoading || isSuccess}
               >
                 {isSuccess ? (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4 animate-pulse" />
-                    {t.login.success}
-                  </>
+                  <span className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                    <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{t.login.success}</span>
+                  </span>
                 ) : isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -160,8 +176,8 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-              <p>{t.login.noAccount} <Link href="/register" className="text-primary underline">{t.login.register}</Link></p>
+            <div className="mt-4 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              <p>{t.login.noAccount} <Link href="/register" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline transition-colors duration-300">{t.login.register}</Link></p>
             </div>
           </CardContent>
         </Card>

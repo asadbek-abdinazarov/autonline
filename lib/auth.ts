@@ -14,7 +14,10 @@ export interface User {
   phoneNumber: string
   isActive: boolean
   subscription?: SubscriptionType
+  roles?: string[]
   permissions?: Permission[]
+  fullName?: string
+  nextPaymentDate?: string
 }
 
 export interface LoginResponse {
@@ -23,19 +26,21 @@ export interface LoginResponse {
   id: number
   username: string
   phoneNumber: string
-  isActive: boolean
+  roles?: string[]
   subscription?: SubscriptionType
-  permissions?: Permission[]
+  subscriptionPermissions?: Permission[]
+  rolePermissions?: Permission[]
+  isActive: boolean
+  fullName?: string
+  nextPaymentDate?: string
 }
 
 export async function login(username: string, password: string): Promise<User> {
   try {
-    const { buildApiUrl } = await import('./api-utils')
+    const { buildApiUrl, getDefaultHeaders } = await import('./api-utils')
     const response = await fetch(buildApiUrl('/api/v1/auth/login'), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getDefaultHeaders(),
       body: JSON.stringify({
         username,
         password,
@@ -53,14 +58,16 @@ export async function login(username: string, password: string): Promise<User> {
       // Try to get error details from response body
       let errorMessage = 'Tizimga kirishda xatolik yuz berdi'
       
-      try {
-        const errorData = await response.json()
+      const { safeJsonParse } = await import('./api-utils')
+      const errorData = await safeJsonParse<{ message?: string; error?: string }>(response)
+      
+      if (errorData) {
         if (errorData.message) {
           errorMessage = errorData.message
         } else if (errorData.error) {
           errorMessage = errorData.error
         }
-      } catch (parseError) {
+      } else {
         // If JSON parsing fails, use status-based error messages
         if (response.status === 400) {
           errorMessage = 'Login yoki parol noto\'g\'ri'
@@ -76,7 +83,12 @@ export async function login(username: string, password: string): Promise<User> {
       throw new Error(errorMessage)
     }
 
-    const data: LoginResponse = await response.json()
+    const { safeJsonParse } = await import('./api-utils')
+    const data = await safeJsonParse<LoginResponse>(response)
+    
+    if (!data) {
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
     
     // Check if user is active
     if (!data.isActive) {
@@ -88,13 +100,27 @@ export async function login(username: string, password: string): Promise<User> {
       localStorage.setItem('accessToken', data.token)
     }
 
+    // Combine subscriptionPermissions and rolePermissions into permissions
+    const allPermissions: Permission[] = []
+    if (Array.isArray(data.subscriptionPermissions)) {
+      allPermissions.push(...data.subscriptionPermissions)
+    }
+    if (Array.isArray(data.rolePermissions)) {
+      allPermissions.push(...data.rolePermissions)
+    }
+    // Remove duplicates
+    const uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
+
     return {
       id: data.id,
       username: data.username,
       phoneNumber: data.phoneNumber,
       isActive: data.isActive,
       subscription: data.subscription ?? 'FREE',
-      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      roles: Array.isArray(data.roles) ? data.roles : [],
+      permissions: uniquePermissions,
+      fullName: data.fullName,
+      nextPaymentDate: data.nextPaymentDate,
     }
   } catch (error) {
     // If it's already an Error with a message, re-throw it
@@ -112,15 +138,25 @@ export async function login(username: string, password: string): Promise<User> {
   }
 }
 
-export async function register(username: string, password: string, phoneNumber: string): Promise<User> {
+export async function register(fullName: string, username: string, password: string, phoneNumber: string, confirmPassword?: string): Promise<User> {
   try {
-    const { buildApiUrl } = await import('./api-utils')
+    const { buildApiUrl, getDefaultHeaders } = await import('./api-utils')
+    const body: { fullName: string; username: string; password: string; phoneNumber: string; confirmPassword?: string } = {
+      fullName,
+      username,
+      password,
+      phoneNumber,
+    }
+    
+    // Add confirmPassword if it's provided and not empty
+    if (confirmPassword && confirmPassword.trim()) {
+      body.confirmPassword = confirmPassword
+    }
+    
     const response = await fetch(buildApiUrl('/api/v1/auth/register'), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password, phoneNumber }),
+      headers: getDefaultHeaders(),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -131,14 +167,16 @@ export async function register(username: string, password: string, phoneNumber: 
       }
 
       let errorMessage = 'Ro\'yxatdan o\'tishda xatolik yuz berdi'
-      try {
-        const errorData = await response.json()
+      const { safeJsonParse } = await import('./api-utils')
+      const errorData = await safeJsonParse<{ message?: string; error?: string }>(response)
+      
+      if (errorData) {
         if (errorData.message) {
           errorMessage = errorData.message
         } else if (errorData.error) {
           errorMessage = errorData.error
         }
-      } catch (_) {
+      } else {
         if (response.status >= 500) {
           errorMessage = 'Server xatoligi. Iltimos, keyinroq urinib ko\'ring'
         }
@@ -147,7 +185,12 @@ export async function register(username: string, password: string, phoneNumber: 
       throw new Error(errorMessage)
     }
 
-    const data: LoginResponse = await response.json()
+    const { safeJsonParse } = await import('./api-utils')
+    const data = await safeJsonParse<LoginResponse>(response)
+    
+    if (!data) {
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
 
     if (!data.isActive) {
       throw new Error('Foydalanuvchi faol emas')
@@ -157,13 +200,27 @@ export async function register(username: string, password: string, phoneNumber: 
       localStorage.setItem('accessToken', data.token)
     }
 
+    // Combine subscriptionPermissions and rolePermissions into permissions
+    const allPermissions: Permission[] = []
+    if (Array.isArray(data.subscriptionPermissions)) {
+      allPermissions.push(...data.subscriptionPermissions)
+    }
+    if (Array.isArray(data.rolePermissions)) {
+      allPermissions.push(...data.rolePermissions)
+    }
+    // Remove duplicates
+    const uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
+
     return {
       id: data.id,
       username: data.username,
       phoneNumber: data.phoneNumber,
       isActive: data.isActive,
       subscription: data.subscription ?? 'FREE',
-      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      roles: Array.isArray(data.roles) ? data.roles : [],
+      permissions: uniquePermissions,
+      fullName: data.fullName,
+      nextPaymentDate: data.nextPaymentDate,
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -176,14 +233,35 @@ export async function register(username: string, password: string, phoneNumber: 
   }
 }
 
-export function logout(): Promise<void> {
-  return new Promise((resolve) => {
+export async function logout(): Promise<void> {
+  try {
+    const { buildApiUrl, getDefaultHeaders } = await import('./api-utils')
+    const accessToken = getAccessToken()
+    
+    // Send logout request to backend if token exists
+    if (accessToken) {
+      try {
+        const headers = getDefaultHeaders()
+        headers['Authorization'] = `Bearer ${accessToken}`
+        await fetch(buildApiUrl('/api/v1/auth/logout'), {
+          method: 'POST',
+          headers,
+        })
+      } catch (error) {
+        // If logout request fails, still clear local storage
+        console.error('Logout request failed:', error)
+      }
+    }
+  } catch (error) {
+    // If there's any error, still clear local storage
+    console.error('Logout error:', error)
+  } finally {
+    // Always clear local storage regardless of API call result
     if (typeof window !== "undefined") {
       localStorage.removeItem("user")
       localStorage.removeItem("accessToken")
     }
-    resolve()
-  })
+  }
 }
 
 export function getCurrentUser(): User | null {

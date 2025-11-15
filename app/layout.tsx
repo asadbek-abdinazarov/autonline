@@ -5,6 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { NotificationProvider } from '@/components/notification-provider'
 import { TranslationProvider } from '@/hooks/use-translation'
+import { UserBlockListener } from '@/components/user-block-listener'
+import { ErrorProvider } from '@/components/error-provider'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -25,17 +28,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#3b82f6" />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <TranslationProvider>
-        <NotificationProvider>
-          {children}
-          <Toaster position="top-right" richColors />
-        </NotificationProvider>
-        </TranslationProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TranslationProvider>
+          <ErrorProvider>
+          <NotificationProvider>
+            {children}
+            <Toaster position="top-right" richColors />
+            <UserBlockListener />
+          </NotificationProvider>
+          </ErrorProvider>
+          </TranslationProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

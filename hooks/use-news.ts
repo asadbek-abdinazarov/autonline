@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { buildApiUrl } from "@/lib/api-utils"
+import { buildApiUrl, getDefaultHeaders } from "@/lib/api-utils"
 
 interface NewsItem {
   newsId: number
@@ -24,9 +24,7 @@ export function useNews() {
       
       const response = await fetch(buildApiUrl('/api/v1/news'), {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getDefaultHeaders(),
       })
       
       if (!response.ok) {
@@ -40,10 +38,18 @@ export function useNews() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      const data = await response.json()
-      setNews(data)
+      const { safeJsonParse } = await import('@/lib/api-utils')
+      const data = await safeJsonParse<NewsItem[]>(response)
+      if (data) {
+        setNews(data)
+      } else {
+        throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+      }
     } catch (err) {
       console.error('Error fetching news:', err)
+      // Check if it's a network error
+      const { handleApiError } = await import('@/lib/api-utils')
+      await handleApiError(err)
       setError(err instanceof Error ? err.message : 'Yangiliklar yuklanmadi')
     } finally {
       setIsLoading(false)

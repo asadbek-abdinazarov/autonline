@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, HelpCircle, Crown, Star, Ban } from "lucide-react"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, HelpCircle, Crown, Star, Ban, TrendingUp } from "lucide-react"
 import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,6 +55,17 @@ export function UserMenu() {
     }
   }
 
+  const formatFullDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const day = date.getDate()
+    const month = t.history.dateFormat.months[date.getMonth()]
+    const year = date.getFullYear()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    
+    return `${day} ${month} ${year}, ${hours}:${minutes}`
+  }
+
   const formatAmount = (amount: number, currency: string) => {
     const formattedNumber = new Intl.NumberFormat('uz-UZ', {
       minimumFractionDigits: 0,
@@ -97,10 +108,15 @@ export function UserMenu() {
           <User className="h-7 w-7 text-primary" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[95vw] sm:w-[420px] max-h-[85vh] mx-2 sm:mx-0">
-        <DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-[95vw] sm:w-[420px] max-h-[85vh] mx-2 sm:mx-0 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 transition-colors duration-300">
+        <DropdownMenuLabel className="text-slate-900 dark:text-white">
           <div className="flex items-center justify-between">
-            <span className="text-sm">{user?.username || t.userMenu.user}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-semibold">{user?.fullName || user?.username || t.userMenu.user}</span>
+              {user?.fullName && (
+                <span className="text-xs text-slate-600 dark:text-slate-400">{user.username}</span>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               {user?.subscription && (() => {
                 const getSubMeta = () => {
@@ -112,98 +128,146 @@ export function UserMenu() {
                     case 'BASIC':
                       return { label: 'BASIC', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                     default:
-                      return { label: 'FREE', Icon: Ban, classes: 'from-muted to-muted text-muted-foreground border border-border' }
+                      return { label: 'FREE', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                   }
                 }
                 const { label, Icon, classes } = getSubMeta()
                 return (
-                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? 'bg-transparent' : ''}`}>
-                    <Icon className={`h-3 w-3 ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`} />
-                    <span className={`text-xs font-semibold ${label === 'FREE' ? 'text-muted-foreground' : 'text-white'}`}>{label}</span>
+                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? '' : ''}`}>
+                    <Icon className={`h-3 w-3 ${label === 'FREE' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`} />
+                    <span className={`text-xs font-semibold ${label === 'FREE' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`}>{label}</span>
                   </div>
                 )
               })()}
               {user?.isActive ? (
-                <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">{t.userMenu.active}</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/50 transition-colors duration-300">{t.userMenu.active}</span>
               ) : (
-                <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{t.userMenu.inactive}</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-slate-200/50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50 transition-colors duration-300">{t.userMenu.inactive}</span>
               )}
             </div>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+        <DropdownMenuLabel className="font-normal text-xs text-slate-600 dark:text-slate-400">
           {user?.phoneNumber || t.userMenu.phoneNotFound}
         </DropdownMenuLabel>
+        {user?.nextPaymentDate && (
+          <DropdownMenuLabel className="font-normal text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+            <Calendar className="h-3 w-3" />
+            <span>{t.userMenu.nextPaymentDate}: {formatFullDateTime(user.nextPaymentDate)}</span>
+          </DropdownMenuLabel>
+        )}
         
 
         {showPaymentHistory && hasPermission('VIEW_PAYMENTS') && paymentHistory.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <div className="px-2 sm:px-3 py-2 sm:py-3">
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="text-sm sm:text-base font-semibold">{t.userMenu.paymentHistory}</span>
+            <div className="px-3 py-3">
+              {/* Header */}
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+                  <CreditCard className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t.userMenu.paymentHistory}</h3>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-400">Barcha to'lovlar ro'yxati</p>
+                </div>
               </div>
               
-              <ScrollArea className="h-64 sm:h-72">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8 sm:py-12">
-                    <div className="text-center">
-                      <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 sm:mb-3" />
-                      <p className="text-xs sm:text-sm text-muted-foreground font-medium">{t.common.loading}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {paymentHistory.map((payment, index) => (
-                      <Card key={index} className="border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 bg-card/30">
-                        <CardHeader className="pb-1 sm:pb-1.5 px-2 sm:px-3 py-1 sm:py-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <CardTitle className="text-sm sm:text-base font-bold truncate">
-                              {formatAmount(payment.paymentAmount, payment.paymentCurrency)}
-                            </CardTitle>
-                            <Badge 
-                              variant={payment.isPaid ? "default" : "destructive"}
-                              className={`text-xs px-1 sm:px-1.5 py-0.5 h-4 sm:h-5 flex items-center gap-0.5 sm:gap-1 font-medium flex-shrink-0 ${
+              {/* Separator */}
+              <div className="h-px bg-gradient-to-r from-transparent via-slate-300/50 dark:via-slate-700/50 to-transparent mb-3 transition-colors duration-300" />
+              
+              {/* Content */}
+              <div className="bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
+                <ScrollArea className="h-48">
+                  <div className="p-2">
+                    {isLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12 px-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+                          <Loader2 className="h-8 w-8 text-blue-500 animate-spin relative z-10" />
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-3">{t.common.loading}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {paymentHistory.map((payment, index) => (
+                          <div 
+                            key={index}
+                            className="group relative overflow-hidden rounded-lg bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-md hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                          >
+                            {/* Glow effect on hover */}
+                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                              payment.isPaid 
+                                ? 'bg-gradient-to-r from-green-500/10 to-emerald-500/10' 
+                                : 'bg-gradient-to-r from-red-500/10 to-rose-500/10'
+                            }`} />
+                            
+                            <div className="relative p-3">
+                              {/* Top section */}
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 mb-1">
+                                    <TrendingUp className={`h-3.5 w-3.5 flex-shrink-0 ${
+                                      payment.isPaid ? 'text-green-400' : 'text-red-400'
+                                    }`} />
+                                    <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                      {formatAmount(payment.paymentAmount, payment.paymentCurrency)}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* Status badge */}
+                                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold text-[10px] transition-all duration-300 flex-shrink-0 ${
+                                  payment.isPaid 
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/30 group-hover:shadow-green-500/50' 
+                                    : 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/30 group-hover:shadow-red-500/50'
+                                }`}>
+                                  {payment.isPaid ? (
+                                    <>
+                                      <CheckCircle className="h-2.5 w-2.5" />
+                                      <span>{t.userMenu.paid}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="h-2.5 w-2.5" />
+                                      <span>{t.userMenu.unpaid}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Date section */}
+                              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                                <Calendar className="h-3 w-3 flex-shrink-0" />
+                                <span className="text-[11px] truncate">{formatDate(payment.paymentDate)}</span>
+                              </div>
+                              
+                              {/* Bottom accent line */}
+                              <div className={`absolute bottom-0 left-0 right-0 h-0.5 transition-all duration-300 ${
                                 payment.isPaid 
-                                  ? 'bg-green-500 hover:bg-green-600 text-white border-green-500' 
-                                  : 'bg-red-500 hover:bg-red-600 text-white border-red-500'
-                              }`}
-                            >
-                              {payment.isPaid ? (
-                                <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                              ) : (
-                                <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                              )}
-                              <span className="hidden sm:inline">{payment.isPaid ? t.userMenu.paid : t.userMenu.unpaid}</span>
-                              <span className="sm:hidden">{payment.isPaid ? '✓' : '✗'}</span>
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0 px-2 sm:px-3 pb-1.5 sm:pb-2">
-                          <div className="space-y-1.5 sm:space-y-2">
-                            {payment.description && (
-                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                {payment.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-muted-foreground truncate">{formatDate(payment.paymentDate)}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                              <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-muted-foreground truncate">{payment.paymentMethod}</span>
+                                  ? 'bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-0 group-hover:opacity-100' 
+                                  : 'bg-gradient-to-r from-transparent via-red-500 to-transparent opacity-0 group-hover:opacity-100'
+                              }`} />
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </ScrollArea>
+                </ScrollArea>
+              </div>
+              
+              {/* Footer stats */}
+              <div className="mt-3 flex items-center justify-between px-1 text-[10px] text-slate-600 dark:text-slate-400">
+                <div>
+                  Jami: <span className="font-semibold text-slate-900 dark:text-white">{paymentHistory.length}</span> ta
+                </div>
+                <div>
+                  To'langan: <span className="font-semibold text-green-400">
+                    {paymentHistory.filter(p => p.isPaid).length}
+                  </span>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -232,7 +296,7 @@ export function UserMenu() {
         
         <DropdownMenuItem 
           onClick={handleLogout}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
+          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 focus:text-red-700 dark:focus:text-red-300 focus:bg-red-50 dark:focus:bg-red-900/20 transition-colors duration-300"
         >
           <LogOut className="mr-2 h-4 w-4" />
           {t.userMenu.logout}

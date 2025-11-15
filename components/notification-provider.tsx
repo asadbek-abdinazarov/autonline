@@ -4,12 +4,13 @@ import { createContext, useContext, useState, useCallback, ReactNode, useEffect 
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { logout, setCurrentUser } from "@/lib/auth"
-import { setGlobalNotificationHandler, setGlobal429ErrorHandler } from "@/lib/api-utils"
+import { setGlobalNotificationHandler, setGlobal429ErrorHandler, setGlobalErrorHandler } from "@/lib/api-utils"
 
 interface NotificationContextType {
   showNotification: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void
   show401Error: (message?: string) => void
   show429Error: (message?: string) => void
+  showError: (message: string) => void
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -35,7 +36,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const show401Error = useCallback(async (message?: string) => {
-    const errorMessage = message || "Sizning sessiyangiz tugagan. Qaytadan kirish kerak."
+    const errorMessage = message || "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak."
 
     // Clear user data and redirect immediately
     await logout()
@@ -53,14 +54,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     toast.warning(errorMessage, { duration: 5000 })
   }, [])
 
+  const showError = useCallback((message: string) => {
+    // Show toast notification as error
+    toast.error(message, { duration: 5000 })
+  }, [])
+
   // Set global notification handlers
   useEffect(() => {
     setGlobalNotificationHandler(show401Error)
     setGlobal429ErrorHandler(show429Error)
-  }, [show401Error, show429Error])
+    setGlobalErrorHandler(showError)
+  }, [show401Error, show429Error, showError])
 
   return (
-    <NotificationContext.Provider value={{ showNotification, show401Error, show429Error }}>
+    <NotificationContext.Provider value={{ showNotification, show401Error, show429Error, showError }}>
       {children}
     </NotificationContext.Provider>
   )

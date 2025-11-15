@@ -13,6 +13,24 @@ interface QuizTimerProps {
 export function QuizTimer({ totalSeconds, onTimeUp, isPaused = false }: QuizTimerProps) {
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds)
   const hasCalledTimeUp = useRef(false)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isPausedRef = useRef(isPaused)
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    isPausedRef.current = isPaused
+  }, [isPaused])
+
+  // Reset timer when totalSeconds changes
+  useEffect(() => {
+    setSecondsLeft(totalSeconds)
+    hasCalledTimeUp.current = false
+    // Clear and restart interval when totalSeconds changes
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }, [totalSeconds])
 
   useEffect(() => {
     if (secondsLeft === 0 && !hasCalledTimeUp.current) {
@@ -21,21 +39,45 @@ export function QuizTimer({ totalSeconds, onTimeUp, isPaused = false }: QuizTime
     }
   }, [secondsLeft, onTimeUp])
 
+  // Timer interval effect - only depends on isPaused
   useEffect(() => {
-    if (isPaused || secondsLeft <= 0) return
+    // Clear any existing interval first
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
 
-    const interval = setInterval(() => {
+    // Don't start timer if paused
+    if (isPaused) {
+      return
+    }
+
+    // Start the interval
+    intervalRef.current = setInterval(() => {
+      // Check pause state from ref to avoid dependency issues
+      if (isPausedRef.current) {
+        return
+      }
+
       setSecondsLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(interval)
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+          }
           return 0
         }
         return prev - 1
       })
     }, 1000)
 
-    return () => clearInterval(interval)
-  }, [isPaused, secondsLeft])
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [isPaused])
 
   const minutes = Math.floor(secondsLeft / 60)
   const seconds = secondsLeft % 60

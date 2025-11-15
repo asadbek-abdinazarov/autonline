@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useApi } from "./use-api"
-import { buildApiUrl } from "@/lib/api-utils"
+import { buildApiUrl, safeJsonParse } from "@/lib/api-utils"
 
 interface PaymentHistoryItem {
   paymentAmount: number
@@ -29,8 +29,12 @@ export function usePaymentHistory() {
       })
       
       if (response) {
-        const data = await response.json()
-        setPaymentHistory(data)
+        const data = await safeJsonParse<PaymentHistoryItem[]>(response)
+        if (data) {
+          setPaymentHistory(data)
+        } else {
+          setError('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+        }
       }
     } catch (err) {
       console.error('Error fetching payment history:', err)

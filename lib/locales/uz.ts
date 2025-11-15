@@ -147,13 +147,13 @@ export const uz = {
         },
         {
           value: "95%",
-          label: "Muvaffaqiyat darajasi",
-          description: "Bizning foydalanuvchilarimiz",
+          label: "Jami yechilgan testlar",
+          description: "Barcha foydalanuvchilar tomonidan yechilgan testlar",
         },
         {
-          value: "24/7",
-          label: "Qo'llab-quvvatlash",
-          description: "Kunduzi va kechasi",
+          value: "To'lovlar",
+          label: "Muvaffaqiyatli to'lovlar",
+          description: "",
         },
       ],
     },
@@ -193,8 +193,8 @@ export const uz = {
       countText: "500+",
       helpCenter: "Yordam markazi",
       contact: {
-        phone: "+998 90 123 45 67",
-        email: "info@autonline.uz",
+        phone: "+998 77 010 80 60",
+        email: "a.abdinazarov@student.pdp.university",
         telegram: "Telegram",
       },
     },
@@ -216,12 +216,17 @@ export const uz = {
       emptyDescription: "Tez orada yangi yangiliklar qo'shiladi",
     },
     topics: {
-      title: "Test Mavzulari",
-      description: "Barcha mavzular bo'yicha professional testlar",
+      title: "Barcha mavzular",
+      description: "Yo'l harakati qoidalari, transport vositalari, transport rejimi va boshqa mavzular",
       loading: "Mavzular yuklanmoqda...",
       error: "Ma'lumotlar yuklanmadi",
       viewAll: "Barchasini ko'rish",
       showLess: "Kamroq ko'rsatish",
+    },
+    specialFeatures: {
+      title: "Mahsus Imkoniyatlar",
+      description: "Platformamizning eksklyuziv funksiyalari",
+      randomQuizButton: "Tasodify testni boshlash",
     },
   },
 
@@ -359,6 +364,8 @@ export const uz = {
     testHistory: "Test tarixi",
     helpCenter: "Yordam markazi",
     logout: "Chiqish",
+    nextPayment: "Keyingi to'lov",
+    nextPaymentDate: "Keyingi to'lov sanasi",
   },
 
   // Quiz
@@ -389,6 +396,16 @@ export const uz = {
     randomLoading: "Tasodify savollar tayyorlanmoqda...",
     randomTest: "Tasodify test",
     newRandomTest: "Yangi tasodify test",
+    selectQuestionCount: "Savollar sonini tanlang",
+    selectQuestionCountDescription: "Test uchun nechta savol olishni xohlaysiz?",
+    custom: "Boshqa (5-100)",
+    customIntervalPlaceholder: "5-100 orasida son kiriting",
+    customIntervalHint: "Minimum 5, maksimum 100 ta savol tanlash mumkin",
+    startQuiz: "Testni boshlash",
+    invalidInterval: "Noto'g'ri son. 5 va 100 orasida bo'lishi kerak",
+    quickSelect: "Tezkor tanlov",
+    personalized: "Shaxsiylashtirilgan",
+    questions: "savol",
   },
 
   // Footer

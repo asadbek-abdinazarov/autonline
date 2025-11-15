@@ -4,10 +4,10 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { fetchQuestionsByLessonId, type QuestionApiResponse } from "@/lib/data"
+import { fetchQuestionsByLessonId, type QuestionApiResponse, getLocalizedLessonName, getLocalizedLessonDescription } from "@/lib/data"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Clock, FileQuestion, Play, Loader2 } from "lucide-react"
+import { ArrowLeft, Clock, FileQuestion, Play, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useTranslation } from "@/hooks/use-translation"
 
@@ -16,7 +16,7 @@ interface TopicClientProps {
 }
 
 export default function TopicClient({ topicId }: TopicClientProps) {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -102,30 +102,54 @@ export default function TopicClient({ topicId }: TopicClientProps) {
   const timeInMinutes = Math.ceil(lessonData.questions.length * 1.2) // 1.2 minutes per question
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 sm:py-12">
-        <Button variant="ghost" size="lg" asChild className="mb-6 sm:mb-8 hover:scale-105 transition-transform">
-          <Link href="/home" className="flex items-center gap-2">
-            <ArrowLeft className="h-5 w-5" />
-            {t.common.back}
-          </Link>
-        </Button>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 mb-8 sm:mb-12">
+          {/* Background gradient blobs */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
 
-        <div className="max-w-4xl mx-auto">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+              <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <Link href="/home" className="flex items-center gap-2">
+                  <ArrowLeft className="h-5 w-5" />
+                  {t.common.back}
+                </Link>
+              </Button>
+            </div>
+
+            <div className="text-center">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                  <Sparkles className="h-4 w-4 text-blue-500" />
+                  <span>{lessonData ? getLocalizedLessonName(lessonData, language) : t.topics.testInfo}</span>
+                </div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    {lessonData ? getLocalizedLessonName(lessonData, language) : "Test mavzusi"}
+                  </span>
+                </h1>
+                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                  {lessonData ? getLocalizedLessonDescription(lessonData, language) || "Test mavzusi" : "Test mavzusi"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Section */}
+        <section className="container mx-auto px-4 py-8 sm:py-12">
+          <div className="max-w-4xl mx-auto">
           <Card className="mb-8 sm:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-6">
-              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
                 <div className="text-6xl sm:text-7xl filter drop-shadow-lg">{lessonData.lessonIcon || "📚"}</div>
-                <div className="flex-1">
-                  <CardTitle className="text-3xl sm:text-4xl md:text-5xl mb-3 text-balance bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-bold">
-                    {lessonData.lessonName}
-                  </CardTitle>
-                  <CardDescription className="text-base sm:text-lg text-pretty leading-relaxed">
-                    {lessonData.lessonDescription || "Test mavzusi"}
-                  </CardDescription>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -193,7 +217,8 @@ export default function TopicClient({ topicId }: TopicClientProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   )

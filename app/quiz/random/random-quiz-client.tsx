@@ -1,21 +1,22 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { submitLessonHistory, type QuestionApiResponse, type QuestionData } from "@/lib/data"
+import { submitLessonHistory, type QuestionApiResponse, type QuestionData, getLocalizedLessonName } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
 import { useApi } from "@/hooks/use-api"
 import { buildApiUrl } from "@/lib/api-utils"
+import { Input } from "@/components/ui/input"
 
 interface UserAnswer {
   selectedAnswer: number
@@ -24,8 +25,12 @@ interface UserAnswer {
 
 interface RandomQuizApiResponse {
   lessonId: number
-  lessonName: string
-  lessonDescription: string
+  nameUz: string
+  nameOz: string
+  nameRu: string
+  descriptionUz: string
+  descriptionOz: string
+  descriptionRu: string
   lessonIcon: string
   lessonQuestionCount: number
   lessonViewsCount: number
@@ -33,12 +38,12 @@ interface RandomQuizApiResponse {
 }
 
 export default function RandomQuizClient() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const router = useRouter()
   const { makeAuthenticatedRequest } = useApi()
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState<Map<number, UserAnswer>>(new Map())
@@ -46,22 +51,78 @@ export default function RandomQuizClient() {
   const [isAnswered, setIsAnswered] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
-  const [selectedLanguage, setSelectedLanguage] = useState<'oz' | 'uz' | 'ru'>('oz')
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    userAnswersRef.current = userAnswers
+  }, [userAnswers])
+  
+  useEffect(() => {
+    answeredQuestionsRef.current = answeredQuestions
+  }, [answeredQuestions])
+  
+  useEffect(() => {
+    currentQuestionIndexRef.current = currentQuestionIndex
+  }, [currentQuestionIndex])
+  
+  useEffect(() => {
+    scoreRef.current = score
+  }, [score])
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [showIntervalSelector, setShowIntervalSelector] = useState(true)
+  const [interval, setInterval] = useState<number>(20)
+  const [customInterval, setCustomInterval] = useState<string>("")
+  const [isCustomMode, setIsCustomMode] = useState(false)
   const hasFetchedRef = useRef(false)
   const hasSubmittedHistoryRef = useRef(false)
+  const previousLanguageRef = useRef<string | null>(null)
+  const currentQuestionCountRef = useRef<number | null>(null)
+  const userAnswersRef = useRef<Map<number, UserAnswer>>(new Map())
+  const answeredQuestionsRef = useRef<Map<number, boolean>>(new Map())
+  const currentQuestionIndexRef = useRef<number>(0)
+  const scoreRef = useRef<number>(0)
+
+  // Map header language to question language
+  // Header: uz (lotincha) -> API: uz (lotincha)
+  // Header: cyr (kirilcha) -> API: oz (kirilcha)
+  // Header: ru (ruscha) -> API: ru (ruscha)
+  const selectedLanguage = useMemo(() => {
+    // Debug: log to identify the issue
+    console.log('[Random Quiz] Header language:', language, 'Type:', typeof language)
+    
+    // Force check: ensure we're using the correct mapping
+    let result: 'oz' | 'uz' | 'ru'
+    if (language === 'uz') {
+      result = 'uz' // Lotincha o'zbekcha - API da uz key
+      console.log('[Random Quiz] Mapped to uz (lotincha)')
+    } else if (language === 'cyr') {
+      result = 'oz' // Kirilcha o'zbekcha - API da oz key
+      console.log('[Random Quiz] Mapped to oz (kirilcha)')
+    } else if (language === 'ru') {
+      result = 'ru' // Ruscha - API da ru key
+      console.log('[Random Quiz] Mapped to ru (ruscha)')
+    } else {
+      // Default to lotincha o'zbekcha
+      result = 'uz'
+      console.log('[Random Quiz] Default mapped to uz (lotincha)')
+    }
+    
+    console.log('[Random Quiz] Final selectedLanguage:', result)
+    return result
+  }, [language])
 
   const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
 
   // Fetch random questions from API
-  const fetchRandomQuiz = useCallback(async () => {
+  const fetchRandomQuiz = useCallback(async (questionCount: number) => {
     try {
       setIsLoading(true)
       setError(null)
       
-      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/random-quiz'), {
+      const url = buildApiUrl(`/api/v1/random-quiz?interval=${questionCount}`)
+      const response = await makeAuthenticatedRequest(url, {
         method: 'GET',
       })
 
@@ -69,7 +130,12 @@ export default function RandomQuizClient() {
         throw new Error('Network error or authentication failed')
       }
 
-      const apiData: RandomQuizApiResponse[] = await response.json()
+      const { safeJsonParse } = await import('@/lib/api-utils')
+      const apiData = await safeJsonParse<RandomQuizApiResponse[]>(response)
+      
+      if (!apiData) {
+        throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+      }
 
       // Flatten questions from all lessons into a single array
       const allQuestions: QuestionData[] = []
@@ -86,8 +152,12 @@ export default function RandomQuizClient() {
       // Create a synthetic QuestionApiResponse for compatibility
       const syntheticResponse: QuestionApiResponse = {
         lessonId: 43, // Random quiz doesn't have a specific lesson ID
-        lessonName: 'Tasodify test',
-        lessonDescription: 'Har hil mavzulardan tayyorlangan tasodify savollar',
+        nameUz: 'Tasodify test',
+        nameOz: 'Таъсифий тест',
+        nameRu: 'Случайный тест',
+        descriptionUz: 'Har hil mavzulardan tayyorlangan tasodify savollar',
+        descriptionOz: 'Ҳар хил мавзулардан тайёрланган таъсифий саволлар',
+        descriptionRu: 'Случайные вопросы из разных тем',
         lessonIcon: '🎲',
         lessonQuestionCount: allQuestions.length,
         questions: allQuestions,
@@ -95,6 +165,7 @@ export default function RandomQuizClient() {
 
       setLessonData(syntheticResponse)
       setQuestions(allQuestions)
+      currentQuestionCountRef.current = questionCount
     } catch (err) {
       console.error('Error fetching random quiz:', err)
       setError(err instanceof Error ? err.message : t.quiz.notFound)
@@ -105,22 +176,75 @@ export default function RandomQuizClient() {
     }
   }, [makeAuthenticatedRequest, t.quiz.notFound])
 
+  const handleStartQuiz = () => {
+    let questionCount = interval
+    if (isCustomMode && customInterval) {
+      const customValue = parseInt(customInterval, 10)
+      if (isNaN(customValue) || customValue < 5 || customValue > 100) {
+        setError(t.quiz.invalidInterval)
+        return
+      }
+      questionCount = customValue
+    }
+    
+    setError(null)
+    setShowIntervalSelector(false)
+    hasFetchedRef.current = false
+    previousLanguageRef.current = language
+    fetchRandomQuiz(questionCount)
+  }
+
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
       router.push("/login")
       return
     }
+  }, [router])
 
-    // Prevent duplicate requests
-    if (hasFetchedRef.current) {
-      return
+  // Watch for language changes and refetch questions if quiz is active
+  useEffect(() => {
+    // Only refetch if quiz has started (not showing interval selector) and language changed
+    if (!showIntervalSelector && questions.length > 0) {
+      const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+      
+      if (languageChanged && currentQuestionCountRef.current !== null) {
+        // Save current userAnswers before refetching (to preserve user's answers when language changes)
+        // Use refs to get the latest values without causing dependency issues
+        const savedUserAnswers = new Map(userAnswersRef.current)
+        const savedAnsweredQuestions = new Map(answeredQuestionsRef.current)
+        const savedCurrentIndex = currentQuestionIndexRef.current
+        const savedScore = scoreRef.current
+        
+        // Reset fetch ref and update language
+        previousLanguageRef.current = language
+        hasFetchedRef.current = false
+        
+        // Refetch with new language
+        fetchRandomQuiz(currentQuestionCountRef.current).then(() => {
+          // Restore userAnswers after refetch (preserve user's progress)
+          setUserAnswers(savedUserAnswers)
+          setAnsweredQuestions(savedAnsweredQuestions)
+          setCurrentQuestionIndex(savedCurrentIndex)
+          setScore(savedScore)
+          // Update isAnswered state based on current question
+          const currentAnswer = savedUserAnswers.get(savedCurrentIndex)
+          setIsAnswered(!!currentAnswer)
+        }).catch(() => {
+          // If fetch fails, reset state
+          setUserAnswers(new Map())
+          setAnsweredQuestions(new Map())
+          setCurrentQuestionIndex(0)
+          setIsAnswered(false)
+          setScore(0)
+        })
+      } else if (previousLanguageRef.current === null) {
+        previousLanguageRef.current = language
+      }
+    } else if (previousLanguageRef.current === null) {
+      previousLanguageRef.current = language
     }
-
-    hasFetchedRef.current = true
-
-    fetchRandomQuiz()
-  }, [router, fetchRandomQuiz])
+  }, [language, showIntervalSelector, questions.length, fetchRandomQuiz])
 
   useEffect(() => {
     const currentAnswer = userAnswers.get(currentQuestionIndex)
@@ -163,6 +287,178 @@ export default function RandomQuizClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showResults, lessonData, score, questions.length])
 
+  // Interval selector state
+  if (showIntervalSelector) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <Header />
+        <main className="container mx-auto px-4 py-8 sm:py-12">
+          <div className="max-w-3xl mx-auto">
+            {/* Hero Section */}
+            <div className="text-center mb-8 sm:mb-12 space-y-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg mb-4">
+                <Target className="h-10 w-10 text-white" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                {t.quiz.selectQuestionCount}
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                {t.quiz.selectQuestionCountDescription}
+              </p>
+            </div>
+
+            <Card className="border-2 shadow-xl bg-gradient-to-br from-card via-card to-muted/20">
+              <CardContent className="p-6 sm:p-8">
+                {error && (
+                  <div className="mb-6 p-4 rounded-xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-sm text-center animate-in fade-in slide-in-from-top-2">
+                    {error}
+                  </div>
+                )}
+
+                {/* Quick Select Buttons */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Zap className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">{t.quiz.quickSelect}</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    {[20, 50, 100].map((count) => {
+                      const isSelected = !isCustomMode && interval === count
+                      return (
+                        <button
+                          key={count}
+                          onClick={() => {
+                            setInterval(count)
+                            setIsCustomMode(false)
+                            setCustomInterval("")
+                            setError(null)
+                          }}
+                          className={cn(
+                            "relative group h-24 sm:h-28 rounded-xl border-2 transition-all duration-300",
+                            "hover:scale-105 hover:shadow-lg",
+                            isSelected
+                              ? "bg-gradient-to-br from-violet-500 to-fuchsia-500 border-violet-500 text-white shadow-lg"
+                              : "bg-card border-border hover:border-primary/50"
+                          )}
+                        >
+                          <div className="flex flex-col items-center justify-center h-full space-y-1">
+                            <span className="text-2xl sm:text-3xl font-bold">{count}</span>
+                            <span className="text-xs sm:text-sm opacity-80">{t.quiz.questions}</span>
+                          </div>
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+                              <CheckCircle2 className="h-4 w-4 text-violet-600" />
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Option */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">{t.quiz.personalized}</h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsCustomMode(!isCustomMode)
+                      if (!isCustomMode) {
+                        setCustomInterval("")
+                      } else {
+                        setInterval(20)
+                      }
+                      setError(null)
+                    }}
+                    className={cn(
+                      "w-full p-4 rounded-xl border-2 transition-all duration-300",
+                      "hover:scale-[1.02] hover:shadow-md",
+                      isCustomMode
+                        ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary shadow-md"
+                        : "bg-card border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-base">{t.quiz.custom}</span>
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 transition-all",
+                        isCustomMode ? "bg-primary border-primary" : "border-muted-foreground"
+                      )}>
+                        {isCustomMode && (
+                          <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                  
+                  {isCustomMode && (
+                    <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder={t.quiz.customIntervalPlaceholder}
+                          value={customInterval}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            // Faqat raqamlarni qabul qilish
+                            if (value === '' || /^\d+$/.test(value)) {
+                              setCustomInterval(value)
+                              setError(null)
+                            }
+                          }}
+                          className="text-center text-xl font-semibold h-14 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        />
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                          <span className="text-muted-foreground font-medium">{t.quiz.questions}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-success" />
+                          <span>Min: 5</span>
+                        </div>
+                        <span>•</span>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                          <span>Max: 100</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <Button
+                    size="lg"
+                    onClick={handleStartQuiz}
+                    disabled={isCustomMode && (!customInterval || parseInt(customInterval, 10) < 5 || parseInt(customInterval, 10) > 100)}
+                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                  >
+                    <Play className="mr-2 h-5 w-5" />
+                    {t.quiz.startQuiz}
+                  </Button>
+
+                  <Button variant="ghost" asChild className="w-full">
+                    <Link href="/home" className="flex items-center justify-center">
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      {t.quiz.backToHome}
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -181,7 +477,7 @@ export default function RandomQuizClient() {
   }
 
   // Error state
-  if (error) {
+  if (error && !showIntervalSelector) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -190,7 +486,10 @@ export default function RandomQuizClient() {
             <CardContent className="py-8 text-center">
               <p className="text-lg text-muted-foreground mb-4">{error}</p>
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => window.location.reload()}>
+                <Button onClick={() => {
+                  setError(null)
+                  setShowIntervalSelector(true)
+                }}>
                   {t.common.retry}
                 </Button>
                 <Button variant="outline" asChild>
@@ -302,7 +601,7 @@ export default function RandomQuizClient() {
     hasFetchedRef.current = false
     hasSubmittedHistoryRef.current = false
     
-    fetchRandomQuiz()
+    setShowIntervalSelector(true)
   }
 
   if (showResults) {
@@ -368,48 +667,43 @@ export default function RandomQuizClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
       <Header />
 
-      <main className="container mx-auto px-4 py-4 sm:py-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/home">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {t.quiz.back}
-              </Link>
-            </Button>
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-muted-foreground">
-                🎲 {lessonData?.lessonName || t.quiz.randomTest}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedLanguage === 'oz' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('oz')}
-                >
-                  O'Z
-                </Button>
-                <Button
-                  variant={selectedLanguage === 'uz' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('uz')}
-                >
-                  УЗ
-                </Button>
-                <Button
-                  variant={selectedLanguage === 'ru' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedLanguage('ru')}
-                >
-                  РУ
-                </Button>
+      <main className="flex-1">
+        {/* Minimal Hero Section */}
+        <section className="relative overflow-hidden pt-4 sm:pt-6 pb-4 sm:pb-6 mb-4 sm:mb-6">
+          {/* Background gradient blobs */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/5 dark:bg-violet-500/5 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-500/5 dark:bg-fuchsia-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          </div>
+
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                <Link href="/home" className="flex items-center gap-2">
+                  <ArrowLeft className="h-5 w-5" />
+                  {t.quiz.back}
+                </Link>
+              </Button>
+              <div className="flex items-center gap-4">
+                <div className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300">
+                  🎲 {lessonData ? getLocalizedLessonName(lessonData, language) : t.quiz.randomTest}
+                </div>
+                <div className="flex gap-2">
+                  <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm font-medium border border-primary/20">
+                    {selectedLanguage === 'oz' ? "O'Z" : selectedLanguage === 'uz' ? 'УЗ' : 'РУ'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </section>
 
+        {/* Quiz Content */}
+        <section className="container mx-auto px-4 py-4 sm:py-8">
+          <div className="max-w-5xl mx-auto">
           <div className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
@@ -485,7 +779,12 @@ export default function RandomQuizClient() {
               <CardContent className="space-y-4">
                 <div className="text-center p-4 bg-muted/20 rounded-xl border border-muted/50 shadow-sm">
                   <h3 className="text-xl sm:text-2xl font-semibold leading-relaxed text-balance max-w-3xl mx-auto">
-                    {currentQuestion.questionText[selectedLanguage]}
+                    {(() => {
+                      const questionText = currentQuestion.questionText[selectedLanguage]
+                      console.log('[Random Quiz] Question text for', selectedLanguage, ':', questionText ? 'Found' : 'Not found')
+                      console.log('[Random Quiz] Available keys:', Object.keys(currentQuestion.questionText))
+                      return questionText || currentQuestion.questionText.uz
+                    })()}
                   </h3>
                 </div>
 
@@ -528,7 +827,7 @@ export default function RandomQuizClient() {
                     {t.quiz.selectAnswer}
                   </h4>
                   <div className="max-w-3xl mx-auto space-y-3">
-                    {currentQuestion.answers.answerText[selectedLanguage].map((option, index) => {
+                    {(currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz).map((option, index) => {
                       const correctAnswerIndex = currentQuestion.answers.status - 1
                       const isCorrect = index === correctAnswerIndex
                       const isSelected = currentUserAnswer?.selectedAnswer === index
@@ -595,7 +894,8 @@ export default function RandomQuizClient() {
               </CardContent>
             </Card>
           </div>
-        </div>
+          </div>
+        </section>
       </main>
 
       <ImageModal

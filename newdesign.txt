@@ -1,0 +1,1612 @@
+# 🎨 DESIGN SYSTEM DOCUMENTATION
+## Payment History Component - Complete Design Guide
+
+---
+
+## 📋 TABLE OF CONTENTS
+1. Color Palette (Rang Palitra)
+2. Typography System (Tipografiya)
+3. Spacing & Layout (Bo'shliq va Joylashuv)
+4. Animation & Transitions (Animatsiya)
+5. Component Breakdown (Komponent Tuzilishi)
+6. Theme Variants (Theme Variantlari)
+
+---
+
+## 🌙 DARK THEME (TUNGI REJIM)
+
+### 1️⃣ BACKGROUND COLORS (FON RANGLARI)
+
+**Primary Backgrounds:**
+- slate-950: #020617 (Gradient start - eng qorong'i)
+- slate-900: #0f172a (Gradient middle/end - asosiy fon)
+- slate-900/50: rgba(15, 23, 42, 0.5) (Card container - shaffof)
+- slate-800/40: rgba(30, 41, 59, 0.4) (Payment card - yarim shaffof)
+
+**Usage:**
+```css
+/* Main screen background */
+background: linear-gradient(to bottom right, #020617, #0f172a, #020617);
+
+/* Card container */
+background-color: rgba(15, 23, 42, 0.5);
+backdrop-filter: blur(24px);
+
+/* Individual payment cards */
+background-color: rgba(30, 41, 59, 0.4);
+```
+
+---
+
+### 2️⃣ BORDER COLORS (CHEGARA RANGLARI)
+
+**Border Hierarchy:**
+- slate-800/50: rgba(30, 41, 59, 0.5) (Container border)
+- slate-700/50: rgba(51, 65, 85, 0.5) (Card default border)
+- slate-600/50: rgba(71, 85, 105, 0.5) (Card hover border)
+
+**Separator Line:**
+```css
+/* Gradient separator */
+background: linear-gradient(to right, transparent, #334155, transparent);
+height: 1px;
+```
+
+---
+
+### 3️⃣ TEXT COLORS (MATN RANGLARI)
+
+**Text Hierarchy:**
+- white (#ffffff): Primary text (titles, amounts)
+- slate-400 (#94a3b8): Secondary text (descriptions, dates)
+- slate-300 (#cbd5e1): Hover state text
+
+**Examples:**
+```css
+/* Main title */
+color: #ffffff;
+font-weight: 700;
+
+/* Description/Date */
+color: #94a3b8;
+font-weight: 400;
+
+/* Loading text */
+color: #94a3b8;
+```
+
+---
+
+### 4️⃣ ACCENT COLORS (Urg'u Ranglari)
+
+#### 🔵 PRIMARY (Blue/Indigo) - Headers & Icons
+```css
+/* Header icon background */
+background: linear-gradient(to bottom right, #3b82f6, #4f46e5);
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+
+/* Icon color */
+color: #ffffff;
+```
+
+#### 🟢 SUCCESS (Green/Emerald) - Paid Status
+```css
+/* Paid badge background */
+background: linear-gradient(to right, #22c55e, #059669);
+box-shadow: 0 10px 25px rgba(34, 197, 94, 0.3);
+color: #ffffff;
+
+/* Paid icon */
+color: #4ade80; /* green-400 */
+
+/* Hover glow */
+background: linear-gradient(to right, rgba(34, 197, 94, 0.1), rgba(5, 150, 105, 0.1));
+```
+
+#### 🔴 ERROR (Red/Rose) - Unpaid Status
+```css
+/* Unpaid badge background */
+background: linear-gradient(to right, #ef4444, #e11d48);
+box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+color: #ffffff;
+
+/* Unpaid icon */
+color: #f87171; /* red-400 */
+
+/* Hover glow */
+background: linear-gradient(to right, rgba(239, 68, 68, 0.1), rgba(225, 29, 72, 0.1));
+```
+
+---
+
+### 5️⃣ SHADOW SYSTEM (Soya Tizimi)
+
+**Shadow Levels:**
+```css
+/* Small - Icons */
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+
+/* Medium - Cards default */
+box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+/* Large - Cards hover */
+box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.5);
+
+/* XL - Container */
+box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+```
+
+**Glow Effects:**
+```css
+/* Loading spinner glow */
+background: rgba(59, 130, 246, 0.2);
+filter: blur(40px);
+animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+/* Paid badge glow (hover) */
+box-shadow: 0 10px 25px rgba(34, 197, 94, 0.5);
+
+/* Unpaid badge glow (hover) */
+box-shadow: 0 10px 25px rgba(239, 68, 68, 0.5);
+```
+
+---
+
+### 6️⃣ GRADIENT SYSTEM (Gradient Tizimi)
+
+**Background Gradients:**
+```css
+/* Main screen */
+background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+
+/* Header icon */
+background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+
+/* Paid badge */
+background: linear-gradient(90deg, #22c55e 0%, #059669 100%);
+
+/* Unpaid badge */
+background: linear-gradient(90deg, #ef4444 0%, #e11d48 100%);
+
+/* Separator line */
+background: linear-gradient(90deg, transparent 0%, #334155 50%, transparent 100%);
+
+/* Bottom accent line (paid) */
+background: linear-gradient(90deg, transparent 0%, #22c55e 50%, transparent 100%);
+
+/* Bottom accent line (unpaid) */
+background: linear-gradient(90deg, transparent 0%, #ef4444 50%, transparent 100%);
+```
+
+---
+
+## ☀️ LIGHT THEME (KUNDUZGI REJIM)
+
+### 1️⃣ BACKGROUND COLORS (FON RANGLARI)
+
+**Primary Backgrounds:**
+- slate-50: #f8fafc (Gradient start - eng yorug'i)
+- slate-100: #f1f5f9 (Gradient middle/end - asosiy fon)
+- white/80: rgba(255, 255, 255, 0.8) (Card container - yarim shaffof)
+- slate-50/90: rgba(248, 250, 252, 0.9) (Payment card)
+
+**Usage:**
+```css
+/* Main screen background */
+background: linear-gradient(to bottom right, #f8fafc, #f1f5f9, #f8fafc);
+
+/* Card container */
+background-color: rgba(255, 255, 255, 0.8);
+backdrop-filter: blur(24px);
+
+/* Individual payment cards */
+background-color: rgba(248, 250, 252, 0.9);
+```
+
+---
+
+### 2️⃣ BORDER COLORS (CHEGARA RANGLARI)
+
+**Border Hierarchy:**
+- slate-200: #e2e8f0 (Container border)
+- slate-300/50: rgba(203, 213, 225, 0.5) (Card default border)
+- slate-400/50: rgba(148, 163, 184, 0.5) (Card hover border)
+
+**Separator Line:**
+```css
+/* Gradient separator */
+background: linear-gradient(to right, transparent, #cbd5e1, transparent);
+height: 1px;
+```
+
+---
+
+### 3️⃣ TEXT COLORS (MATN RANGLARI)
+
+**Text Hierarchy:**
+- slate-900 (#0f172a): Primary text (titles, amounts)
+- slate-600 (#475569): Secondary text (descriptions, dates)
+- slate-700 (#334155): Hover state text
+
+**Examples:**
+```css
+/* Main title */
+color: #0f172a;
+font-weight: 700;
+
+/* Description/Date */
+color: #475569;
+font-weight: 400;
+
+/* Loading text */
+color: #475569;
+```
+
+---
+
+### 4️⃣ ACCENT COLORS (Urg'u Ranglari)
+
+#### 🔵 PRIMARY (Blue/Indigo) - Headers & Icons
+```css
+/* Header icon background */
+background: linear-gradient(to bottom right, #3b82f6, #4f46e5);
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+
+/* Icon color */
+color: #ffffff;
+```
+
+#### 🟢 SUCCESS (Green/Emerald) - Paid Status
+```css
+/* Paid badge background */
+background: linear-gradient(to right, #22c55e, #059669);
+box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+color: #ffffff;
+
+/* Paid icon */
+color: #16a34a; /* green-600 */
+
+/* Hover glow */
+background: linear-gradient(to right, rgba(34, 197, 94, 0.15), rgba(5, 150, 105, 0.15));
+```
+
+#### 🔴 ERROR (Red/Rose) - Unpaid Status
+```css
+/* Unpaid badge background */
+background: linear-gradient(to right, #ef4444, #e11d48);
+box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+color: #ffffff;
+
+/* Unpaid icon */
+color: #dc2626; /* red-600 */
+
+/* Hover glow */
+background: linear-gradient(to right, rgba(239, 68, 68, 0.15), rgba(225, 29, 72, 0.15));
+```
+
+---
+
+### 5️⃣ SHADOW SYSTEM (Soya Tizimi)
+
+**Shadow Levels:**
+```css
+/* Small - Icons */
+box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+
+/* Medium - Cards default */
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+/* Large - Cards hover */
+box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+/* XL - Container */
+box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+```
+
+**Glow Effects:**
+```css
+/* Loading spinner glow */
+background: rgba(59, 130, 246, 0.25);
+filter: blur(40px);
+animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+/* Paid badge glow (hover) */
+box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+
+/* Unpaid badge glow (hover) */
+box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+```
+
+---
+
+## 📐 TYPOGRAPHY SYSTEM (TIPOGRAFIYA)
+
+### Font Family
+```css
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+```
+
+### Font Sizes & Weights
+```css
+/* Headings */
+.heading-xl { font-size: 20px; font-weight: 700; line-height: 28px; }
+.heading-lg { font-size: 18px; font-weight: 700; line-height: 28px; }
+
+/* Body */
+.body-base { font-size: 14px; font-weight: 400; line-height: 20px; }
+.body-sm { font-size: 12px; font-weight: 400; line-height: 16px; }
+.body-xs { font-size: 10px; font-weight: 500; line-height: 14px; }
+
+/* Special */
+.semibold { font-weight: 600; }
+.bold { font-weight: 700; }
+```
+
+### Text Truncation
+```css
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+```
+
+---
+
+## 📏 SPACING SYSTEM (BO'SHLIQ TIZIMI)
+
+### Base Unit: 4px (0.25rem)
+
+**Padding Scale:**
+```css
+p-1: 4px
+p-2: 8px
+p-3: 12px
+p-4: 16px
+p-6: 24px
+p-8: 32px
+p-12: 48px
+p-16: 64px
+```
+
+**Gap Scale:**
+```css
+gap-1: 4px
+gap-1.5: 6px
+gap-2: 8px
+gap-3: 12px
+gap-4: 16px
+gap-6: 24px
+```
+
+**Margin Scale:**
+```css
+m-1: 4px
+m-2: 8px
+m-3: 12px
+m-4: 16px
+m-6: 24px
+```
+
+### Component Spacing
+```css
+/* Header section */
+margin-bottom: 24px (mb-6)
+
+/* Cards container padding */
+padding: 16px (p-4)
+
+/* Card spacing */
+margin-bottom: 12px (space-y-3)
+
+/* Card internal padding */
+padding: 16px (p-4)
+
+/* Status badge padding */
+padding: 6px 12px (px-3 py-1.5)
+```
+
+---
+
+## 🔄 ANIMATION SYSTEM (ANIMATSIYA TIZIMI)
+
+### Timing Functions
+```css
+/* Default easing */
+transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+/* Smooth ease-out */
+ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+/* Bounce effect */
+ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
+```
+
+### Duration Scale
+```css
+duration-150: 150ms  /* Quick interactions */
+duration-300: 300ms  /* Standard transitions */
+duration-500: 500ms  /* Smooth animations */
+duration-700: 700ms  /* Slow, emphasized */
+```
+
+### Animations
+```css
+/* Spin (Loading) */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+animation: spin 1s linear infinite;
+
+/* Pulse (Glow) */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+/* Zoom-in (Icons) */
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+animation: zoom-in 300ms cubic-bezier(0, 0, 0.2, 1);
+```
+
+### Hover Transitions
+```css
+/* Card hover */
+.card {
+  transition: all 300ms ease-out;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(71, 85, 105, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.5);
+}
+
+/* Badge hover */
+.badge {
+  transition: box-shadow 300ms ease-out;
+}
+.badge:hover {
+  box-shadow: 0 10px 25px rgba(34, 197, 94, 0.5);
+}
+
+/* Accent line appearance */
+.accent-line {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+.card:hover .accent-line {
+  opacity: 1;
+}
+```
+
+---
+
+## 📦 BORDER RADIUS SYSTEM (BURCHAK YUMALOQLIGI)
+
+```css
+rounded-none: 0px
+rounded-sm: 2px
+rounded: 4px
+rounded-md: 6px
+rounded-lg: 8px
+rounded-xl: 12px     /* Cards */
+rounded-2xl: 16px    /* Container */
+rounded-3xl: 24px    /* Main wrapper (not used here) */
+rounded-full: 9999px /* Badges, icons */
+```
+
+### Component Usage
+```css
+/* Main container */
+border-radius: 16px (rounded-2xl)
+
+/* Payment cards */
+border-radius: 12px (rounded-xl)
+
+/* Header icon background */
+border-radius: 12px (rounded-xl)
+
+/* Status badges */
+border-radius: 9999px (rounded-full)
+
+/* Custom scrollbar */
+border-radius: 10px
+```
+
+---
+
+## 🎯 COMPONENT BREAKDOWN (KOMPONENT TUZILISHI)
+
+### 1. Header Section
+```
+┌─────────────────────────────────────┐
+│  [🔵]  To'lov tarixi                │
+│        Barcha to'lovlar ro'yxati     │
+└─────────────────────────────────────┘
+
+Elements:
+- Icon container: 40px × 40px, rounded-xl, gradient blue→indigo
+- Title: text-xl, font-bold, white
+- Description: text-sm, slate-400
+- Spacing: gap-3, mb-2
+```
+
+### 2. Separator Line
+```
+────────────────────────────────────────
+Gradient: transparent → slate-700 → transparent
+Height: 1px
+Margin: mb-6
+```
+
+### 3. Container
+```
+┌─────────────────────────────────────┐
+│  Card 1                             │
+│  Card 2                             │
+│  Card 3                             │
+│  Card 4                             │
+└─────────────────────────────────────┘
+
+Properties:
+- Background: slate-900/50, backdrop-blur
+- Border: slate-800/50, 1px
+- Border-radius: rounded-2xl
+- Shadow: shadow-2xl
+- Max-height: 384px (h-96)
+- Overflow: auto with custom scrollbar
+```
+
+### 4. Payment Card
+```
+┌─────────────────────────────────────┐
+│ [📈] 250,000 UZS      [✓ To'langan]│
+│ [📅] 05 Noy, 2024                   │
+│ ────────────────────────────────── │ ← Accent line
+└─────────────────────────────────────┘
+
+Layout:
+- Padding: 16px (p-4)
+- Background: slate-800/40
+- Border: slate-700/50 → slate-600/50 (hover)
+- Border-radius: rounded-xl
+- Glow overlay: opacity 0 → 100 (hover)
+- Transform: translateY(0) → -2px (hover)
+
+Top Section:
+- TrendingUp icon: 16px, green-400/red-400
+- Amount: text-lg, font-bold, white
+- Status badge: rounded-full, gradient, shadow
+
+Bottom Section:
+- Calendar icon: 14px, slate-400
+- Date text: text-sm, slate-400
+
+Accent Line:
+- Position: absolute bottom
+- Height: 2px (h-0.5)
+- Gradient: transparent → green/red → transparent
+- Opacity: 0 → 100 (hover)
+```
+
+### 5. Status Badge
+```
+┌─────────────────┐
+│ [✓] To'langan  │ (Green version)
+└─────────────────┘
+
+┌──────────────────┐
+│ [✗] To'lanmagan │ (Red version)
+└──────────────────┘
+
+Properties:
+- Padding: 6px 12px (px-3 py-1.5)
+- Border-radius: rounded-full
+- Font-size: 12px (text-xs)
+- Font-weight: 500 (font-medium)
+- Icon size: 12px (h-3 w-3)
+- Gap: 6px (gap-1.5)
+
+Paid:
+- Background: linear-gradient(90deg, #22c55e, #059669)
+- Shadow: 0 10px 25px rgba(34, 197, 94, 0.3)
+- Hover shadow: rgba(34, 197, 94, 0.5)
+
+Unpaid:
+- Background: linear-gradient(90deg, #ef4444, #e11d48)
+- Shadow: 0 10px 25px rgba(239, 68, 68, 0.3)
+- Hover shadow: rgba(239, 68, 68, 0.5)
+```
+
+### 6. Loading State
+```
+┌─────────────────────────────────────┐
+│                                     │
+│         [⟳ spinning]                │
+│        Yuklanmoqda...               │
+│                                     │
+└─────────────────────────────────────┘
+
+Elements:
+- Spinner: 40px, blue-500, animate-spin
+- Glow: blue-500/20, blur-xl, animate-pulse
+- Text: text-sm, slate-400
+- Padding: py-16, px-6
+```
+
+### 7. Footer Stats
+```
+Jami: 4 ta to'lov    To'langan: 3
+
+Layout:
+- Display: flex, justify-between
+- Padding: px-4
+- Margin-top: 24px (mt-6)
+- Label: text-sm, slate-400
+- Value: font-semibold, white/green-400
+```
+
+### 8. Custom Scrollbar
+```
+Width: 6px
+Track:
+- Background: rgba(15, 23, 42, 0.5)
+- Border-radius: 10px
+
+Thumb:
+- Background: linear-gradient(to bottom, #475569, #334155)
+- Border-radius: 10px
+
+Thumb (hover):
+- Background: linear-gradient(to bottom, #64748b, #475569)
+```
+
+---
+
+## 🎨 DESIGN TOKENS SUMMARY
+
+### Color Tokens (Dark Theme)
+```javascript
+const darkTheme = {
+  // Backgrounds
+  'bg-primary': '#0f172a',
+  'bg-secondary': 'rgba(15, 23, 42, 0.5)',
+  'bg-card': 'rgba(30, 41, 59, 0.4)',
+  
+  // Text
+  'text-primary': '#ffffff',
+  'text-secondary': '#94a3b8',
+  
+  // Borders
+  'border-default': 'rgba(51, 65, 85, 0.5)',
+  'border-hover': 'rgba(71, 85, 105, 0.5)',
+  
+  // Accent
+  'accent-blue': 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+  'accent-green': 'linear-gradient(90deg, #22c55e, #059669)',
+  'accent-red': 'linear-gradient(90deg, #ef4444, #e11d48)',
+  
+  // Status
+  'status-paid-icon': '#4ade80',
+  'status-unpaid-icon': '#f87171'
+};
+```
+
+### Color Tokens (Light Theme)
+```javascript
+const lightTheme = {
+  // Backgrounds
+  'bg-primary': '#f1f5f9',
+  'bg-secondary': 'rgba(255, 255, 255, 0.8)',
+  'bg-card': 'rgba(248, 250, 252, 0.9)',
+  
+  // Text
+  'text-primary': '#0f172a',
+  'text-secondary': '#475569',
+  
+  // Borders
+  'border-default': 'rgba(203, 213, 225, 0.5)',
+  'border-hover': 'rgba(148, 163, 184, 0.5)',
+  
+  // Accent
+  'accent-blue': 'linear-gradient(135deg, #3b82f6, #4f46e5)',
+  'accent-green': 'linear-gradient(90deg, #22c55e, #059669)',
+  'accent-red': 'linear-gradient(90deg, #ef4444, #e11d48)',
+  
+  // Status
+  'status-paid-icon': '#16a34a',
+  'status-unpaid-icon': '#dc2626'
+};
+```
+
+### Spacing Tokens
+```javascript
+const spacing = {
+  'xs': '4px',
+  'sm': '8px',
+  'md': '12px',
+  'lg': '16px',
+  'xl': '24px',
+  '2xl': '32px',
+  '3xl': '48px'
+};
+```
+
+### Typography Tokens
+```javascript
+const typography = {
+  'heading-xl': { size: '20px', weight: 700, lineHeight: '28px' },
+  'heading-lg': { size: '18px', weight: 700, lineHeight: '28px' },
+  'body-base': { size: '14px', weight: 400, lineHeight: '20px' },
+  'body-sm': { size: '12px', weight: 400, lineHeight: '16px' },
+  'caption': { size: '10px', weight: 500, lineHeight: '14px' }
+};
+```
+
+### Border Radius Tokens
+```javascript
+const borderRadius = {
+  'sm': '4px',
+  'md': '8px',
+  'lg': '12px',
+  'xl': '16px',
+  'full': '9999px'
+};
+```
+
+### Shadow Tokens
+```javascript
+const shadows = {
+  'sm': '0 10px 25px rgba(59, 130, 246, 0.2)',
+  'md': '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  'lg': '0 25px 50px -12px rgba(15, 23, 42, 0.5)',
+  'xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+};
+```
+
+---
+
+## 📱 RESPONSIVE BREAKPOINTS (MOSLASHUVCHAN NUQTALAR)
+
+```css
+/* Mobile first approach */
+/* Default: < 640px */
+
+/* Small devices (landscape phones) */
+@media (min-width: 640px) { }
+
+/* Medium devices (tablets) */
+@media (min-width: 768px) { 
+  max-width: 448px; /* Container max-width */
+}
+
+/* Large devices (desktops) */
+@media (min-width: 1024px) { }
+
+/* Extra large devices */
+@media (min-width: 1280px) { }
+```
+
+---
+
+## ♿ ACCESSIBILITY (QO'LLASH QULAYLIGI)
+
+### Color Contrast Ratios (WCAG 2.1)
+```
+Dark Theme:
+- White on slate-900: 15.8:1 (AAA ✓)
+- slate-400 on slate-900: 7.2:1 (AA ✓)
+- Green-400 on slate-800: 6.5:1 (AA ✓)
+
+Light Theme:
+- slate-900 on slate-50: 15.2:1 (AAA ✓)
+- slate-600 on slate-50: 8.1:1 (AAA ✓)
+- Green-600 on white: 4.8:1 (AA ✓)
+```
+
+### Focus States
+```css
+/* Keyboard navigation */
+.card:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Button focus */
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+```
+
+### Screen Reader Support
+```html
+<!-- Semantic HTML -->
+<section aria-label="To'lov tarixi">
+  <h2>To'lov tarixi</h2>
+  <div role="list">
+    <article role="listitem" aria-label="To'lov: 250,000 so'm, To'langan">
+      <!-- Card content -->
+    </article>
+  </div>
+</section>
+
+<!-- Loading state -->
+<div role="status" aria-live="polite">
+  <span class="sr-only">Yuklanmoqda...</span>
+</div>
+```
+
+---
+
+## 🔧 IMPLEMENTATION GUIDE (AMALGA OSHIRISH BO'YICHA QO'LLANMA)
+
+### CSS Variables Setup
+```css
+:root {
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  
+  /* Border radius */
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-base: 300ms;
+  --transition-slow: 500ms;
+  
+  /* Easing */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: rgba(15, 23, 42, 0.5);
+  --bg-card: rgba(30, 41, 59, 0.4);
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --border-default: rgba(51, 65, 85, 0.5);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: rgba(255, 255, 255, 0.8);
+  --bg-card: rgba(248, 250, 252, 0.9);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-default: rgba(203, 213, 225, 0.5);
+}
+```
+
+### Tailwind Config
+```javascript
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        'primary': {
+          50: '#eff6ff',
+          500: '#3b82f6',
+          600: '#4f46e5',
+          900: '#1e3a8a'
+        },
+        'success': {
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a'
+        },
+        'error': {
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626'
+        }
+      },
+      spacing: {
+        '0.5': '2px',
+        '1.5': '6px',
+        '2.5': '10px',
+        '3.5': '14px'
+      },
+      backdropBlur: {
+        'xl': '24px'
+      },
+      boxShadow: {
+        'glow-sm': '0 10px 25px rgba(59, 130, 246, 0.2)',
+        'glow-md': '0 10px 25px rgba(34, 197, 94, 0.3)',
+        'glow-lg': '0 10px 25px rgba(34, 197, 94, 0.5)'
+      },
+      animation: {
+        'spin-slow': 'spin 2s linear infinite',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+      }
+    }
+  },
+  plugins: []
+}
+```
+
+---
+
+## 🎨 DESIGN PRINCIPLES (DIZAYN PRINSIPLARI)
+
+### 1. Visual Hierarchy (Ko'rish Tartib-qoidasi)
+```
+Level 1 (Most Important):
+  - Amount (18px, bold, white)
+  - Status badge (gradient, bold)
+
+Level 2 (Secondary):
+  - Icons (16px, colored)
+  - Header title (20px, bold)
+
+Level 3 (Tertiary):
+  - Date (12px, muted)
+  - Description text (14px, muted)
+```
+
+### 2. Consistency Rules (Izchillik Qoidalari)
+```
+✓ Always use 4px grid system
+✓ Consistent spacing: 8px, 12px, 16px, 24px
+✓ Same border-radius for similar elements
+✓ Uniform transition timing (300ms)
+✓ Consistent shadow hierarchy
+✓ Same hover behavior across cards
+```
+
+### 3. Affordance Principles (Interaktivlik Ko'rsatkichlari)
+```
+Hoverable elements:
+  - Cursor changes to pointer
+  - Subtle lift effect (-translateY)
+  - Shadow increases
+  - Border color brightens
+
+Loading states:
+  - Spinner animation
+  - Pulsing glow effect
+  - Disabled cursor
+  - Reduced opacity
+
+Active states:
+  - Gradient backgrounds
+  - Icons with semantic colors
+  - Clear status indicators
+```
+
+### 4. Gestalt Principles (Gestalt Prinsiplari)
+```
+Proximity:
+  - Related items grouped closely
+  - Consistent spacing between groups
+
+Similarity:
+  - All cards have same structure
+  - Consistent badge styling
+  - Uniform icon sizing
+
+Continuity:
+  - Scrollable list flow
+  - Aligned text elements
+  - Consistent visual rhythm
+
+Closure:
+  - Complete card boundaries
+  - Clear section separation
+```
+
+---
+
+## 🌈 COLOR PSYCHOLOGY (RANG PSIXOLOGIYASI)
+
+### Dark Theme Psychology
+```
+Slate/Gray Tones:
+  - Professional, modern
+  - Reduces eye strain
+  - Focus on content
+  - Premium feeling
+
+Blue/Indigo Accents:
+  - Trust, reliability
+  - Technology, innovation
+  - Calm, stable
+  - Professional
+
+Green Tones (Paid):
+  - Success, positive
+  - Growth, prosperity
+  - Safe, secure
+  - Completion
+
+Red Tones (Unpaid):
+  - Urgent, attention
+  - Important, critical
+  - Warning, alert
+  - Action needed
+```
+
+### Light Theme Psychology
+```
+Light Gray/White:
+  - Clean, minimal
+  - Open, spacious
+  - Professional
+  - Accessible
+
+Same accent principles apply but:
+  - Higher contrast
+  - More vibrant
+  - Better readability in daylight
+```
+
+---
+
+## 📊 PERFORMANCE CONSIDERATIONS (ISHLASH OPTIMALLASHTIRISH)
+
+### CSS Optimization
+```css
+/* Use transform instead of position changes */
+✓ transform: translateY(-2px);
+✗ top: -2px;
+
+/* Use opacity for show/hide */
+✓ opacity: 0; transition: opacity 300ms;
+✗ display: none; (no transition)
+
+/* Hardware acceleration */
+.card {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Avoid expensive properties in animations */
+✗ box-shadow (expensive)
+✓ opacity, transform (cheap)
+```
+
+### Animation Performance
+```javascript
+// Debounce hover effects
+const debouncedHover = debounce(() => {
+  // Hover logic
+}, 100);
+
+// Throttle scroll events
+const throttledScroll = throttle(() => {
+  // Scroll logic
+}, 150);
+
+// Use CSS animations when possible
+// Avoid JavaScript animations for simple effects
+```
+
+### Loading Strategy
+```javascript
+// Lazy load images/icons
+import { lazy, Suspense } from 'react';
+
+// Virtualize long lists
+import { FixedSizeList } from 'react-window';
+
+// Code splitting
+const PaymentHistory = lazy(() => import('./PaymentHistory'));
+```
+
+---
+
+## 🧪 TESTING GUIDELINES (TEST QO'LLANMA)
+
+### Visual Regression Tests
+```javascript
+// Check component renders correctly
+test('renders payment history correctly', () => {
+  render(<PaymentHistory />);
+  expect(screen.getByText('To\'lov tarixi')).toBeInTheDocument();
+});
+
+// Check loading state
+test('shows loading spinner', () => {
+  render(<PaymentHistory isLoading={true} />);
+  expect(screen.getByRole('status')).toBeInTheDocument();
+});
+
+// Check hover states
+test('card lifts on hover', async () => {
+  const { container } = render(<PaymentHistory />);
+  const card = container.querySelector('.card');
+  await userEvent.hover(card);
+  expect(card).toHaveStyle('transform: translateY(-2px)');
+});
+```
+
+### Color Contrast Tests
+```javascript
+// Check WCAG compliance
+test('text has sufficient contrast', () => {
+  const { container } = render(<PaymentHistory />);
+  const text = container.querySelector('.text-primary');
+  const contrast = getContrast(text);
+  expect(contrast).toBeGreaterThan(4.5); // AA standard
+});
+```
+
+### Accessibility Tests
+```javascript
+// Check keyboard navigation
+test('card is keyboard accessible', async () => {
+  render(<PaymentHistory />);
+  const card = screen.getAllByRole('listitem')[0];
+  card.focus();
+  expect(card).toHaveFocus();
+});
+
+// Check screen reader support
+test('has proper aria labels', () => {
+  render(<PaymentHistory />);
+  expect(screen.getByLabelText('To\'lov tarixi')).toBeInTheDocument();
+});
+```
+
+---
+
+## 🔄 STATE MANAGEMENT (HOLAT BOSHQARUVI)
+
+### Component States
+```javascript
+// Loading State
+{
+  isLoading: true,
+  paymentHistory: [],
+  error: null
+}
+
+// Success State
+{
+  isLoading: false,
+  paymentHistory: [...data],
+  error: null
+}
+
+// Error State
+{
+  isLoading: false,
+  paymentHistory: [],
+  error: "Network error"
+}
+
+// Empty State
+{
+  isLoading: false,
+  paymentHistory: [],
+  error: null
+}
+```
+
+### Transition Matrix
+```
+Initial → Loading
+  Trigger: Component mount
+  Duration: Instant
+  Visual: Show spinner
+
+Loading → Success
+  Trigger: Data received
+  Duration: 300ms fade
+  Visual: Cards animate in
+
+Loading → Error
+  Trigger: Request failed
+  Duration: 300ms fade
+  Visual: Error message
+
+Success → Loading
+  Trigger: Refresh requested
+  Duration: 150ms fade
+  Visual: Show spinner overlay
+```
+
+---
+
+## 📝 CODE EXAMPLES (KOD NAMUNALARI)
+
+### Component Structure
+```jsx
+// Main Component
+<PaymentHistorySection>
+  <Header>
+    <IconContainer />
+    <TitleGroup>
+      <Title />
+      <Description />
+    </TitleGroup>
+  </Header>
+  
+  <Separator />
+  
+  <Container>
+    {isLoading ? (
+      <LoadingState />
+    ) : (
+      <CardList>
+        {items.map(item => (
+          <PaymentCard key={item.id}>
+            <TopSection>
+              <AmountGroup>
+                <Icon />
+                <Amount />
+              </AmountGroup>
+              <StatusBadge />
+            </TopSection>
+            <BottomSection>
+              <DateGroup>
+                <Icon />
+                <Date />
+              </DateGroup>
+            </BottomSection>
+            <AccentLine />
+          </PaymentCard>
+        ))}
+      </CardList>
+    )}
+  </Container>
+  
+  <Footer>
+    <Stat label="Jami" />
+    <Stat label="To'langan" />
+  </Footer>
+</PaymentHistorySection>
+```
+
+### Styled Component Example
+```jsx
+import styled from 'styled-components';
+
+const Card = styled.div`
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-hover);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.5);
+    
+    .accent-line {
+      opacity: 1;
+    }
+    
+    .glow-overlay {
+      opacity: 1;
+    }
+  }
+`;
+
+const StatusBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: ${props => 
+    props.isPaid 
+      ? 'linear-gradient(90deg, #22c55e, #059669)' 
+      : 'linear-gradient(90deg, #ef4444, #e11d48)'
+  };
+  color: white;
+  box-shadow: ${props =>
+    props.isPaid
+      ? '0 10px 25px rgba(34, 197, 94, 0.3)'
+      : '0 10px 25px rgba(239, 68, 68, 0.3)'
+  };
+  transition: box-shadow 300ms ease-out;
+  
+  &:hover {
+    box-shadow: ${props =>
+      props.isPaid
+        ? '0 10px 25px rgba(34, 197, 94, 0.5)'
+        : '0 10px 25px rgba(239, 68, 68, 0.5)'
+    };
+  }
+`;
+```
+
+### Tailwind Classes Reference
+```jsx
+// Container
+className="bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-800/50 overflow-hidden shadow-2xl"
+
+// Card
+className="group relative overflow-hidden rounded-xl bg-slate-800/40 border border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/50 hover:-translate-y-0.5"
+
+// Badge (Paid)
+className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium text-xs bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30 group-hover:shadow-green-500/50"
+
+// Badge (Unpaid)
+className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium text-xs bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30 group-hover:shadow-red-500/50"
+```
+
+---
+
+## 🎯 BEST PRACTICES (ENG YAXSHI AMALIYOTLAR)
+
+### 1. Naming Conventions
+```javascript
+// Component names: PascalCase
+PaymentHistory
+StatusBadge
+LoadingSpinner
+
+// Props: camelCase
+isLoading
+paymentAmount
+isPaid
+
+// CSS classes: kebab-case
+.payment-card
+.status-badge
+.accent-line
+
+// Constants: UPPER_SNAKE_CASE
+MAX_ITEMS
+DEFAULT_CURRENCY
+ANIMATION_DURATION
+```
+
+### 2. File Organization
+```
+components/
+  PaymentHistory/
+    index.jsx
+    PaymentHistory.jsx
+    PaymentCard.jsx
+    StatusBadge.jsx
+    LoadingState.jsx
+    styles.css (or styles.module.css)
+    PaymentHistory.test.jsx
+    README.md
+```
+
+### 3. Props Validation
+```javascript
+import PropTypes from 'prop-types';
+
+PaymentCard.propTypes = {
+  payment: PropTypes.shape({
+    paymentAmount: PropTypes.number.isRequired,
+    paymentCurrency: PropTypes.string.isRequired,
+    isPaid: PropTypes.bool.isRequired,
+    paymentDate: PropTypes.string.isRequired
+  }).isRequired,
+  formatAmount: PropTypes.func.isRequired,
+  formatDate: PropTypes.func.isRequired
+};
+```
+
+### 4. Performance Optimization
+```javascript
+// Memoize expensive calculations
+const formattedAmount = useMemo(
+  () => formatAmount(payment.paymentAmount, payment.paymentCurrency),
+  [payment.paymentAmount, payment.paymentCurrency]
+);
+
+// Memoize components
+const PaymentCard = memo(({ payment }) => {
+  // Component logic
+});
+
+// Debounce hover effects
+const handleHover = useCallback(
+  debounce(() => {
+    // Hover logic
+  }, 100),
+  []
+);
+```
+
+---
+
+## 🚀 DEPLOYMENT CHECKLIST (O'RNATISH RO'YXATI)
+
+### Pre-deployment
+```
+☐ All colors meet WCAG contrast ratios
+☐ Animations run at 60fps
+☐ No layout shifts (CLS < 0.1)
+☐ Loading states implemented
+☐ Error states implemented
+☐ Empty states implemented
+☐ Hover states work on all interactive elements
+☐ Focus states visible for keyboard navigation
+☐ Screen reader tested
+☐ Mobile responsive
+☐ Cross-browser tested (Chrome, Firefox, Safari, Edge)
+☐ Dark/Light themes both work
+☐ Images optimized
+☐ Code minified
+☐ CSS purged (unused styles removed)
+```
+
+### Performance Targets
+```
+☐ First Contentful Paint (FCP) < 1.8s
+☐ Largest Contentful Paint (LCP) < 2.5s
+☐ First Input Delay (FID) < 100ms
+☐ Cumulative Layout Shift (CLS) < 0.1
+☐ Time to Interactive (TTI) < 3.8s
+☐ Total Bundle Size < 200KB (gzipped)
+```
+
+---
+
+## 📚 RESOURCES & REFERENCES (MANBALAR)
+
+### Design Inspiration
+```
+- Dribbble: Premium payment UI designs
+- Behance: Modern dashboard interfaces
+- Awwwards: Award-winning web designs
+- Tailwind UI: Component examples
+```
+
+### Color Tools
+```
+- Coolors.co: Palette generator
+- Contrast Checker: WCAG compliance
+- ColorBox: Color scale generator
+- Paletton: Color scheme designer
+```
+
+### Animation Resources
+```
+- Cubic-bezier.com: Timing function generator
+- Animista: CSS animation library
+- Framer Motion: React animation library
+- GSAP: Advanced animations
+```
+
+### Testing Tools
+```
+- Lighthouse: Performance audit
+- axe DevTools: Accessibility testing
+- BrowserStack: Cross-browser testing
+- Chrome DevTools: Performance profiling
+```
+
+---
+
+## 🔮 FUTURE ENHANCEMENTS (KELAJAKDAGI YAXSHILANISHLAR)
+
+### Phase 1 (Short-term)
+```
+☐ Add search/filter functionality
+☐ Implement sorting options
+☐ Add export to CSV/PDF
+☐ Implement pagination
+☐ Add date range picker
+☐ Show payment method icons
+```
+
+### Phase 2 (Mid-term)
+```
+☐ Add charts/graphs for payment trends
+☐ Implement payment categories
+☐ Add recurring payment indicators
+☐ Show payment success rate
+☐ Add notification system
+☐ Implement bulk actions
+```
+
+### Phase 3 (Long-term)
+```
+☐ AI-powered payment predictions
+☐ Advanced analytics dashboard
+☐ Payment reminders
+☐ Integration with payment gateways
+☐ Multi-currency support
+☐ Invoice generation
+```
+
+---
+
+## 📞 SUPPORT & MAINTENANCE (QULLAB-QUVVATLASH)
+
+### Documentation Updates
+```
+Update frequency: Monthly
+Review: Quarterly
+Version control: Semantic versioning (v1.2.3)
+Changelog: Keep detailed history
+```
+
+### Browser Support
+```
+Chrome: Last 2 versions
+Firefox: Last 2 versions
+Safari: Last 2 versions
+Edge: Last 2 versions
+Mobile Safari: iOS 13+
+Chrome Android: Last 2 versions
+```
+
+### Known Issues
+```
+Issue #1: Hover effects don't work on touch devices
+  Solution: Implement touch-specific interactions
+
+Issue #2: Scrollbar styling not supported in Firefox
+  Solution: Provide fallback styles
+
+Issue #3: Backdrop blur performance on older devices
+  Solution: Use feature detection and fallback
+```
+
+---
+
+## 📋 VERSION HISTORY (VERSIYA TARIXI)
+
+```
+v1.0.0 (Current)
+  - Initial release
+  - Dark theme implementation
+  - Core payment history functionality
+  - Responsive design
+  - Accessibility features
+
+v1.1.0 (Planned)
+  - Light theme implementation
+  - Search functionality
+  - Filter options
+  - Performance improvements
+
+v1.2.0 (Future)
+  - Charts and analytics
+  - Export functionality
+  - Advanced filters
+  - Bulk operations
+```
+
+---
+
+## ✅ CONCLUSION (XULOSA)
+
+Ushbu dizayn tizimi quyidagi asosiy tamoyillarga asoslangan:
+
+1. **Izchillik**: Barcha elementlar bir xil dizayn tilida
+2. **Soddalik**: Foydalanuvchi uchun tushunarli va qulay
+3. **Zamonaviylik**: 2024-2025 yilgi trendlarga mos
+4. **Ishlash**: Optimallashtirilgan va tez
+5. **Qulaylik**: Accessibility standartlariga mos
+
+Dizayn maqsadi: Premium, professional va foydalanuvchi-do'st interfeys yaratish.
+
+---
+
+END OF DOCUMENTATION

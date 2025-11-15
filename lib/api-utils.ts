@@ -5,6 +5,8 @@ import { logout, setCurrentUser } from "@/lib/auth"
 // Global notification function - will be set by the notification provider
 let globalShow401Error: ((message?: string) => void) | null = null
 let globalShow429Error: ((message?: string) => void) | null = null
+let globalSetServerError: ((error: boolean) => void) | null = null
+let globalShowError: ((message: string) => void) | null = null
 
 export function setGlobalNotificationHandler(show401Error: (message?: string) => void) {
   globalShow401Error = show401Error
@@ -12,6 +14,14 @@ export function setGlobalNotificationHandler(show401Error: (message?: string) =>
 
 export function setGlobal429ErrorHandler(show429Error: (message?: string) => void) {
   globalShow429Error = show429Error
+}
+
+export function setGlobalServerErrorHandler(setServerError: (error: boolean) => void) {
+  globalSetServerError = setServerError
+}
+
+export function setGlobalErrorHandler(showError: (message: string) => void) {
+  globalShowError = showError
 }
 
 // Centralized API base URL helpers
@@ -30,11 +40,123 @@ export function buildApiUrl(path: string): string {
   return `${base}${normalizedPath}`
 }
 
+// Get current language from localStorage
+export function getCurrentLanguage(): string {
+  if (typeof window === 'undefined') {
+    return 'uz' // Default language for server-side
+  }
+  const savedLanguage = localStorage.getItem('language')
+  // Map language codes to API format (uz, oz, ru)
+  const languageMap: Record<string, string> = {
+    'uz': 'uz',
+    'cyr': 'oz',
+    'ru': 'ru',
+  }
+  return languageMap[savedLanguage as keyof typeof languageMap] || 'uz'
+}
+
+// Get default headers including Accept-Language
+export function getDefaultHeaders(additionalHeaders?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept-Language': getCurrentLanguage(),
+    ...(additionalHeaders || {}),
+  }
+  return headers
+}
+
+/**
+ * Safely parse JSON from a Response object
+ * Handles empty responses, invalid JSON, and network errors
+ */
+export async function safeJsonParse<T>(response: Response | null): Promise<T | null> {
+  if (!response) {
+    return null
+  }
+
+  try {
+    // Check if response has content
+    const contentType = response.headers.get('content-type')
+    const text = await response.text()
+    
+    // If response is empty, return null
+    if (!text || text.trim().length === 0) {
+      return null
+    }
+    
+    // Check if content-type indicates JSON
+    if (contentType && !contentType.includes('application/json')) {
+      console.warn('Response is not JSON, content-type:', contentType)
+      return null
+    }
+    
+    // Try to parse JSON
+    try {
+      return JSON.parse(text) as T
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError)
+      console.error('Response text:', text.substring(0, 200)) // Log first 200 chars
+      return null
+    }
+  } catch (error) {
+    console.error('Error reading response:', error)
+    return null
+  }
+}
+
+// Check if error is a network/server error
+function isNetworkError(error: any): boolean {
+  if (!error) return false
+  
+  // Network errors (fetch failed, connection refused, etc.)
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    return true
+  }
+  
+  // Connection errors
+  if (error?.message?.includes('Failed to fetch') || 
+      error?.message?.includes('NetworkError') ||
+      error?.message?.includes('Network request failed') ||
+      error?.message?.includes('ERR_INTERNET_DISCONNECTED') ||
+      error?.message?.includes('ERR_NETWORK_CHANGED') ||
+      error?.message?.includes('ERR_CONNECTION_REFUSED') ||
+      error?.message?.includes('ERR_CONNECTION_RESET') ||
+      error?.message?.includes('ERR_CONNECTION_CLOSED') ||
+      error?.message?.includes('ERR_CONNECTION_ABORTED') ||
+      error?.message?.includes('ERR_CONNECTION_TIMED_OUT')) {
+    return true
+  }
+  
+  // 500-599 server errors
+  if (error?.status >= 500 && error?.status < 600) {
+    return true
+  }
+  
+  // 502, 503, 504 specific errors
+  if (error?.status === 502 || error?.status === 503 || error?.status === 504) {
+    return true
+  }
+  
+  return false
+}
+
 export async function handleApiError(error: any): Promise<boolean> {
+  // Check if it's a network/server error first
+  if (isNetworkError(error)) {
+    if (globalSetServerError) {
+      globalSetServerError(true)
+    }
+    return true // Indicates server error was handled
+  }
+  
   // Check if it's a 401 error
   if (error?.message?.includes('401') || error?.status === 401) {
     if (globalShow401Error) {
-      await globalShow401Error("Sizning sessiyangiz tugagan. Qaytadan kirish kerak.")
+      if(error.message != null){
+        await globalShow401Error(error.message)
+      }else{
+        await globalShow401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
+      }
     } else {
       // Fallback: direct logout and redirect
       await logout()
@@ -60,7 +182,7 @@ export async function handleApiError(error: any): Promise<boolean> {
     }
     return true // Indicates 429 was handled
   }
-  return false // Not a 401 or 429 error
+  return false // Not a handled error
 }
 
 export async function makeAuthenticatedRequest(url: string, options: RequestInit = {}) {
@@ -69,7 +191,7 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...getDefaultHeaders(),
       ...(options.headers as Record<string, string>),
     }
     
@@ -84,6 +206,12 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
     })
     
     if (!response.ok) {
+      // Check for server errors (500-599)
+      if (response.status >= 500 && response.status < 600) {
+        await handleApiError({ status: response.status })
+        return null
+      }
+      
       if (response.status === 401) {
         await handleApiError({ status: 401 })
         return null
@@ -94,6 +222,23 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
         return null
       }
       
+      // Try to parse error response to get message field
+      let errorMessage: string | null = null
+      const clonedResponse = response.clone()
+      
+      // Try to parse error response as JSON
+      const errorData = await safeJsonParse<{ message?: string; error?: string }>(clonedResponse)
+      if (errorData) {
+        errorMessage = errorData.message || errorData.error || null
+      }
+      
+      // If message field exists and is not empty, show it in notification
+      if (errorMessage && errorMessage.trim() && globalShowError) {
+        globalShowError(errorMessage)
+        return null
+      }
+      
+      // Fallback to text response if no message field
       const errorText = await response.text()
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
     }

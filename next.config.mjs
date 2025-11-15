@@ -10,6 +10,16 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
+  webpack: (config, { isServer }) => {
+    // Client-side uchun fallback qo'shamiz
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'supports-color': false,
+      }
+    }
+    return config
+  },
   async rewrites() {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL  || 'http://localhost:8080'
     return [

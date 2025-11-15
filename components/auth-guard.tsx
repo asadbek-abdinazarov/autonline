@@ -32,7 +32,7 @@ export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardP
       // Inactive user: clear storage, notify and redirect
       logout().finally(() => {
         setCurrentUser(null)
-        show401Error("Sizning sessiyangiz tugagan. Qaytadan kirish kerak.")
+        show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
       })
       return
     }

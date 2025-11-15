@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useApi } from "./use-api"
-import { buildApiUrl } from "@/lib/api-utils"
+import { buildApiUrl, safeJsonParse } from "@/lib/api-utils"
 import { fetchTopicsFromApi } from "@/lib/data"
 
 export interface LessonHistoryItem {
@@ -15,6 +15,10 @@ export interface LessonHistoryItem {
   notCorrectAnswersCount: number
   allQuestionCount: number | null
   createdDate: string
+  // Localized fields from API (if available)
+  nameUz?: string
+  nameOz?: string
+  nameRu?: string
 }
 
 export function useLessonHistory() {
@@ -33,7 +37,12 @@ export function useLessonHistory() {
       })
       
       if (response) {
-        const data: LessonHistoryItem[] = await response.json()
+        const data = await safeJsonParse<LessonHistoryItem[]>(response)
+        
+        if (!data) {
+          setError('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+          return
+        }
         
         // Fetch topics to get lesson icons
         try {
