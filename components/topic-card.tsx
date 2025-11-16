@@ -18,7 +18,7 @@ export function TopicCard({ topic }: TopicCardProps) {
   const [showTitleModal, setShowTitleModal] = useState(false)
   const localizedTitle = getLocalizedName(topic, language)
   const localizedDescription = getLocalizedDescription(topic, language)
-  const isLongTitle = localizedTitle.length > 30
+  const isLongTitle = localizedTitle.length > 44
 
   return (
     <Card className="group hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl w-full h-[280px] flex flex-col">
@@ -50,7 +50,7 @@ export function TopicCard({ topic }: TopicCardProps) {
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-bold leading-relaxed">
+                      <DialogTitle className="text-xl font-bold leading-relaxed transition-colors duration-200">
                         {localizedTitle}
                       </DialogTitle>
                     </DialogHeader>
@@ -80,14 +80,13 @@ export function TopicCard({ topic }: TopicCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-0 flex-1 flex flex-col">
-        <div className="flex-1"></div>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-10 line-clamp-1 leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 mt-2 line-clamp-3 leading-relaxed transition-colors duration-200">
           {localizedDescription}
         </p>
         <Button asChild className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
           <Link href={`/topics/${topic.id}`} className="flex items-center justify-center">
-            <span className="font-medium">Boshlash</span>
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+            <span className="font-medium transition-colors duration-200">Boshlash</span>
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200 transition-colors duration-200" />
           </Link>
         </Button>
       </CardContent>

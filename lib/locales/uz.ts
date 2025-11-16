@@ -249,6 +249,35 @@ export const uz = {
     defaultError: "Login yoki parol noto'g'ri",
   },
 
+  // Register Page
+  register: {
+    title: "Hisob yaratish",
+    subtitle: "Haydovchilik guvohnomasini olish uchun tayyorgarlik platformasi",
+    description: "To'liq ism va telefon raqamingizni kiriting",
+    fullName: "To'liq ism",
+    fullNamePlaceholder: "To'liq ismingizni kiriting",
+    username: "Foydalanuvchi nomi",
+    usernamePlaceholder: "Foydalanuvchi nomingizni yarating",
+    phone: "Telefon raqam",
+    phonePlaceholder: "+998 90 123 45 67 yoki 90 123 45 67",
+    phoneExample: "Masalan: +998 90 123 45 67, 998 90 123 45 67, yoki 90 123 45 67",
+    phoneError: "Telefon raqami 9 raqamdan iborat bo'lishi kerak (masalan: 901234567 yoki +998901234567)",
+    phoneErrorOperator: "Telefon raqami noto'g'ri operator kodi. O'zbekiston mobil operator kodlaridan foydalaning.",
+    password: "Foydalanuvchi paroli",
+    passwordPlaceholder: "Yangi parol yarating",
+    confirmPassword: "Parolni tasdiqlash",
+    confirmPasswordPlaceholder: "Parolni qayta kiriting",
+    passwordMismatch: "Parollar mos kelmaydi",
+    submit: "Ro'yxatdan o'tish",
+    submitting: "Jo'natilmoqda",
+    submitted: "Yuborildi",
+    success: "Yuborildi",
+    error: "Ro'yxatdan o'tishda xatolik",
+    homePage: "Bosh sahifa",
+    hasAccount: "Sizda allaqachon foydalanuvchi hisob mavjudmi?",
+    login: "Kirish",
+  },
+
   // News Page
   news: {
     title: "Yangiliklar",

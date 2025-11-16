@@ -249,6 +249,35 @@ export const ru = {
     defaultError: "Неверный логин или пароль",
   },
 
+  // Register Page
+  register: {
+    title: "Создание аккаунта",
+    subtitle: "Платформа подготовки для получения водительских прав",
+    description: "Введите ваше полное имя и номер телефона",
+    fullName: "Полное имя",
+    fullNamePlaceholder: "Введите ваше полное имя",
+    username: "Имя пользователя",
+    usernamePlaceholder: "Создайте имя пользователя",
+    phone: "Номер телефона",
+    phonePlaceholder: "+998 90 123 45 67 или 90 123 45 67",
+    phoneExample: "Например: +998 90 123 45 67, 998 90 123 45 67, или 90 123 45 67",
+    phoneError: "Номер телефона должен состоять из 9 цифр (например: 901234567 или +998901234567)",
+    phoneErrorOperator: "Неверный код оператора телефона. Используйте коды мобильных операторов Узбекистана.",
+    password: "Пароль пользователя",
+    passwordPlaceholder: "Создайте новый пароль",
+    confirmPassword: "Подтверждение пароля",
+    confirmPasswordPlaceholder: "Повторно введите пароль",
+    passwordMismatch: "Пароли не совпадают",
+    submit: "Зарегистрироваться",
+    submitting: "Отправка...",
+    submitted: "Отправлено",
+    success: "Отправлено",
+    error: "Ошибка при регистрации",
+    homePage: "Главная страница",
+    hasAccount: "У вас уже есть аккаунт?",
+    login: "Войти",
+  },
+
   // News Page
   news: {
     title: "Новости",

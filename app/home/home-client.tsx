@@ -81,14 +81,14 @@ export default function HomeClient() {
               <div className="max-w-4xl mx-auto space-y-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
                   <Sparkles className="h-4 w-4 text-blue-500" />
-                  <span>{t.home.hero.welcome}</span>
+                  <span className="transition-transform duration-200 transition-colors duration-300">{t.home.hero.welcome}</span>
               </div>
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     {t.home.hero.title}
                   </span>
                   <br />
-                  <span className="text-slate-900 dark:text-white">{t.home.hero.subtitle}</span>
+                  <span className="text-slate-900 dark:text-white transition-transform duration-200 transition-colors duration-300">{t.home.hero.subtitle}</span>
                 </h1>
                 <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
                   {t.home.hero.description}

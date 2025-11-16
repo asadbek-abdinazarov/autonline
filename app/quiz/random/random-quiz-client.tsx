@@ -550,8 +550,18 @@ export default function RandomQuizClient() {
       clearTimeout(autoSkipTimeout)
     }
 
-    const correctAnswerIndex = currentQuestion.answers.status - 1
-    const isCorrect = answerIndex === correctAnswerIndex
+    // API da to'g'ri javob isCorrect array'da saqlanadi
+    // isCorrect[index] === true bo'lsa, u javob to'g'ri
+    let isCorrect = false
+    if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
+      isCorrect = currentQuestion.answers.isCorrect[answerIndex] === true
+      console.log('[Random Quiz] isCorrect array:', currentQuestion.answers.isCorrect, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
+    } else if (currentQuestion.answers.status) {
+      isCorrect = answerIndex === currentQuestion.answers.status - 1
+      console.log('[Random Quiz] Using status field:', currentQuestion.answers.status, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
+    } else {
+      console.warn('[Random Quiz] No isCorrect array or status field found for question:', currentQuestion.questionId)
+    }
 
     const newUserAnswers = new Map(userAnswers)
     newUserAnswers.set(currentQuestionIndex, { selectedAnswer: answerIndex, isCorrect })
@@ -828,8 +838,13 @@ export default function RandomQuizClient() {
                   </h4>
                   <div className="max-w-3xl mx-auto space-y-3">
                     {(currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz).map((option, index) => {
-                      const correctAnswerIndex = currentQuestion.answers.status - 1
-                      const isCorrect = index === correctAnswerIndex
+                      // API da to'g'ri javob isCorrect array'da saqlanadi
+                      let isCorrect = false
+                      if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
+                        isCorrect = currentQuestion.answers.isCorrect[index] === true
+                      } else if (currentQuestion.answers.status) {
+                        isCorrect = index === currentQuestion.answers.status - 1
+                      }
                       const isSelected = currentUserAnswer?.selectedAnswer === index
                       const showCorrect = isAnswered && isCorrect
                       const showIncorrect = isAnswered && isSelected && !isCorrect

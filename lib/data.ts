@@ -73,7 +73,8 @@ export interface QuestionData {
   answers: {
     answerId: number
     questionId: number
-    status: number
+    status?: number // Deprecated, use isCorrect instead
+    isCorrect?: boolean[] // Array of boolean values for each answer option
     answerText: {
       oz: string[]
       uz: string[]
@@ -767,7 +768,8 @@ export async function fetchQuestionsByLessonId(
           answers: {
             answerId: q.variants.find(v => v.isCorrect)?.variantId || 0,
             questionId: q.questionId,
-            status: q.variants.find(v => v.isCorrect) ? 1 : 0,
+            status: q.variants.findIndex(v => v.isCorrect) + 1, // Find index of correct answer (1-based)
+            isCorrect: q.variants.map(v => v.isCorrect), // Create isCorrect array from variants
             answerText: {
               uz: q.variants.map(v => v.text),
               oz: q.variants.map(v => v.text),
@@ -783,6 +785,17 @@ export async function fetchQuestionsByLessonId(
       if (!apiData.lessonId || !apiData.questions) {
         throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
       }
+      
+      // Ensure isCorrect array is created for old format if not present
+      apiData.questions = apiData.questions.map(q => {
+        if (!q.answers.isCorrect && q.answers.status) {
+          // Create isCorrect array from status field
+          const answerCount = q.answers.answerText.uz?.length || q.answers.answerText.oz?.length || q.answers.answerText.ru?.length || 0
+          const correctIndex = q.answers.status - 1 // Convert 1-based to 0-based
+          q.answers.isCorrect = Array(answerCount).fill(false).map((_, index) => index === correctIndex)
+        }
+        return q
+      })
     }
     
     // Save to cache

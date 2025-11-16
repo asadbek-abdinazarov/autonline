@@ -37,7 +37,7 @@ export function Header() {
               priority
             />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">AutOnline</h1>
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">AutOnline</h1>
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">

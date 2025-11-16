@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react"
 import { register as registerApi, setCurrentUser } from "@/lib/auth"
+import { useTranslation } from "@/hooks/use-translation"
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [fullName, setFullName] = useState("")
   const [username, setUsername] = useState("")
@@ -44,7 +46,7 @@ export default function RegisterPage() {
       return {
         isValid: false,
         normalized: '',
-        error: "Telefon raqami 9 raqamdan iborat bo'lishi kerak (masalan: 901234567 yoki +998901234567)"
+        error: t.register.phoneError
       }
     }
     
@@ -56,7 +58,7 @@ export default function RegisterPage() {
       return {
         isValid: false,
         normalized: '',
-        error: "Telefon raqami noto'g'ri operator kodi. O'zbekiston mobil operator kodlaridan foydalaning."
+        error: t.register.phoneErrorOperator
       }
     }
     
@@ -101,7 +103,7 @@ export default function RegisterPage() {
     
     // Check if passwords match when confirm password is filled
     if (confirmPassword && value !== confirmPassword) {
-      setPasswordError("Parollar mos kelmaydi")
+      setPasswordError(t.register.passwordMismatch)
     }
   }
 
@@ -116,7 +118,7 @@ export default function RegisterPage() {
     
     // Check if passwords match
     if (password && value !== password) {
-      setPasswordError("Parollar mos kelmaydi")
+      setPasswordError(t.register.passwordMismatch)
     } else if (password && value === password) {
       setPasswordError("")
     }
@@ -137,7 +139,7 @@ export default function RegisterPage() {
     
     // Validate passwords match
     if (password !== confirmPassword) {
-      setPasswordError("Parollar mos kelmaydi")
+      setPasswordError(t.register.passwordMismatch)
       return
     }
     
@@ -149,7 +151,7 @@ export default function RegisterPage() {
       setIsLoading(false)
       setTimeout(() => router.push("/home"), 1200)
     } catch (err: any) {
-      setError(err instanceof Error ? err.message : "Ro'yxatdan o'tishda xatolik")
+      setError(err instanceof Error ? err.message : t.register.error)
       setIsLoading(false)
     }
   }
@@ -177,14 +179,14 @@ export default function RegisterPage() {
             AutOnline
           </h1>
           <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400">
-            Haydovchilik guvohnomasini olish uchun tayyorgarlik platformasi
+            {t.register.subtitle}
           </p>
         </div>
 
         <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl transition-colors duration-300">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Hisob yaratish</CardTitle>
-            <CardDescription className="text-base text-slate-600 dark:text-slate-400">To'liq ism va telefon raqamingizni kiriting</CardDescription>
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{t.register.title}</CardTitle>
+            <CardDescription className="text-base text-slate-600 dark:text-slate-400">{t.register.description}</CardDescription>
           </CardHeader>
           
           <CardContent>
@@ -199,11 +201,11 @@ export default function RegisterPage() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">To'liq ism</Label>
+                <Label htmlFor="fullName">{t.register.fullName}</Label>
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="To'liq ismingizni kiriting"
+                  placeholder={t.register.fullNamePlaceholder}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -212,11 +214,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">Foydalanuvchi nomi</Label>
+                <Label htmlFor="username">{t.register.username}</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Foydalanuvchi nomingizni yarating"
+                  placeholder={t.register.usernamePlaceholder}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -225,11 +227,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefon raqam</Label>
+                <Label htmlFor="phone">{t.register.phone}</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+998 90 123 45 67 yoki 90 123 45 67"
+                  placeholder={t.register.phonePlaceholder}
                   value={phone}
                   onChange={handlePhoneChange}
                   required
@@ -240,18 +242,18 @@ export default function RegisterPage() {
                   <p className="text-xs text-red-600 mt-1">{phoneError}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Masalan: +998 90 123 45 67, 998 90 123 45 67, yoki 90 123 45 67
+                    {t.register.phoneExample}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Foydalanuvchi paroli</Label>
+                <Label htmlFor="password">{t.register.password}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Yangi parol yarating"
+                    placeholder={t.register.passwordPlaceholder}
                     value={password}
                     onChange={handlePasswordChange}
                     required
@@ -274,12 +276,12 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Parolni tasdiqlash</Label>
+                <Label htmlFor="confirmPassword">{t.register.confirmPassword}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Parolni qayta kiriting"
+                    placeholder={t.register.confirmPasswordPlaceholder}
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
                     required
@@ -307,13 +309,13 @@ export default function RegisterPage() {
               {isSuccess && (
                 <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 p-3 rounded-md flex items-center gap-2 transition-colors duration-300">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Yuborildi</span>
+                  <span>{t.register.success}</span>
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button asChild variant="outline" size="lg" className="w-full border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300">
-                  <Link href="/">Bosh sahifa</Link>
+                  <Link href="/">{t.register.homePage}</Link>
                 </Button>
 
                 <Button 
@@ -331,15 +333,15 @@ export default function RegisterPage() {
                   {isSuccess ? (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4 animate-pulse" />
-                      Yuborildi
+                      {t.register.submitted}
                     </>
                   ) : isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Jo'natilmoqda
+                      {t.register.submitting}
                     </>
                   ) : (
-                    "Ro'yxatdan o'tish"
+                    t.register.submit
                   )}
                 </Button>
               </div>
@@ -347,9 +349,9 @@ export default function RegisterPage() {
 
             <div className="mt-4 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               <p>
-                Sizda allaqachon foydalanuvchi hisob mavjudmi?{" "}
+                {t.register.hasAccount}{" "}
                 <Link href="/login" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline transition-colors duration-300">
-                  Kirish
+                  {t.register.login}
                 </Link>
               </p>
             </div>
