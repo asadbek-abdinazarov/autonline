@@ -84,7 +84,7 @@ export function TopicCard({ topic }: TopicCardProps) {
           {localizedDescription}
         </p>
         <Button asChild className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
-          <Link href={`/topics/${topic.id}`} className="flex items-center justify-center">
+          <Link href={`/quiz/${topic.id}`} className="flex items-center justify-center">
             <span className="font-medium transition-colors duration-200">Boshlash</span>
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200 transition-colors duration-200" />
           </Link>

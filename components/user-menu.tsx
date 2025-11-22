@@ -3,11 +3,10 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, HelpCircle, Crown, Star, Ban, TrendingUp } from "lucide-react"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp } from "lucide-react"
 import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import {
@@ -88,10 +87,6 @@ export function UserMenu() {
   
   const handleHistoryClick = () => {
     router.push("/history")
-  }
-
-  const handleHelpCenterClick = () => {
-    router.push("/help-center")
   }
 
 
@@ -178,8 +173,7 @@ export function UserMenu() {
               
               {/* Content */}
               <div className="bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
-                <ScrollArea className="h-48">
-                  <div className="p-2">
+                <div className={`p-2 ${paymentHistory.length > 2 ? 'max-h-48 overflow-y-auto' : ''}`}>
                     {isLoading ? (
                       <div className="flex flex-col items-center justify-center py-12 px-4">
                         <div className="relative">
@@ -235,6 +229,11 @@ export function UserMenu() {
                                   )}
                                 </div>
                               </div>
+
+                              <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                              <span className="text-[12px] mb-2 truncate">{payment.description}</span>
+                              <span className="text-[12px] mb-2 truncate">({payment.paymentMethod})</span>
+                              </div>
                               
                               {/* Date section */}
                               <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
@@ -253,8 +252,7 @@ export function UserMenu() {
                         ))}
                       </div>
                     )}
-                  </div>
-                </ScrollArea>
+                </div>
               </div>
               
               {/* Footer stats */}
@@ -283,14 +281,6 @@ export function UserMenu() {
             {t.userMenu.testHistory}
           </DropdownMenuItem>
         )}
-        
-        <DropdownMenuItem 
-          onClick={handleHelpCenterClick}
-          className="cursor-pointer"
-        >
-          <HelpCircle className="mr-2 h-4 w-4" />
-          {t.userMenu.helpCenter}
-        </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         

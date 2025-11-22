@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { buildApiUrl, getDefaultHeaders } from "@/lib/api-utils"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface NewsItem {
   newsId: number
@@ -16,15 +17,25 @@ export function useNews() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { language } = useTranslation()
 
   const fetchNews = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
       
+      // Map frontend language to API language format
+      // uz (lotin) -> uz, cyr (kiril) -> oz, ru -> ru
+      const apiLanguage = language === 'cyr' ? 'oz' : language === 'ru' ? 'ru' : 'uz'
+      
+      const headers = {
+        ...getDefaultHeaders(),
+        'Accept-Language': apiLanguage,
+      }
+      
       const response = await fetch(buildApiUrl('/api/v1/news'), {
         method: 'GET',
-        headers: getDefaultHeaders(),
+        headers,
       })
       
       if (!response.ok) {
@@ -54,7 +65,7 @@ export function useNews() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [language])
 
   return {
     news,

@@ -47,10 +47,12 @@ export function getCurrentLanguage(): string {
   }
   const savedLanguage = localStorage.getItem('language')
   // Map language codes to API format (uz, oz, ru)
+  // Handle 'en' or any unknown language as 'uz'
   const languageMap: Record<string, string> = {
     'uz': 'uz',
     'cyr': 'oz',
     'ru': 'ru',
+    'en': 'uz', // Default English to Uzbek
   }
   return languageMap[savedLanguage as keyof typeof languageMap] || 'uz'
 }

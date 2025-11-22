@@ -130,12 +130,12 @@ export default function TopicClient({ topicId }: TopicClientProps) {
                   <Sparkles className="h-4 w-4 text-blue-500" />
                   <span>{lessonData ? getLocalizedLessonName(lessonData, language) : t.topics.testInfo}</span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700 px-2">
                   <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     {lessonData ? getLocalizedLessonName(lessonData, language) : "Test mavzusi"}
                   </span>
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
                   {lessonData ? getLocalizedLessonDescription(lessonData, language) || "Test mavzusi" : "Test mavzusi"}
                 </p>
               </div>
@@ -146,46 +146,46 @@ export default function TopicClient({ topicId }: TopicClientProps) {
         {/* Content Section */}
         <section className="container mx-auto px-4 py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
-          <Card className="mb-8 sm:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="pb-6">
+          <Card className="mb-6 sm:mb-8 md:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-4 sm:pb-6 px-4 sm:px-6">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-                <div className="text-6xl sm:text-7xl filter drop-shadow-lg">{lessonData.lessonIcon || "📚"}</div>
+                <div className="text-5xl sm:text-6xl md:text-7xl filter drop-shadow-lg">{lessonData.lessonIcon || "📚"}</div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20 hover:scale-105 transition-transform">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <FileQuestion className="h-6 w-6 text-white" />
+            <CardContent className="px-4 sm:px-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20 hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                    <FileQuestion className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.questionsCount}</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-primary">{lessonData.questions.length}</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">{lessonData.questions.length}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20 hover:scale-105 transition-transform">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20 hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.time}</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-primary">{timeInMinutes} {t.topics.minutes}</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">{timeInMinutes} {t.topics.minutes}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20 hover:scale-105 transition-transform">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                    <Play className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20 hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <Play className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.topics.timePerQuestion}</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-primary">1.2 {t.topics.minutesShort}</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">1.2 {t.topics.minutesShort}</p>
                   </div>
                 </div>
               </div>
 
-              <Button size="lg" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-lg py-6" asChild>
+              <Button size="lg" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base sm:text-lg py-5 sm:py-6" asChild>
                 <Link href={`/quiz/${topicId}`} className="flex items-center justify-center gap-2">
-                  <Play className="h-5 w-5" />
+                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                   {t.topics.startTest}
                 </Link>
               </Button>
@@ -193,29 +193,15 @@ export default function TopicClient({ topicId }: TopicClientProps) {
           </Card>
 
           <Card className="border-2 shadow-lg bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl sm:text-2xl font-bold flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileQuestion className="h-5 w-5 text-primary" />
+            <CardHeader className="px-4 sm:px-6">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileQuestion className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
                 {t.topics.testInfo}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-4 text-lg sm:text-xl">{t.topics.tips}</h4>
-                <ul className="list-none space-y-3">
-                  {t.topics.tipsList.map((tip, index) => (
-                    <li key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-primary text-xs font-bold">{index + 1}</span>
-                      </div>
-                      <span className="text-base leading-relaxed">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </CardContent>
+
           </Card>
           </div>
         </section>

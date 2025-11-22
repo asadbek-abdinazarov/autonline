@@ -191,11 +191,32 @@ export default function LandingPage() {
                 priority
               />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{t.common.appName}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">{t.common.appName}</h1>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeSwitcher />
             <LanguageSwitcher />
+            <Button
+              variant="ghost"
+              asChild
+              size="sm"
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            >
+              <Link href="/help-center" className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.userMenu.helpCenter}</span>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Link href="/subscription" className="flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.header.subscription}</span>
+              </Link>
+            </Button>
             {isLoggedIn ? (
               <Button asChild className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
                   <Link href="/home" className="flex items-center gap-2">
@@ -357,11 +378,6 @@ export default function LandingPage() {
                         </p>
                       </div>
                     </div>
-                    {index < steps.length - 1 && (
-                      <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                        <ChevronRight className="h-8 w-8 text-slate-400 dark:text-slate-600" />
-                      </div>
-                    )}
                   </div>
                 )
               })}
@@ -370,8 +386,8 @@ export default function LandingPage() {
         </section>
 
         {/* Benefits Section */}
-        <section id="benefits" className="py-20 sm:py-24 md:py-32 bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10"></div>
+        <section id="benefits" className="py-20 sm:py-24 md:py-32 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-16 sm:mb-20">
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white">
@@ -492,8 +508,8 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="relative py-20 sm:py-24 md:py-32 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600"></div>
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90"></div>
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10 text-center">
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-xl mb-6 shadow-lg">

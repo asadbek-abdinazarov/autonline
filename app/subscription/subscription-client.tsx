@@ -1,13 +1,13 @@
 "use client"
 
+import { useState } from "react"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Crown, Check, Loader2, Sparkles, Zap, Shield, Star } from "lucide-react"
-import Link from "next/link"
 import { Footer } from "@/components/footer"
 import { AuthGuard } from "@/components/auth-guard"
-import { useState } from "react"
 import { useNotification } from "@/components/notification-provider"
 import { useApi } from "@/hooks/use-api"
 import { buildApiUrl } from "@/lib/api-utils"
@@ -162,12 +162,12 @@ export function SubscriptionClient() {
                     <Sparkles className="h-4 w-4 text-amber-500" />
                     <span>Premium Obuna</span>
                   </div>
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700 px-2">
                     <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent">
                       Premium Obuna
                     </span>
                   </h1>
-                  <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
                     Barcha funksiyalardan foydalanish va imtihonga mukammal tayyorlanish uchun obuna sotib oling
                   </p>
                 </div>
@@ -198,17 +198,17 @@ export function SubscriptionClient() {
                 >
                   {plan.popular && (
                     <>
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                      <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-20">
                         <div className="relative">
                           <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 rounded-full blur-md opacity-75 animate-pulse" />
-                          <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2">
-                            <Star className="h-4 w-4 fill-white animate-spin-slow" />
-                            <span>ENG MASHHUR</span>
-                            <Star className="h-4 w-4 fill-white animate-spin-slow" />
+                          <div className="relative bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold shadow-2xl flex items-center gap-1 sm:gap-2">
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-white animate-spin-slow" />
+                            <span className="whitespace-nowrap">ENG MASHHUR</span>
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-white animate-spin-slow" />
                           </div>
                         </div>
                       </div>
-                      <div className="absolute -inset-1 bg-gradient-to-r from-primary via-amber-500 to-primary rounded-3xl opacity-20 blur-xl" />
+                      <div className="absolute -inset-1 bg-gradient-to-r from-primary via-amber-500 to-primary rounded-2xl sm:rounded-3xl opacity-20 blur-xl" />
                     </>
                   )}
                   
@@ -226,22 +226,22 @@ export function SubscriptionClient() {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full" />
                     )}
                     
-                    <CardHeader className="relative pb-3 pt-5">
+                    <CardHeader className="relative pb-3 pt-4 sm:pt-5 px-4 sm:px-6">
                       <div className="mb-3">
                         <div className="flex items-center gap-2 mb-2">
                           <div className={cn(
-                            "p-1.5 rounded-lg flex-shrink-0",
+                            "p-1 sm:p-1.5 rounded-lg flex-shrink-0",
                             index === 0 
                               ? "bg-blue-500/10 text-blue-600" 
                               : "bg-amber-500/10 text-amber-600"
                           )}>
                             {index === 0 ? (
-                              <Sparkles className="h-4 w-4" />
+                              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                             ) : (
-                              <Zap className="h-4 w-4" />
+                              <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
                             )}
                           </div>
-                          <CardTitle className="text-lg sm:text-xl font-bold leading-tight">
+                          <CardTitle className="text-base sm:text-lg md:text-xl font-bold leading-tight">
                             {plan.name}
                           </CardTitle>
                         </div>
@@ -250,38 +250,38 @@ export function SubscriptionClient() {
                         </CardDescription>
                       </div>
                       
-                      <div className="flex items-baseline gap-2 mt-3 mb-2">
-                        <span className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
+                      <div className="flex items-baseline gap-1 sm:gap-2 mt-3 mb-2">
+                        <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
                           {new Intl.NumberFormat('uz-UZ', {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 0
                           }).format(plan.price)}
                         </span>
                         <div className="flex flex-col justify-center">
-                          <span className="text-sm font-semibold text-muted-foreground">
+                          <span className="text-xs sm:text-sm font-semibold text-muted-foreground">
                             {plan.currency}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">
                             / {plan.duration}
                           </span>
                         </div>
                       </div>
                       
                       {plan.popular && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">
-                          <span className="text-sm">🎁</span>
-                          <span className="text-xs font-semibold text-green-700 dark:text-green-400">
+                        <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">
+                          <span className="text-xs sm:text-sm">🎁</span>
+                          <span className="text-[10px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
                             Bonus
                           </span>
                         </div>
                       )}
                     </CardHeader>
                     
-                    <CardContent className="space-y-3 pb-4 flex-1 flex flex-col">
+                    <CardContent className="space-y-3 pb-4 flex-1 flex flex-col px-4 sm:px-6">
                       <div className="border-t pt-3 flex-1">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-2">
-                          <div className="p-1 rounded-md bg-primary/10">
-                            <Shield className="h-3 w-3 text-primary" />
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-foreground mb-2">
+                          <div className="p-0.5 sm:p-1 rounded-md bg-primary/10">
+                            <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" />
                           </div>
                           <span>Imkoniyatlar:</span>
                         </div>
@@ -289,12 +289,12 @@ export function SubscriptionClient() {
                           {plan.features.map((feature, featureIndex) => (
                             <li 
                               key={featureIndex} 
-                              className="flex items-start gap-2 group/item hover:bg-muted/20 p-1 rounded transition-colors"
+                              className="flex items-start gap-1.5 sm:gap-2 group/item hover:bg-muted/20 p-0.5 sm:p-1 rounded transition-colors"
                             >
                               <div className="mt-0.5 p-0.5 rounded-full bg-success/20 group-hover/item:bg-success/30 transition-all flex-shrink-0">
-                                <Check className="h-3 w-3 text-success" />
+                                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-success" />
                               </div>
-                              <span className="text-xs sm:text-sm leading-relaxed text-foreground">
+                              <span className="text-[11px] sm:text-xs md:text-sm leading-relaxed text-foreground">
                                 {feature}
                               </span>
                             </li>
@@ -304,7 +304,7 @@ export function SubscriptionClient() {
                       
                       <Button
                         className={cn(
-                          "w-full h-10 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 mt-2",
+                          "w-full h-9 sm:h-10 text-[11px] sm:text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 mt-2",
                           plan.popular
                             ? "bg-gradient-to-r from-primary via-blue-600 to-primary hover:from-primary/90 hover:via-blue-500 hover:to-primary/90 text-white"
                             : "bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-100 dark:to-gray-200 hover:from-gray-800 hover:to-gray-700 dark:hover:from-gray-200 dark:hover:to-gray-300 text-white dark:text-gray-900"
@@ -314,13 +314,13 @@ export function SubscriptionClient() {
                       >
                         {isProcessing ? (
                           <>
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
                             <span className="hidden sm:inline">Jarayonda...</span>
                             <span className="sm:hidden">...</span>
                           </>
                         ) : (
                           <>
-                            <Crown className="mr-1.5 h-3.5 w-3.5" />
+                            <Crown className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             <span>Sotib olish</span>
                           </>
                         )}
@@ -391,6 +391,7 @@ export function SubscriptionClient() {
               </CardContent>
             </Card>
           </div>
+          </section>
         </main>
 
         <Footer />

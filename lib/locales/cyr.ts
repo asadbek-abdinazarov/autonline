@@ -365,6 +365,10 @@ export const cyr = {
     correctAnswers: "Тўғри жавоблар",
     incorrectAnswers: "Хато жавоблар",
     totalQuestions: "Жами саволлар",
+    totalTests: "Жами тестлар",
+    averageScore: "Ўртача балл",
+    successRate: "Муваффақият даражаси",
+    recentTests: "Сўнгги тестлар",
     dateFormat: {
       now: "Ҳозир",
       hoursAgo: "{hours} соат олдин",
@@ -435,6 +439,8 @@ export const cyr = {
     quickSelect: "Тезкор танлов",
     personalized: "Шахсийлаштирилган",
     questions: "савол",
+    progress: "Жараён",
+    score: "Балл",
   },
 
   // Footer

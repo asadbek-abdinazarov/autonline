@@ -365,6 +365,10 @@ export const ru = {
     correctAnswers: "Правильные ответы",
     incorrectAnswers: "Неправильные ответы",
     totalQuestions: "Всего вопросов",
+    totalTests: "Всего тестов",
+    averageScore: "Средний балл",
+    successRate: "Процент успеха",
+    recentTests: "Последние тесты",
     dateFormat: {
       now: "Сейчас",
       hoursAgo: "{hours} часов назад",
@@ -435,6 +439,8 @@ export const ru = {
     quickSelect: "Быстрый выбор",
     personalized: "Персонализированный",
     questions: "вопрос",
+    progress: "Прогресс",
+    score: "Балл",
   },
 
   // Footer

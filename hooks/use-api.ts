@@ -2,7 +2,6 @@
 
 import { useCallback } from "react"
 import { useNotification } from "@/components/notification-provider"
-import { getDefaultHeaders } from "@/lib/api-utils"
 import { useTranslation } from "@/hooks/use-translation"
 
 export function useApi() {
@@ -28,8 +27,23 @@ export function useApi() {
       // Get access token
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
       
+      // Map frontend language to API language format
+      // uz (lotin) -> uz, cyr (kiril) -> oz, ru -> ru
+      // Handle 'en' or any unknown language as 'uz'
+      let apiLanguage = 'uz' // Default to uz
+      if (language === 'cyr') {
+        apiLanguage = 'oz'
+      } else if (language === 'ru') {
+        apiLanguage = 'ru'
+      } else if (language === 'uz') {
+        apiLanguage = 'uz'
+      }
+      // For 'en' or any other value, default to 'uz'
+      
+      // Create headers with correct language - don't use getDefaultHeaders to avoid 'en' issue
       const headers: Record<string, string> = {
-        ...getDefaultHeaders(),
+        'Content-Type': 'application/json',
+        'Accept-Language': apiLanguage, // Use current language from hook
         ...(options.headers as Record<string, string>),
       }
       

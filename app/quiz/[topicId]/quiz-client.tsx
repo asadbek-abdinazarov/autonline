@@ -417,279 +417,263 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <main className="flex-1">
-        {/* Minimal Hero Section */}
-        <section className="relative overflow-hidden pt-4 sm:pt-6 pb-4 sm:pb-6 mb-4 sm:mb-6">
-          {/* Background gradient blobs */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          </div>
-
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-              <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                <Link href="/home" className="flex items-center gap-2">
-                  <ArrowLeft className="h-5 w-5" />
-                  {t.quiz.back}
+        {/* Header Section - Minimal and Clean */}
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/home" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline text-sm">{t.quiz.back}</span>
                 </Link>
               </Button>
-              <div className="flex items-center gap-4">
-                <div className="text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300">
-                  {lessonData?.lessonIcon} {lessonData ? getLocalizedLessonName(lessonData, language) : ''}
-                </div>
-                <div className="flex gap-2">
-                  <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm font-medium border border-primary/20">
-                    {selectedLanguage === 'uz' ? "O'Z" : selectedLanguage === 'oz' ? 'УЗ' : 'РУ'}
-                  </div>
-                </div>
+              <div className="h-5 w-px bg-border hidden sm:block"></div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{lessonData?.lessonIcon}</span>
+                <span className="text-sm font-medium text-foreground hidden sm:inline">{lessonData ? getLocalizedLessonName(lessonData, language) : ''}</span>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-primary/10 text-primary">
+                {selectedLanguage === 'uz' ? "O'Z" : selectedLanguage === 'oz' ? 'УЗ' : 'РУ'}
+              </span>
+            </div>
           </div>
-        </section>
+        </div>
 
-        {/* Quiz Content */}
-        <section className="container mx-auto px-4 py-4 sm:py-8">
-          <div className="max-w-5xl mx-auto">
-          <div className="space-y-4 sm:space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base sm:text-lg">{t.quiz.questionNavigator}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <QuestionNavigator
-                  totalQuestions={questions.length}
-                  currentQuestion={currentQuestionIndex}
-                  answeredQuestions={answeredQuestions}
-                  onQuestionClick={handleQuestionClick}
-                />
+        {/* Main Content Grid - Sidebar + Quiz */}
+        <div className="container mx-auto px-4 py-6 lg:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <aside className="lg:col-span-1">
+              <div className="sticky top-24 space-y-4">
+                {/* Timer Card */}
+                <Card className="bg-gradient-to-br from-primary/5 via-primary/0 to-transparent border-primary/20">
+                  <CardContent className="pt-6">
+                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={isAnswered} />
+                  </CardContent>
+                </Card>
 
-                <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 text-xs sm:text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-success flex-shrink-0"></div>
-                    <span className="text-pretty">{t.quiz.correctAnswer}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-error flex-shrink-0"></div>
-                    <span className="text-pretty">{t.quiz.incorrectAnswer}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-muted flex-shrink-0"></div>
-                    <span className="text-pretty">{t.quiz.unanswered}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Navigator Card */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">{t.quiz.questionNavigator}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <QuestionNavigator
+                      totalQuestions={questions.length}
+                      currentQuestion={currentQuestionIndex}
+                      answeredQuestions={answeredQuestions}
+                      onQuestionClick={handleQuestionClick}
+                    />
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={isAnswered} />
-              </CardHeader>
-            </Card>
-
-            {/* Single Column Layout - Question and Image Combined */}
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-background via-background to-muted/10">
-              <CardHeader className="pb-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary font-bold text-xl shadow-md">
-                      {currentQuestionIndex + 1}
+                    {/* Legend */}
+                    <div className="pt-3 border-t border-border space-y-2">
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="w-3 h-3 rounded bg-success"></div>
+                        <span className="text-muted-foreground">{t.quiz.correctAnswer}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="w-3 h-3 rounded bg-error"></div>
+                        <span className="text-muted-foreground">{t.quiz.incorrectAnswer}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="w-3 h-3 rounded bg-muted"></div>
+                        <span className="text-muted-foreground">{t.quiz.unanswered}</span>
+                      </div>
                     </div>
+
+                    {/* Progress Stats */}
+                    <div className="pt-3 border-t border-border">
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.progress}</p>
+                          <p className="text-lg font-bold">{answeredQuestions.size}/{questions.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.score}</p>
+                          <p className="text-lg font-bold text-success">{score}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </aside>
+
+            <section className="lg:col-span-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+              <Card className="shadow-lg border-0">
+                <CardHeader className="pb-6 border-b border-border">
+                  <div className="flex items-start justify-between gap-4">
                     <div>
-                      <CardTitle className="text-xl sm:text-2xl font-bold">
-                        {t.quiz.question} {currentQuestionIndex + 1} {t.quiz.of} {questions.length}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1 font-medium">
-                        {lessonData ? getLocalizedLessonName(lessonData, language) : ''}
-                      </p>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary font-bold">
+                          {currentQuestionIndex + 1}
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl">
+                            {t.quiz.question} {currentQuestionIndex + 1} <span className="text-muted-foreground font-normal">/ {questions.length}</span>
+                          </CardTitle>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Feedback Badge */}
+                    {isAnswered && currentUserAnswer && (
+                      <div className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap",
+                        currentUserAnswer.isCorrect 
+                          ? "bg-success/15 text-success border border-success/30" 
+                          : "bg-error/15 text-error border border-error/30"
+                      )}>
+                        {currentUserAnswer.isCorrect ? (
+                          <>
+                            <CheckCircle2 className="h-4 w-4" />
+                            {t.quiz.correctAnswer}
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-lg">✕</span>
+                            {t.quiz.incorrectAnswer}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pt-8 space-y-6">
+                  {/* Question Text */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.question}</p>
+                    <div className="text-center p-6 rounded-lg bg-muted/40 border border-muted/60">
+                      <h3 className="text-2xl font-semibold leading-relaxed text-balance">
+                        {(() => {
+                          const questionText = currentQuestion.questionText[selectedLanguage]
+                          return questionText || currentQuestion.questionText.uz
+                        })()}
+                      </h3>
                     </div>
                   </div>
-                  {isAnswered && currentUserAnswer && (
-                    <div className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-full shadow-md",
-                      currentUserAnswer.isCorrect ? "bg-success/10 border border-success/20" : "bg-error/10 border border-error/20"
-                    )}>
-                      {currentUserAnswer.isCorrect ? (
-                        <span className="text-success font-semibold flex items-center gap-2 text-sm sm:text-base">
-                          <CheckCircle2 className="h-5 w-5" />
-                          {t.quiz.correctAnswer}
-                        </span>
-                      ) : (
-                        <span className="text-error font-semibold text-sm sm:text-base">
-                          {t.quiz.incorrectAnswer}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {/* Question Text - Larger */}
-                <div className="text-center p-4 bg-muted/20 rounded-xl border border-muted/50 shadow-sm">
-                  <h3 className="text-xl sm:text-2xl font-semibold leading-relaxed text-balance max-w-3xl mx-auto">
-                    {(() => {
-                      const questionText = currentQuestion.questionText[selectedLanguage]
-                      // Debug: log actual content to see if it's cyrillic or latin
-                      if (questionText) {
-                        const firstChar = questionText.charAt(0)
-                        const isCyrillic = /[\u0400-\u04FF]/.test(firstChar)
-                        console.log('[Quiz] Question text first char:', firstChar, 'Is Cyrillic:', isCyrillic)
-                        console.log('[Quiz] Question text preview:', questionText.substring(0, 50))
-                      }
-                      console.log('[Quiz] All question texts:', {
-                        uz: currentQuestion.questionText.uz?.substring(0, 30),
-                        oz: currentQuestion.questionText.oz?.substring(0, 30),
-                        ru: currentQuestion.questionText.ru?.substring(0, 30)
-                      })
-                      return questionText || currentQuestion.questionText.uz
-                    })()}
-                  </h3>
-                </div>
 
-                {/* Image - Above Answer Options */}
-                {currentQuestion.photo && (
-                  <div className="flex justify-center">
-                    <div className="relative group max-w-lg w-full">
+                  {/* Image - if exists */}
+                  {currentQuestion.photo && (
+                    <div className="flex justify-center">
+                      <div className="relative group max-w-md w-full">
                         <img
                           src={`https://api.rulionline.uz/storage/${currentQuestion.photo}`}
                           alt={t.quiz.questionImage}
-                          className="w-full h-auto max-h-64 object-contain rounded-xl border border-muted/50 shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                          className="w-full h-auto max-h-80 object-contain rounded-lg border border-border shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
                             const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                            console.log('Opening image modal with URL:', imageUrl)
                             setCurrentImageUrl(imageUrl)
                             setIsImageModalOpen(true)
                           }}
                         />
-                      <div 
-                        className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                          console.log('Opening image modal with URL:', imageUrl)
-                          setCurrentImageUrl(imageUrl)
-                          setIsImageModalOpen(true)
-                        }}
-                      >
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg flex items-center gap-2">
-                          <ZoomIn className="w-5 h-5 text-primary" />
-                          <span className="text-primary font-semibold text-sm">{t.quiz.zoom}</span>
+                        <div 
+                          className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
+                            setCurrentImageUrl(imageUrl)
+                            setIsImageModalOpen(true)
+                          }}
+                        >
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
+                            <ZoomIn className="w-4 h-4 text-primary" />
+                            <span className="text-primary font-medium text-xs">{t.quiz.zoom}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Answer Options - Clean minimalist design with borders */}
-                <div className="space-y-3">
-                  <h4 className="text-base font-semibold text-center mb-3 text-muted-foreground">
-                    {t.quiz.selectAnswer}
-                  </h4>
-                  <div className="max-w-3xl mx-auto space-y-3">
-                    {(() => {
-                      const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
-                      // Debug: log to check if answers are in correct language
-                      if (answerOptions && answerOptions.length > 0) {
-                        const firstAnswer = answerOptions[0]
-                        const firstChar = firstAnswer?.charAt(0)
-                        const isCyrillic = firstChar && /[\u0400-\u04FF]/.test(firstChar)
-                        console.log('[Quiz] First answer first char:', firstChar, 'Is Cyrillic:', isCyrillic)
-                        console.log('[Quiz] First answer preview:', firstAnswer?.substring(0, 30))
-                      }
-                      return answerOptions
-                    })().map((option, index) => {
-                      // API da to'g'ri javob isCorrect array'da saqlanadi
-                      let isCorrect = false
-                      if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
-                        isCorrect = currentQuestion.answers.isCorrect[index] === true
-                      } else if (currentQuestion.answers.status) {
-                        isCorrect = index === currentQuestion.answers.status - 1
-                      }
-                      const isSelected = currentUserAnswer?.selectedAnswer === index
-                      const showCorrect = isAnswered && isCorrect
-                      const showIncorrect = isAnswered && isSelected && !isCorrect
+                  {/* Answer Options */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.selectAnswer}</p>
+                    <div className="space-y-2">
+                      {(() => {
+                        const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
+                        return answerOptions
+                      })().map((option, index) => {
+                        let isCorrect = false
+                        if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
+                          isCorrect = currentQuestion.answers.isCorrect[index] === true
+                        } else if (currentQuestion.answers.status) {
+                          isCorrect = index === currentQuestion.answers.status - 1
+                        }
+                        const isSelected = currentUserAnswer?.selectedAnswer === index
+                        const showCorrect = isAnswered && isCorrect
+                        const showIncorrect = isAnswered && isSelected && !isCorrect
 
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleAnswerSelect(index)}
-                          disabled={isAnswered}
-                          className={cn(
-                            "w-full p-5 rounded-xl border-2 transition-all duration-200 shadow-sm",
-                            "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20",
-                            "transform hover:scale-[1.01] active:scale-[0.99]",
-                            !isAnswered && "bg-white border-gray-300 hover:border-gray-400 hover:bg-gray-50",
-                            !isAnswered && isSelected && "bg-blue-50 border-blue-400 shadow-md",
-                            showCorrect && "bg-green-50 border-green-400 shadow-md",
-                            showIncorrect && "bg-red-50 border-red-400 shadow-md",
-                            isAnswered && !showCorrect && !showIncorrect && "opacity-60 bg-gray-100 border-gray-200",
-                          )}
-                        >
-                          <div className="flex items-start gap-3">
-                            {/* Answer Letter - Uppercase A, B, C */}
-                            <span
-                              className={cn(
-                                "text-lg font-bold flex-shrink-0 mt-0.5",
-                                !isAnswered && "text-gray-600",
-                                showCorrect && "text-green-600",
-                                showIncorrect && "text-red-600",
-                                !isAnswered && isSelected && "text-blue-600",
-                              )}
-                            >
-                              {String.fromCharCode(65 + index)}
-                            </span>
-                            
-                            {/* Answer Text - Larger and more visible */}
-                            <span
-                              className={cn(
-                                "text-lg leading-relaxed flex-1 text-left font-medium",
-                                !isAnswered && "text-gray-800",
-                                (isSelected || showCorrect || showIncorrect) && "font-semibold",
-                                showCorrect && "text-green-700",
-                                showIncorrect && "text-red-700",
-                                !isAnswered && isSelected && "text-blue-700",
-                              )}
-                            >
-                              {option}
-                            </span>
-
-                            {/* Status Icon - More visible checkmark or X */}
-                            {isAnswered && (showCorrect || showIncorrect) && (
-                              <div className="flex-shrink-0 mt-0.5">
-                                {showCorrect ? (
-                                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                                ) : (
-                                  <span className="text-red-600 text-lg font-bold">✕</span>
-                                )}
-                              </div>
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleAnswerSelect(index)}
+                            disabled={isAnswered}
+                            className={cn(
+                              "w-full p-4 rounded-lg border-2 transition-all duration-200 text-left",
+                              "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20",
+                              "transform hover:scale-[1.01] active:scale-[0.99]",
+                              !isAnswered && "bg-card border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer",
+                              !isAnswered && isSelected && "bg-primary/10 border-primary shadow-md",
+                              showCorrect && "bg-success/10 border-success shadow-md",
+                              showIncorrect && "bg-error/10 border-error shadow-md",
+                              isAnswered && !showCorrect && !showIncorrect && "opacity-50 bg-muted/30 border-muted/50 cursor-not-allowed",
                             )}
-                          </div>
-                        </button>
-                      )
-                    })}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={cn(
+                                "flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm flex-shrink-0 mt-0.5",
+                                !isAnswered && "bg-muted text-foreground",
+                                !isAnswered && isSelected && "bg-primary text-primary-foreground",
+                                showCorrect && "bg-success text-white",
+                                showIncorrect && "bg-error text-white",
+                              )}>
+                                {String.fromCharCode(65 + index)}
+                              </div>
+                              <span className={cn(
+                                "flex-1 font-medium leading-relaxed",
+                                !isAnswered && "text-foreground",
+                                (isSelected || showCorrect || showIncorrect) && "font-semibold",
+                                showCorrect && "text-success",
+                                showIncorrect && "text-error",
+                                !isAnswered && isSelected && "text-primary",
+                              )}>
+                                {option}
+                              </span>
+                              {isAnswered && (showCorrect || showIncorrect) && (
+                                <div className="flex-shrink-0 mt-1">
+                                  {showCorrect ? (
+                                    <CheckCircle2 className="w-5 h-5 text-success" />
+                                  ) : (
+                                    <span className="text-error text-lg font-bold">✕</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </section>
           </div>
         </div>
-        </section>
       </main>
 
       {/* Image Modal */}
       <ImageModal
         isOpen={isImageModalOpen}
-        onClose={() => {
-          console.log('Closing image modal')
-          setIsImageModalOpen(false)
-        }}
+        onClose={() => setIsImageModalOpen(false)}
         imageUrl={currentImageUrl}
         alt={t.quiz.questionImage}
       />

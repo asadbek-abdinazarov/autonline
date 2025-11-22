@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { submitLessonHistory, type QuestionApiResponse, type QuestionData, getLocalizedLessonName } from "@/lib/data"
+import { submitLessonHistory, type QuestionApiResponse, type QuestionData, type QuestionDataNew, getLocalizedLessonName } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
@@ -24,17 +24,12 @@ interface UserAnswer {
 }
 
 interface RandomQuizApiResponse {
-  lessonId: number
-  nameUz: string
-  nameOz: string
-  nameRu: string
-  descriptionUz: string
-  descriptionOz: string
-  descriptionRu: string
-  lessonIcon: string
-  lessonQuestionCount: number
-  lessonViewsCount: number
-  questions: QuestionData[]
+  id: number
+  icon: string
+  name: string
+  description: string
+  viewsCount: number
+  questions: QuestionDataNew[]
 }
 
 export default function RandomQuizClient() {
@@ -131,19 +126,38 @@ export default function RandomQuizClient() {
       }
 
       const { safeJsonParse } = await import('@/lib/api-utils')
-      const apiData = await safeJsonParse<RandomQuizApiResponse[]>(response)
+      const apiData = await safeJsonParse<RandomQuizApiResponse>(response)
       
       if (!apiData) {
         throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
       }
 
-      // Flatten questions from all lessons into a single array
+      // Convert questions from API response to QuestionData format
       const allQuestions: QuestionData[] = []
-      apiData.forEach((lesson) => {
-        if (lesson.questions && lesson.questions.length > 0) {
-          allQuestions.push(...lesson.questions)
-        }
-      })
+      if (apiData.questions && apiData.questions.length > 0) {
+        // Convert QuestionDataNew format to QuestionData format
+        const convertedQuestions: QuestionData[] = apiData.questions.map((q): QuestionData => ({
+          questionId: q.questionId,
+          photo: q.photo,
+          questionText: {
+            uz: q.questionText,
+            oz: q.questionText,
+            ru: q.questionText,
+          },
+          answers: {
+            answerId: q.variants.find(v => v.isCorrect)?.variantId || 0,
+            questionId: q.questionId,
+            status: q.variants.findIndex(v => v.isCorrect) + 1, // Find index of correct answer (1-based)
+            isCorrect: q.variants.map(v => v.isCorrect), // Create isCorrect array from variants
+            answerText: {
+              uz: q.variants.map(v => v.text),
+              oz: q.variants.map(v => v.text),
+              ru: q.variants.map(v => v.text),
+            },
+          },
+        }))
+        allQuestions.push(...convertedQuestions)
+      }
 
       if (allQuestions.length === 0) {
         throw new Error('Savollar topilmadi')
@@ -151,14 +165,14 @@ export default function RandomQuizClient() {
 
       // Create a synthetic QuestionApiResponse for compatibility
       const syntheticResponse: QuestionApiResponse = {
-        lessonId: 43, // Random quiz doesn't have a specific lesson ID
-        nameUz: 'Tasodify test',
-        nameOz: 'Таъсифий тест',
-        nameRu: 'Случайный тест',
-        descriptionUz: 'Har hil mavzulardan tayyorlangan tasodify savollar',
-        descriptionOz: 'Ҳар хил мавзулардан тайёрланган таъсифий саволлар',
-        descriptionRu: 'Случайные вопросы из разных тем',
-        lessonIcon: '🎲',
+        lessonId: apiData.id || 43, // Use API ID or default to 43 for random quiz
+        nameUz: apiData.name || 'Tasodify test',
+        nameOz: apiData.name || 'Таъсифий тест',
+        nameRu: apiData.name || 'Случайный тест',
+        descriptionUz: apiData.description || 'Har hil mavzulardan tayyorlangan tasodify savollar',
+        descriptionOz: apiData.description || 'Ҳар хил мавзулардан тайёрланган таъсифий саволлар',
+        descriptionRu: apiData.description || 'Случайные вопросы из разных тем',
+        lessonIcon: apiData.icon || '🎲',
         lessonQuestionCount: allQuestions.length,
         questions: allQuestions,
       }
@@ -703,7 +717,7 @@ export default function RandomQuizClient() {
                 </div>
                 <div className="flex gap-2">
                   <div className="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-sm font-medium border border-primary/20">
-                    {selectedLanguage === 'oz' ? "O'Z" : selectedLanguage === 'uz' ? 'УЗ' : 'РУ'}
+                    {selectedLanguage === 'oz' ? "УЗ" : selectedLanguage === 'uz' ? "O'Z" : 'РУ'}
                   </div>
                 </div>
               </div>

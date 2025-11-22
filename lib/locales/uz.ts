@@ -365,6 +365,10 @@ export const uz = {
     correctAnswers: "To'g'ri javoblar",
     incorrectAnswers: "Xato javoblar",
     totalQuestions: "Jami savollar",
+    totalTests: "Jami testlar",
+    averageScore: "O'rtacha ball",
+    successRate: "Muvaffaqiyat darajasi",
+    recentTests: "So'nggi testlar",
     dateFormat: {
       now: "Hozir",
       hoursAgo: "{hours} soat oldin",
@@ -435,6 +439,8 @@ export const uz = {
     quickSelect: "Tezkor tanlov",
     personalized: "Shaxsiylashtirilgan",
     questions: "savol",
+    progress: "Jarayon",
+    score: "Ball",
   },
 
   // Footer

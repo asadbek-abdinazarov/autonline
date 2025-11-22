@@ -4,9 +4,9 @@ import { useEffect } from "react"
 import { Header } from "@/components/header"
 import { AuthGuard } from "@/components/auth-guard"
 import { useLessonHistory } from "@/hooks/use-lesson-history"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, XCircle, Calendar, BookOpen, Loader2, ArrowLeft } from "lucide-react"
+import { CheckCircle, XCircle, Calendar, BookOpen, Loader2, ArrowLeft, TrendingUp, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -15,21 +15,20 @@ import { getLocalizedLessonName } from "@/lib/data"
 
 export function HistoryClient() {
   const { t, language } = useTranslation()
-  const { lessonHistory, isLoading, error, fetchLessonHistory } = useLessonHistory()
-  
-  // Helper function to get localized lesson name from history item
-  const getHistoryLessonName = (history: { lessonName: string; nameUz?: string; nameOz?: string; nameRu?: string }) => {
+  const { lessonHistory, stats, isLoading, error, fetchLessonHistory } = useLessonHistory()
+
+  const getHistoryLessonName = (history: { lessonName: string | null; nameUz?: string; nameOz?: string; nameRu?: string }) => {
     if (history.nameUz || history.nameOz || history.nameRu) {
       return getLocalizedLessonName(
         {
-          nameUz: history.nameUz || history.lessonName,
-          nameOz: history.nameOz || history.lessonName,
-          nameRu: history.nameRu || history.lessonName,
+          nameUz: history.nameUz || history.lessonName || "",
+          nameOz: history.nameOz || history.lessonName || "",
+          nameRu: history.nameRu || history.lessonName || "",
         },
-        language
+        language,
       )
     }
-    return history.lessonName
+    return history.lessonName || "Unknown Lesson"
   }
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export function HistoryClient() {
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
     const diffInDays = Math.floor(diffInHours / 24)
-    
+
     if (diffInHours < 1) {
       return t.history.dateFormat.now
     } else if (diffInHours < 24) {
@@ -49,186 +48,233 @@ export function HistoryClient() {
     } else if (diffInDays < 7) {
       return interpolate(t.history.dateFormat.daysAgo, { days: diffInDays.toString() })
     } else {
-      // Format as "18 Avgust 2025, 14:30"
       const day = date.getDate()
       const month = t.history.dateFormat.months[date.getMonth()]
       const year = date.getFullYear()
-      const hours = date.getHours().toString().padStart(2, '0')
-      const minutes = date.getMinutes().toString().padStart(2, '0')
-      
+      const hours = date.getHours().toString().padStart(2, "0")
+      const minutes = date.getMinutes().toString().padStart(2, "0")
       return `${day} ${month} ${year}, ${hours}:${minutes}`
     }
   }
 
   return (
     <AuthGuard requiredPermission="VIEW_TEST_HISTORY">
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
+      <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 sm:py-12">
-          <div className="max-w-5xl mx-auto">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 mb-8 sm:mb-12">
-              {/* Background gradient blobs */}
-              <div className="absolute inset-0 -z-10">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-              </div>
+          <div className="max-w-6xl mx-auto space-y-8">
+            {/* Back Button */}
+            <div>
+              <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+                <Link href="/home" className="flex items-center gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  {t.common.back}
+                </Link>
+              </Button>
+            </div>
 
-              <div className="container mx-auto px-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                  <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                    <Link href="/home" className="flex items-center gap-2">
-                      <ArrowLeft className="h-5 w-5" />
-                      {t.common.back}
-                    </Link>
-                  </Button>
-                </div>
-
-                <div className="text-center">
-                  <div className="max-w-4xl mx-auto space-y-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-                      <BookOpen className="h-4 w-4 text-blue-500" />
-                      <span>{t.history.title}</span>
-                    </div>
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
-                      <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        {t.history.title}
-                      </span>
-                    </h1>
-                    <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                      {t.history.description}
-                    </p>
-                  </div>
-                </div>
+            {/* Header Section */}
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">{t.history.title}</h1>
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground">{t.history.description}</p>
               </div>
             </section>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-20">
+            {/* Stats Grid */}
+            {!isLoading && !error && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {/* Total Tests Card */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                  <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">{t.history.totalTests ?? "Total Tests"}</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.totalTests}</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex-shrink-0">
+                        <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Passed Tests Card */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                  <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">{t.history.passed || "Passed"}</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.passed}</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-lg bg-green-500/10 dark:bg-green-500/20 flex-shrink-0">
+                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Average Score Card */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                  <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">
+                          {t.history.averageScore ?? "Average Score"}
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.averageScore}%</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 flex-shrink-0">
+                        <Target className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Success Rate Card */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                  <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1 truncate">{t.history.successRate ?? "Success Rate"}</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.successRate}%</p>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 flex-shrink-0">
+                        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-24">
                 <div className="text-center">
-                  <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-500 dark:text-blue-400" />
-                  <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">{t.history.loading}</p>
+                  <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+                  <p className="text-muted-foreground font-medium text-lg">{t.history.loading}</p>
                 </div>
               </div>
-            ) : error ? (
-              <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl transition-colors duration-300">
-                <CardContent className="py-16 text-center">
-                  <div className="p-4 rounded-full bg-destructive/10 dark:bg-destructive/20 w-fit mx-auto mb-6">
+            )}
+
+            {/* Error State */}
+            {error && (
+              <Card className="border-destructive/50 bg-destructive/5">
+                <CardContent className="py-12 text-center">
+                  <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto mb-6">
                     <XCircle className="h-12 w-12 text-destructive" />
                   </div>
-                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">{error}</p>
-                  <Button onClick={fetchLessonHistory} size="lg" variant="outline" className="border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300">
+                  <p className="text-lg text-foreground mb-8">{error}</p>
+                  <Button onClick={fetchLessonHistory} variant="outline" size="lg">
                     {t.common.retry}
                   </Button>
                 </CardContent>
               </Card>
-            ) : lessonHistory.length === 0 ? (
-              <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl transition-colors duration-300">
+            )}
+
+            {/* Empty State */}
+            {!isLoading && !error && lessonHistory.length === 0 && (
+              <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardContent className="py-20 text-center">
-                  <div className="p-4 rounded-full bg-slate-200/50 dark:bg-slate-700/50 w-fit mx-auto mb-6">
-                    <BookOpen className="h-16 w-16 text-slate-400 dark:text-slate-500" />
+                  <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-6">
+                    <BookOpen className="h-16 w-16 text-muted-foreground" />
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-3 text-slate-900 dark:text-white">{t.history.empty}</h3>
-                  <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-                    {t.history.emptyDescription}
-                  </p>
-                  <Button size="lg" asChild className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
+                  <h3 className="text-2xl font-bold mb-3 text-foreground">{t.history.empty}</h3>
+                  <p className="text-muted-foreground mb-8 max-w-md mx-auto">{t.history.emptyDescription}</p>
+                  <Button size="lg" asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Link href="/home">{t.history.viewTopics}</Link>
                   </Button>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="space-y-4 sm:space-y-6">
-                {lessonHistory.map((history) => {
-                  const totalQuestions = history.allQuestionCount || (history.correctAnswersCount + history.notCorrectAnswersCount)
-                  const isPassed = history.percentage >= 70
-                  
-                  return (
-                    <Card 
-                      key={history.lessonHistoryId} 
-                      className={cn(
-                        "border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl",
-                        isPassed 
-                          ? "border-green-500/30 dark:border-green-500/20 bg-gradient-to-br from-green-50/50 to-emerald-50/50 dark:from-green-900/20 dark:to-emerald-900/20 hover:from-green-50 hover:to-emerald-50 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30" 
-                          : "border-red-500/30 dark:border-red-500/20 bg-gradient-to-br from-red-50/50 to-rose-50/50 dark:from-red-900/20 dark:to-rose-900/20 hover:from-red-50 hover:to-rose-50 dark:hover:from-red-900/30 dark:hover:to-rose-900/30"
-                      )}
-                    >
-                      <CardHeader className="pb-3 sm:pb-4">
-                        <div className="flex items-start justify-between gap-3 sm:gap-4">
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg sm:text-xl font-bold mb-2 line-clamp-2 flex items-center gap-2 sm:gap-3 text-slate-900 dark:text-white">
-                              <span>{getHistoryLessonName(history)}</span>
-                              <span className="text-2xl sm:text-3xl flex-shrink-0" role="img" aria-label="lesson icon">
-                                {history.lessonIcon || '📚'}
-                              </span>
-                            </CardTitle>
-                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                              <Badge 
-                                variant={isPassed ? "default" : "destructive"}
+            )}
+
+            {/* History List */}
+            {!isLoading && !error && lessonHistory.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">{t.history.recentTests ?? "Recent Tests"}</h2>
+                <div className="space-y-3">
+                  {lessonHistory.map((history) => {
+                    const totalQuestions = history.allQuestionCount || history.correctAnswersCount + history.notCorrectAnswersCount
+                    const isPassed = (history.percentage || 0) >= 70
+
+                    return (
+                      <Card
+                        key={history.lessonHistoryId}
+                        className={cn(
+                          "border transition-all duration-300 hover:shadow-md hover:border-primary/50 cursor-pointer",
+                          isPassed
+                            ? "border-green-500/30 bg-gradient-to-r from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10"
+                            : "border-red-500/30 bg-gradient-to-r from-red-500/5 to-rose-500/5 hover:from-red-500/10 hover:to-rose-500/10",
+                        )}
+                      >
+                        <CardContent className="py-3 sm:py-4 px-4 sm:px-6">
+                          <div className="flex flex-col gap-3 sm:gap-4">
+                            {/* Top: Lesson Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                                <span className="text-xl sm:text-2xl flex-shrink-0" role="img" aria-label="lesson icon">
+                                  {history.lessonIcon || "📚"}
+                                </span>
+                                <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
+                                  {getHistoryLessonName(history)}
+                                </h3>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span className="truncate">{formatDate(history.createdDate)}</span>
+                                </div>
+                                <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+                                <span className="hidden sm:inline">
+                                  {totalQuestions} {t.history.totalQuestions?.toLowerCase() || "questions"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Bottom: Stats and Score */}
+                            <div className="flex items-center justify-between gap-2 sm:gap-4 pt-2 border-t border-border/50">
+                              {/* Correct Answers */}
+                              <div className="text-center flex-1">
+                                <div className="flex items-center justify-center gap-1 mb-1">
+                                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
+                                  <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+                                    {t.history.correctAnswers || "Correct"}
+                                  </span>
+                                </div>
+                                <p className="text-lg sm:text-xl font-bold text-foreground">{history.correctAnswersCount}</p>
+                              </div>
+
+                              {/* Incorrect Answers */}
+                              <div className="text-center flex-1">
+                                <div className="flex items-center justify-center gap-1 mb-1">
+                                  <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
+                                  <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+                                    {t.history.incorrectAnswers || "Incorrect"}
+                                  </span>
+                                </div>
+                                <p className="text-lg sm:text-xl font-bold text-foreground">{history.notCorrectAnswersCount}</p>
+                              </div>
+
+                              {/* Score Badge */}
+                              <Badge
                                 className={cn(
-                                  "text-sm sm:text-base px-3 py-1.5 h-auto font-semibold flex items-center gap-1.5 sm:gap-2",
-                                  isPassed 
-                                    ? "bg-green-500 hover:bg-green-600 text-white" 
-                                    : "bg-red-500 hover:bg-red-600 text-white"
+                                  "px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0",
+                                  isPassed
+                                    ? "bg-green-600 hover:bg-green-700 text-white"
+                                    : "bg-red-600 hover:bg-red-700 text-white",
                                 )}
                               >
-                                {isPassed ? (
-                                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                                ) : (
-                                  <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                                )}
-                                <span>{history.percentage}%</span>
-                                <span className="text-xs sm:text-sm opacity-90">
-                                  {isPassed ? `(${t.history.passed})` : `(${t.history.failed})`}
-                                </span>
+                                {history.percentage}%
                               </Badge>
-                              <div className="flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base text-slate-600 dark:text-slate-400">
-                                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                                <span>{formatDate(history.createdDate)}</span>
-                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                          <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 rounded-xl border-2 border-green-500/20 dark:border-green-500/30 hover:scale-105 transition-transform">
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                              <CheckCircle className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1">{t.history.correctAnswers}</p>
-                              <p className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-400">{history.correctAnswersCount}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-red-500/10 to-rose-500/10 dark:from-red-500/20 dark:to-rose-500/20 rounded-xl border-2 border-red-500/20 dark:border-red-500/30 hover:scale-105 transition-transform">
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center flex-shrink-0">
-                              <XCircle className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1">{t.history.incorrectAnswers}</p>
-                              <p className="text-2xl sm:text-3xl font-bold text-red-700 dark:text-red-400">{history.notCorrectAnswersCount}</p>
-                            </div>
-                          </div>
-                          
-                          {totalQuestions > 0 && (
-                            <div className="flex items-center gap-4 p-4 sm:p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 dark:from-blue-500/20 dark:to-cyan-500/20 rounded-xl border-2 border-blue-500/20 dark:border-blue-500/30 hover:scale-105 transition-transform">
-                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
-                                <BookOpen className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mb-1">{t.history.totalQuestions}</p>
-                                <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{totalQuestions}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </section>
             )}
           </div>
         </main>
@@ -236,4 +282,3 @@ export function HistoryClient() {
     </AuthGuard>
   )
 }
-
