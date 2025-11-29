@@ -154,16 +154,27 @@ export async function handleApiError(error: any): Promise<boolean> {
   // Check if it's a 401 error
   if (error?.message?.includes('401') || error?.status === 401) {
     if (globalShow401Error) {
-      if(error.message != null){
-        await globalShow401Error(error.message)
-      }else{
-        await globalShow401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
-      }
+      // Use error.message if available, otherwise use default message
+      const messageToShow = error.message && typeof error.message === 'string' && !error.message.includes('401') 
+        ? error.message 
+        : "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak."
+      await globalShow401Error(messageToShow)
     } else {
-      // Fallback: direct logout and redirect
-      await logout()
+      // Fallback: check refresh token status
+      // Only call backend logout if refresh token is missing (expired/cleared)
+      const { getRefreshToken } = await import('./auth')
+      const refreshToken = getRefreshToken()
+      const shouldCallBackend = !refreshToken
+      
+      const messageToShow = error.message && typeof error.message === 'string' && !error.message.includes('401')
+        ? error.message
+        : "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak."
+      
+      await logout(shouldCallBackend)
       setCurrentUser(null)
       if (typeof window !== 'undefined') {
+        // Show alert as fallback
+        alert(messageToShow)
         window.location.href = '/login'
       }
     }
@@ -215,8 +226,111 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
       }
       
       if (response.status === 401) {
-        await handleApiError({ status: 401 })
-        return null
+        // Try to refresh token before showing error (UNAUTHORIZED)
+        // Parse error response to check if it's token expired
+        let isTokenExpired = false
+        let errorData: { message?: string; error?: string; code?: string } | null = null
+        try {
+          const clonedResponse = response.clone()
+          errorData = await safeJsonParse<{ message?: string; error?: string; code?: string }>(clonedResponse)
+          
+          if (errorData) {
+            // Check if code is TOKEN_EXPIRED
+            if (errorData.code === 'TOKEN_EXPIRED') {
+              isTokenExpired = true
+            } else {
+              // Fallback to checking error message
+              const errorMessage = (errorData.message || errorData.error || '').toLowerCase()
+              // Check if error indicates token expiration
+              isTokenExpired = errorMessage.includes('token') && (
+                errorMessage.includes('expired') || 
+                errorMessage.includes('invalid') || 
+                errorMessage.includes('unauthorized')
+              )
+            }
+          } else {
+            // If no error message, assume token expired for 401
+            isTokenExpired = true
+          }
+        } catch (parseError) {
+          // If parsing fails, assume token expired for 401
+          isTokenExpired = true
+        }
+        
+        const { refreshAccessToken, getRefreshToken } = await import('./auth')
+        
+        // Check if refresh token exists before attempting refresh
+        const refreshToken = getRefreshToken()
+        console.log('🟡 [API-UTILS 401 ERROR]', {
+          isTokenExpired,
+          hasRefreshToken: !!refreshToken,
+          errorCode: errorData?.code,
+          errorMessage: errorData?.message
+        })
+        
+        if (refreshToken && isTokenExpired) {
+          console.log('🟡 [API-UTILS] Attempting to refresh token...')
+          try {
+            const refreshResult = await refreshAccessToken()
+            
+            // Check if refresh result is an error object (refresh token expired)
+            if (refreshResult && typeof refreshResult === 'object' && 'isRefreshTokenExpired' in refreshResult) {
+              const errorObj = refreshResult as any
+              console.log('🔴 [API-UTILS REFRESH TOKEN EXPIRED] Calling logout')
+              
+              // Refresh token is expired - call logout with shouldCallBackend=true
+              await logout(true) // Refresh token expired, call backend logout API
+              setCurrentUser(null)
+              await handleApiError({ status: 401, message: errorObj.backendMessage })
+              return null
+            }
+            
+            if (refreshResult && typeof refreshResult === 'string') {
+              const newToken = refreshResult
+              console.log('🟢 [API-UTILS REFRESH SUCCESS] Retrying request with new token')
+              // Retry the request with new token
+              headers['Authorization'] = `Bearer ${newToken}`
+              const retryResponse = await fetch(url, {
+                ...options,
+                headers,
+              })
+              
+              if (retryResponse.ok) {
+                console.log('🟢 [API-UTILS RETRY SUCCESS] Request succeeded after refresh')
+                // Successfully retried with new token, don't redirect to login
+                return retryResponse
+              }
+              
+              console.log('🟡 [API-UTILS RETRY FAILED] Request failed even after refresh:', retryResponse.status)
+              // If retry still fails, return the error response without redirecting
+              // The error should be handled by the calling code, not by redirecting to login
+              // since refresh token was successful
+              return retryResponse
+            } else {
+              // Refresh returned null - this could be network error or other issue
+              // Don't logout, just return null - refresh token might still be valid
+              console.log('🟡 [API-UTILS REFRESH NULL] Refresh returned null, but NOT logging out (refresh token might still be valid)')
+              // Don't throw error, just return null - let calling code handle it
+              return null
+            }
+          } catch (refreshError) {
+            // Other errors (network, etc.) - don't logout, return null
+            console.log('🟡 [API-UTILS REFRESH ERROR] Network or other error, NOT logging out:', refreshError)
+            // Don't throw, return null to let calling code handle
+            return null
+          }
+        } else {
+          if (!refreshToken) {
+            console.log('🔴 [API-UTILS NO REFRESH TOKEN] Calling logout')
+          } else {
+            console.log('🟡 [API-UTILS NOT TOKEN EXPIRED] Error code is not TOKEN_EXPIRED, calling logout')
+          }
+          // No refresh token available - call logout with shouldCallBackend=true
+          await logout(true) // Refresh token missing, call backend logout API
+          setCurrentUser(null)
+          await handleApiError({ status: 401 })
+          return null
+        }
       }
       
       if (response.status === 429) {
@@ -247,6 +361,13 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
     
     return response
   } catch (error) {
+    // Don't handle 401 errors in catch block if we already tried refresh token
+    // The 401 error should be handled in the if block above
+    if (error instanceof Error && error.message.includes('401')) {
+      // Already handled above, don't show error again
+      return null
+    }
+    
     const isHandled = await handleApiError(error)
     if (!isHandled) {
       throw error

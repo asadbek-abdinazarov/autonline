@@ -1,6 +1,9 @@
 import { randomInt } from 'crypto'
 import type { Language } from './locales'
 
+// Request deduplication map to prevent multiple simultaneous requests for the same resource
+const pendingRequests = new Map<string, Promise<any>>()
+
 export interface NewsItem {
   id: string
   title: string
@@ -420,7 +423,16 @@ export const userProfileData: UserProfile = {
 
 // API Functions
 export async function fetchTopicsFromApi(): Promise<Topic[]> {
-  try {
+  const requestKey = 'topics'
+  
+  // Check if there's already a pending request for topics
+  if (pendingRequests.has(requestKey)) {
+    console.log('Deduplicating topics request - reusing pending request')
+    return pendingRequests.get(requestKey)!
+  }
+  
+  const requestPromise = (async () => {
+    try {
     // Get access token - only on client side
     let token: string | null = null
     if (typeof window !== 'undefined') {
@@ -529,14 +541,23 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
         descriptionRu: lesson.descriptionRu,
       }))
     }
-  } catch (error) {
-    console.error('Error fetching topics from API:', error)
-    // Check if it's a network error
-    const { handleApiError } = await import('./api-utils')
-    const isHandled = await handleApiError(error)
-    // Fallback to static data if API fails
-    return topicsData
-  }
+    } catch (error) {
+      console.error('Error fetching topics from API:', error)
+      // Check if it's a network error
+      const { handleApiError } = await import('./api-utils')
+      const isHandled = await handleApiError(error)
+      // Fallback to static data if API fails
+      return topicsData
+    } finally {
+      // Remove from pending requests when done
+      pendingRequests.delete(requestKey)
+    }
+  })()
+  
+  // Store the promise for deduplication
+  pendingRequests.set(requestKey, requestPromise)
+  
+  return requestPromise
 }
 
 // Cache key for lesson data
@@ -660,6 +681,7 @@ export async function fetchQuestionsByLessonId(
 ): Promise<QuestionApiResponse> {
   const useCache = options?.useCache !== false // Default to true
   const forceRefresh = options?.forceRefresh === true
+  const requestKey = `lesson-${lessonId}`
 
   // Try to get from cache first (if not forcing refresh)
   if (useCache && !forceRefresh) {
@@ -670,7 +692,14 @@ export async function fetchQuestionsByLessonId(
     }
   }
 
-  try {
+  // Check if there's already a pending request for this lesson
+  if (pendingRequests.has(requestKey)) {
+    console.log(`Deduplicating lesson ${lessonId} request - reusing pending request`)
+    return pendingRequests.get(requestKey)!
+  }
+
+  const requestPromise = (async () => {
+    try {
     // Get access token - only on client side
     let token: string | null = null
     if (typeof window !== 'undefined') {
@@ -804,13 +833,22 @@ export async function fetchQuestionsByLessonId(
     }
     
     return apiData
-  } catch (error) {
-    console.error('Error fetching questions from API:', error)
-    // Check if it's a network error
-    const { handleApiError } = await import('./api-utils')
-    await handleApiError(error)
-    throw error
-  }
+    } catch (error) {
+      console.error('Error fetching questions from API:', error)
+      // Check if it's a network error
+      const { handleApiError } = await import('./api-utils')
+      await handleApiError(error)
+      throw error
+    } finally {
+      // Remove from pending requests when done
+      pendingRequests.delete(requestKey)
+    }
+  })()
+  
+  // Store the promise for deduplication
+  pendingRequests.set(requestKey, requestPromise)
+  
+  return requestPromise
 }
 
 export interface LessonHistoryRequest {

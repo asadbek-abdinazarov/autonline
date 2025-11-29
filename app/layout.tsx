@@ -8,6 +8,7 @@ import { TranslationProvider } from '@/hooks/use-translation'
 import { UserBlockListener } from '@/components/user-block-listener'
 import { ErrorProvider } from '@/components/error-provider'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ErrorBoundary } from '@/components/error-boundary'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -33,18 +34,20 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TranslationProvider>
-          <ErrorProvider>
-          <NotificationProvider>
-            {children}
-            <Toaster position="top-right" richColors />
-            <UserBlockListener />
-          </NotificationProvider>
-          </ErrorProvider>
-          </TranslationProvider>
-        </ThemeProvider>
-        <Analytics />
+        <ErrorBoundary>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TranslationProvider>
+            <ErrorProvider>
+            <NotificationProvider>
+              {children}
+              <Toaster position="top-right" richColors />
+              <UserBlockListener />
+            </NotificationProvider>
+            </ErrorProvider>
+            </TranslationProvider>
+          </ThemeProvider>
+          <Analytics />
+        </ErrorBoundary>
       </body>
     </html>
   )

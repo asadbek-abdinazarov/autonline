@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react"
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, startTransition } from "react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { logout, setCurrentUser } from "@/lib/auth"
@@ -38,13 +38,81 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const show401Error = useCallback(async (message?: string) => {
     const errorMessage = message || "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak."
 
-    // Clear user data and redirect immediately
-    await logout()
-    setCurrentUser(null)
-    router.push("/login")
+    console.log('🟡 [SHOW401ERROR] Called', {
+      message,
+      timestamp: new Date().toISOString()
+    })
 
-    // Show toast notification (no action button needed)
-    toast.error(errorMessage, { duration: 4500 })
+    // Check if refresh token exists
+    const { getRefreshToken } = await import('@/lib/auth')
+    const refreshToken = getRefreshToken()
+    
+    console.log('🟡 [SHOW401ERROR] Refresh token status:', {
+      hasRefreshToken: !!refreshToken,
+      refreshTokenLength: refreshToken?.length || 0
+    })
+    
+    // IMPORTANT: If refresh token exists, it means logout was NOT called yet
+    // This should NOT happen if refresh was successful, but if refresh failed due to network error,
+    // we should NOT logout or redirect. Only logout/redirect if refresh token is missing (already cleared by logout)
+    if (!refreshToken) {
+      // Refresh token is missing - logout was already called, just redirect
+      console.log('🟡 [SHOW401ERROR] Refresh token missing - logout already called, redirecting')
+      setCurrentUser(null)
+      // Use startTransition to make redirect non-blocking
+      startTransition(() => {
+        router.push("/login")
+      })
+      // Show toast notification
+      toast.error(errorMessage, { duration: 4500 })
+    } else {
+      // Refresh token exists - try to refresh access token and continue the process
+      console.log('🟡 [SHOW401ERROR] Refresh token exists - attempting to refresh access token...')
+      
+      try {
+        const { refreshAccessToken } = await import('@/lib/auth')
+        const refreshResult = await refreshAccessToken()
+        
+        // Check if refresh result is an error object (refresh token expired)
+        if (refreshResult && typeof refreshResult === 'object' && 'isRefreshTokenExpired' in refreshResult) {
+          const errorObj = refreshResult as any
+          console.log('🔴 [SHOW401ERROR] Refresh token expired - calling logout')
+          
+          // Refresh token expired - call logout
+          await logout(true)
+          setCurrentUser(null)
+          // Use startTransition to make redirect non-blocking
+          startTransition(() => {
+            router.push("/login")
+          })
+          
+          // Show backend message in notification
+          toast.error(errorObj.backendMessage || errorMessage, { duration: 4500 })
+          return
+        }
+        
+        if (refreshResult && typeof refreshResult === 'string') {
+          // Refresh successful - token is a string
+          // setTimeout(() => {
+          //   window.location.reload()
+          // }, 700)
+          // Refresh successful - reload page to retry all requests with new token
+          console.log('🟢 [SHOW401ERROR] Refresh successful - reloading page to continue process')
+          toast.success("Sessiya yangilandi. Davom etishingiz mumkin, qandaydur kamchilik yuzaga kelsa sahifani yangilang!.", { duration: 4000 })
+          
+          // Small delay to show success message, then reload
+          
+        } else {
+          // Refresh failed but refresh token still exists (network error, etc.)
+          console.log('🟡 [SHOW401ERROR] Refresh failed but refresh token still exists - showing retry message')
+          toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.", { duration: 4500 })
+        }
+      } catch (refreshError) {
+        // Other errors (network, etc.) - show error but don't logout
+        console.log('🟡 [SHOW401ERROR] Refresh error (not expired):', refreshError)
+        toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.", { duration: 4500 })
+      }
+    }
   }, [router])
 
   const show429Error = useCallback(async (message?: string) => {

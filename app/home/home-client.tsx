@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, startTransition } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { NewsCard } from "@/components/news-card"
@@ -43,19 +43,24 @@ export default function HomeClient() {
         setIsLoading(true)
         setError(null)
         
-        // Fetch both topics and news in parallel
+        // Fetch both topics and news in parallel - properly handle both results
         const [topicsData] = await Promise.all([
           fetchTopicsFromApi(),
-          fetchNews()
+          fetchNews() // This is called but result is not used - it updates the hook state
         ])
         
-        setTopics(topicsData)
+        // Use startTransition to batch state updates and make them non-blocking
+        startTransition(() => {
+          setTopics(topicsData)
+          setIsLoading(false)
+        })
       } catch (err) {
         console.error('Error fetching data:', err)
-        setError(err instanceof Error ? err.message : t.home.topics.error)
+        startTransition(() => {
+          setError(err instanceof Error ? err.message : t.home.topics.error)
+          setIsLoading(false)
+        })
         hasFetchedRef.current = false // Reset on error to allow retry
-      } finally {
-        setIsLoading(false)
       }
     }
 

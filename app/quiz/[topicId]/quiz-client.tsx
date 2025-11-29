@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useMemo } from "react"
+import { useEffect, useState, useRef, useMemo, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
@@ -100,7 +100,9 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
-      router.push("/login")
+      startTransition(() => {
+        router.push("/login")
+      })
       return
     }
 
@@ -140,25 +142,32 @@ export default function QuizClient({ topicId }: QuizClientProps) {
           useCache: !languageChanged,
           forceRefresh: languageChanged 
         })
-        setLessonData(data)
-        setQuestions(data.questions)
         
-        // Restore userAnswers if language changed (preserve user's progress)
-        if (languageChanged) {
-          setUserAnswers(savedUserAnswers)
-          setAnsweredQuestions(savedAnsweredQuestions)
-          setCurrentQuestionIndex(savedCurrentIndex)
-          setScore(savedScore)
-          // Update isAnswered state based on current question
-          const currentAnswer = savedUserAnswers.get(savedCurrentIndex)
-          setIsAnswered(!!currentAnswer)
-        }
+        // Use startTransition to batch state updates
+        startTransition(() => {
+          setLessonData(data)
+          setQuestions(data.questions)
+          
+          // Restore userAnswers if language changed (preserve user's progress)
+          if (languageChanged) {
+            setUserAnswers(savedUserAnswers)
+            setAnsweredQuestions(savedAnsweredQuestions)
+            setCurrentQuestionIndex(savedCurrentIndex)
+            setScore(savedScore)
+            // Update isAnswered state based on current question
+            const currentAnswer = savedUserAnswers.get(savedCurrentIndex)
+            setIsAnswered(!!currentAnswer)
+          }
+          
+          setIsLoading(false)
+        })
       } catch (err) {
         console.error('Error fetching lesson data:', err)
-        setError(err instanceof Error ? err.message : t.quiz.notFound)
+        startTransition(() => {
+          setError(err instanceof Error ? err.message : t.quiz.notFound)
+          setIsLoading(false)
+        })
         hasFetchedRef.current = null // Reset on error to allow retry
-      } finally {
-        setIsLoading(false)
       }
     }
 

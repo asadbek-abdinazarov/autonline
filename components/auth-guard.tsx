@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, ReactNode } from "react"
+import { useEffect, useState, ReactNode, useMemo, useCallback, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { useNotification } from "@/components/notification-provider"
@@ -18,32 +18,71 @@ export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardP
   const router = useRouter()
   const { show401Error } = useNotification()
 
-  useEffect(() => {
+  // Memoize authentication check to avoid blocking
+  const authCheck = useMemo(() => {
     const user = getCurrentUser()
     const isLoggedIn = !!user
-    setIsAuthenticated(isLoggedIn)
-
+    
     if (!isLoggedIn) {
-      router.push("/login")
-      return
+      return { isAuthenticated: false, user: null, hasPermission: false }
     }
 
     if (user && user.isActive === false) {
-      // Inactive user: clear storage, notify and redirect
-      logout().finally(() => {
-        setCurrentUser(null)
-        show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
-      })
-      return
+      return { isAuthenticated: false, user, hasPermission: false, isInactive: true }
     }
 
+    let hasPermission = true
     if (requiredPermission) {
-      const ok = Array.isArray(user?.permissions) && user!.permissions!.includes(requiredPermission)
-      setHasRequiredPermission(ok)
-    } else {
-      setHasRequiredPermission(true)
+      hasPermission = Array.isArray(user?.permissions) && user!.permissions!.includes(requiredPermission)
     }
-  }, [router, requiredPermission])
+
+    return { isAuthenticated: true, user, hasPermission }
+  }, [requiredPermission])
+
+  // Use callback for redirect to avoid blocking
+  const handleRedirect = useCallback(() => {
+    startTransition(() => {
+      router.push("/login")
+    })
+  }, [router])
+
+  // Use callback for inactive user handling
+  const handleInactiveUser = useCallback(async () => {
+    try {
+      await logout(true)
+      setCurrentUser(null)
+      await show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
+      startTransition(() => {
+        router.push("/login")
+      })
+    } catch (error) {
+      console.error('Error handling inactive user:', error)
+      startTransition(() => {
+        router.push("/login")
+      })
+    }
+  }, [router, show401Error])
+
+  useEffect(() => {
+    // Use startTransition to make state updates non-blocking
+    startTransition(() => {
+      setIsAuthenticated(authCheck.isAuthenticated)
+      
+      if (authCheck.isInactive) {
+        // Handle inactive user asynchronously
+        handleInactiveUser()
+        return
+      }
+
+      if (!authCheck.isAuthenticated) {
+        // Redirect asynchronously to avoid blocking
+        handleRedirect()
+        return
+      }
+
+      setHasRequiredPermission(authCheck.hasPermission)
+    })
+  }, [authCheck, handleRedirect, handleInactiveUser])
 
   // Show loading state while checking authentication
   if (isAuthenticated === null || hasRequiredPermission === null) {

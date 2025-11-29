@@ -57,9 +57,116 @@ export function useApi() {
       })
       
       if (!response.ok) {
+        // Try to refresh token if 401 error (UNAUTHORIZED)
         if (response.status === 401) {
-          await show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
-          return null
+          // Parse error response to check if it's token expired
+          let isTokenExpired = false
+          let errorData: { message?: string; error?: string; code?: string } | null = null
+          try {
+            const clonedResponse = response.clone()
+            const { safeJsonParse } = await import('@/lib/api-utils')
+            errorData = await safeJsonParse<{ message?: string; error?: string; code?: string }>(clonedResponse)
+            
+            if (errorData) {
+              // Check if code is TOKEN_EXPIRED
+              if (errorData.code === 'TOKEN_EXPIRED') {
+                isTokenExpired = true
+              } else {
+                // Fallback to checking error message
+                const errorMessage = (errorData.message || errorData.error || '').toLowerCase()
+                // Check if error indicates token expiration
+                isTokenExpired = errorMessage.includes('token') && (
+                  errorMessage.includes('expired') || 
+                  errorMessage.includes('invalid') || 
+                  errorMessage.includes('unauthorized')
+                )
+              }
+            } else {
+              // If no error message, assume token expired for 401
+              isTokenExpired = true
+            }
+          } catch (parseError) {
+            // If parsing fails, assume token expired for 401
+            isTokenExpired = true
+          }
+          
+          const { refreshAccessToken, getRefreshToken } = await import('@/lib/auth')
+          
+          // Check if refresh token exists before attempting refresh
+          const refreshToken = getRefreshToken()
+          console.log('🟡 [401 ERROR]', {
+            isTokenExpired,
+            hasRefreshToken: !!refreshToken,
+            errorCode: errorData?.code,
+            errorMessage: errorData?.message
+          })
+          
+          if (refreshToken && isTokenExpired) {
+            console.log('🟡 [401 ERROR] Attempting to refresh token...')
+            try {
+              const refreshResult = await refreshAccessToken()
+              
+              // Check if refresh result is an error object (refresh token expired)
+              if (refreshResult && typeof refreshResult === 'object' && 'isRefreshTokenExpired' in refreshResult) {
+                const errorObj = refreshResult as any
+                console.log('🔴 [REFRESH TOKEN EXPIRED] Calling logout')
+                
+                // Refresh token is expired - call logout with shouldCallBackend=true
+                const { logout, setCurrentUser } = await import('@/lib/auth')
+                await logout(true) // Refresh token expired, call backend logout API
+                setCurrentUser(null)
+                await show401Error(errorObj.backendMessage || "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
+                return null
+              }
+              
+              if (refreshResult && typeof refreshResult === 'string') {
+                const newToken = refreshResult
+                console.log('🟢 [REFRESH SUCCESS] Retrying request with new token')
+                // Retry the request with new token
+                headers['Authorization'] = `Bearer ${newToken}`
+                const retryResponse = await fetch(url, {
+                  ...options,
+                  headers,
+                })
+                
+                if (retryResponse.ok) {
+                  console.log('🟢 [RETRY SUCCESS] Request succeeded after refresh')
+                  // Successfully retried with new token, don't redirect to login
+                  return retryResponse
+                }
+                
+                console.log('🟡 [RETRY FAILED] Request failed even after refresh:', retryResponse.status)
+                // If retry still fails, return the error response without redirecting
+                // The error should be handled by the calling code, not by redirecting to login
+                // since refresh token was successful
+                return retryResponse
+              } else {
+                // Refresh returned null - this could be network error or other issue
+                // Don't logout, just return error - refresh token might still be valid
+                // Let the user retry or handle the error appropriately
+                console.log('🟡 [REFRESH NULL] Refresh returned null, but NOT logging out (refresh token might still be valid)')
+                // Don't throw error, just return null - let calling code handle it
+                return null
+              }
+            } catch (refreshError) {
+              // Other errors (network, etc.) - don't logout, just show error
+              console.log('🟡 [REFRESH ERROR] Network or other error, NOT logging out:', refreshError)
+              // Don't throw, return null to let calling code handle
+              return null
+            }
+          } else {
+            if (!refreshToken) {
+              console.log('🔴 [NO REFRESH TOKEN] Calling logout')
+            } else {
+              console.log('🟡 [NOT TOKEN EXPIRED] Error code is not TOKEN_EXPIRED, calling logout')
+            }
+            // No refresh token available - call logout with shouldCallBackend=true
+            const { logout, setCurrentUser } = await import('@/lib/auth')
+            await logout(true) // Refresh token missing, call backend logout API
+            setCurrentUser(null)
+            await show401Error("Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak.")
+            return null
+          }
         }
         
         if (response.status === 429) {
@@ -73,6 +180,13 @@ export function useApi() {
       
       return response
     } catch (error) {
+      // Don't handle 401 errors in catch block if we already tried refresh token
+      // The 401 error should be handled in the if block above
+      if (error instanceof Error && error.message.includes('401')) {
+        // Already handled above, don't show error again
+        return null
+      }
+      
       const isHandled = await handleApiError(error)
       if (!isHandled) {
         throw error

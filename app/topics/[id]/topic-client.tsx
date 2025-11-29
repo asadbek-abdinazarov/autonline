@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
@@ -26,7 +26,9 @@ export default function TopicClient({ topicId }: TopicClientProps) {
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
-      router.push("/login")
+      startTransition(() => {
+        router.push("/login")
+      })
       return
     }
 
@@ -43,18 +45,23 @@ export default function TopicClient({ topicId }: TopicClientProps) {
         setIsLoading(true)
         setError(null)
         const data = await fetchQuestionsByLessonId(topicId)
-        setLessonData(data)
+        // Use startTransition to batch state updates
+        startTransition(() => {
+          setLessonData(data)
+          setIsLoading(false)
+        })
       } catch (err) {
         console.error('Error fetching lesson data:', err)
-        setError(err instanceof Error ? err.message : t.home.topics.error)
+        startTransition(() => {
+          setError(err instanceof Error ? err.message : t.home.topics.error)
+          setIsLoading(false)
+        })
         hasFetchedRef.current = null // Reset on error to allow retry
-      } finally {
-        setIsLoading(false)
       }
     }
 
     fetchData()
-  }, [topicId])
+  }, [topicId, router, t])
 
   // Loading state
   if (isLoading) {

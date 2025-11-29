@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
@@ -20,7 +20,9 @@ export default function NewsPage() {
   useEffect(() => {
     const user = getCurrentUser()
     if (!user) {
-      router.push("/login")
+      startTransition(() => {
+        router.push("/login")
+      })
       return
     }
 
@@ -31,7 +33,7 @@ export default function NewsPage() {
 
     hasFetchedRef.current = true
     fetchNews()
-  }, [fetchNews])
+  }, [fetchNews, router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
