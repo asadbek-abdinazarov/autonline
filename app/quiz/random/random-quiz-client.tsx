@@ -84,27 +84,19 @@ export default function RandomQuizClient() {
   // Header: cyr (kirilcha) -> API: oz (kirilcha)
   // Header: ru (ruscha) -> API: ru (ruscha)
   const selectedLanguage = useMemo(() => {
-    // Debug: log to identify the issue
-    console.log('[Random Quiz] Header language:', language, 'Type:', typeof language)
-    
     // Force check: ensure we're using the correct mapping
     let result: 'oz' | 'uz' | 'ru'
     if (language === 'uz') {
       result = 'uz' // Lotincha o'zbekcha - API da uz key
-      console.log('[Random Quiz] Mapped to uz (lotincha)')
     } else if (language === 'cyr') {
       result = 'oz' // Kirilcha o'zbekcha - API da oz key
-      console.log('[Random Quiz] Mapped to oz (kirilcha)')
     } else if (language === 'ru') {
       result = 'ru' // Ruscha - API da ru key
-      console.log('[Random Quiz] Mapped to ru (ruscha)')
     } else {
       // Default to lotincha o'zbekcha
       result = 'uz'
-      console.log('[Random Quiz] Default mapped to uz (lotincha)')
     }
     
-    console.log('[Random Quiz] Final selectedLanguage:', result)
     return result
   }, [language])
 
@@ -181,7 +173,9 @@ export default function RandomQuizClient() {
       setQuestions(allQuestions)
       currentQuestionCountRef.current = questionCount
     } catch (err) {
-      console.error('Error fetching random quiz:', err)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching random quiz:', err)
+      }
       setError(err instanceof Error ? err.message : t.quiz.notFound)
       hasFetchedRef.current = false // Reset on error to allow retry
       throw err
@@ -569,12 +563,12 @@ export default function RandomQuizClient() {
     let isCorrect = false
     if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
       isCorrect = currentQuestion.answers.isCorrect[answerIndex] === true
-      console.log('[Random Quiz] isCorrect array:', currentQuestion.answers.isCorrect, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
     } else if (currentQuestion.answers.status) {
       isCorrect = answerIndex === currentQuestion.answers.status - 1
-      console.log('[Random Quiz] Using status field:', currentQuestion.answers.status, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
     } else {
-      console.warn('[Random Quiz] No isCorrect array or status field found for question:', currentQuestion.questionId)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Random Quiz] No isCorrect array or status field found for question:', currentQuestion.questionId)
+      }
     }
 
     const newUserAnswers = new Map(userAnswers)
@@ -805,8 +799,6 @@ export default function RandomQuizClient() {
                   <h3 className="text-xl sm:text-2xl font-semibold leading-relaxed text-balance max-w-3xl mx-auto">
                     {(() => {
                       const questionText = currentQuestion.questionText[selectedLanguage]
-                      console.log('[Random Quiz] Question text for', selectedLanguage, ':', questionText ? 'Found' : 'Not found')
-                      console.log('[Random Quiz] Available keys:', Object.keys(currentQuestion.questionText))
                       return questionText || currentQuestion.questionText.uz
                     })()}
                   </h3>

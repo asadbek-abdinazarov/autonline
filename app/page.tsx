@@ -6,8 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Footer } from "@/components/footer"
-import { ThemeSwitcher } from "@/components/theme-switcher"
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { Header } from "@/components/header"
 import { getCurrentUser } from "@/lib/auth"
 import { useTranslation } from "@/hooks/use-translation"
 import { interpolate } from "@/hooks/use-translation"
@@ -40,7 +39,8 @@ import {
   FileText,
   History,
   Crown,
-  Loader2
+  Loader2,
+  LogIn
 } from "lucide-react"
 
 interface StatisticResponse {
@@ -179,68 +179,14 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl transition-colors duration-300">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-300">
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16">
-              <Image
-                src="/autonline.svg"
-                alt="AutOnline Logo"
-                fill
-                className="object-contain rounded-md"
-                priority
-              />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">{t.common.appName}</h1>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeSwitcher />
-            <LanguageSwitcher />
-            <Button
-              variant="ghost"
-              asChild
-              size="sm"
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            >
-              <Link href="/help-center" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.userMenu.helpCenter}</span>
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Link href="/subscription" className="flex items-center gap-2">
-                <Crown className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.header.subscription}</span>
-              </Link>
-            </Button>
-            {isLoggedIn ? (
-              <Button asChild className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
-                  <Link href="/home" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.common.dashboard}</span>
-                </Link>
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" asChild size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                  <Link href="/login">{t.common.login}</Link>
-                </Button>
-                <Button asChild size="sm" className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300">
-                  <Link href="/register">{t.common.start}</Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-16 sm:pt-24 md:pt-32 pb-16 sm:pb-24 md:pb-32">
+        <section 
+          className="relative overflow-hidden pt-16 sm:pt-24 md:pt-32 pb-16 sm:pb-24 md:pb-32"
+          aria-label={t.landing.hero.title || "Asosiy bo'lim"}
+        >
           {/* Background gradient blobs */}
           <div className="absolute inset-0 -z-10">
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -276,12 +222,20 @@ export default function LandingPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button size="lg" asChild className="text-lg px-10 py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
-                    <Link href="/register" className="flex items-center gap-2">
-                      {t.common.freeStart}
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                  <>
+                    <Button size="lg" asChild variant="outline" className="text-lg px-10 py-7 h-auto border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300">
+                      <Link href="/login" className="flex items-center gap-2">
+                        <LogIn className="h-5 w-5" />
+                        {t.common.login}
+                      </Link>
+                    </Button>
+                    <Button size="lg" asChild className="text-lg px-10 py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
+                      <Link href="/register" className="flex items-center gap-2">
+                        {t.common.freeStart}
+                        <ArrowRight className="h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </>
                 )}
               </div>
 
@@ -305,7 +259,11 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl">
+        <section 
+          id="features" 
+          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          aria-label={t.landing.features.title || "Xususiyatlar"}
+        >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6">
@@ -344,7 +302,11 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="py-20 sm:py-24 md:py-32 relative overflow-hidden">
+        <section 
+          id="how-it-works" 
+          className="py-20 sm:py-24 md:py-32 relative overflow-hidden"
+          aria-label={t.landing.howItWorks.title || "Qanday ishlaydi"}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"></div>
           <div className="container mx-auto px-4 relative">
             <div className="text-center mb-16 sm:mb-20">
@@ -386,7 +348,11 @@ export default function LandingPage() {
         </section>
 
         {/* Benefits Section */}
-        <section id="benefits" className="py-20 sm:py-24 md:py-32 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden">
+        <section 
+          id="benefits" 
+          className="py-20 sm:py-24 md:py-32 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden"
+          aria-label={t.landing.benefits.title || "Afzalliklar"}
+        >
           <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-16 sm:mb-20">
@@ -423,7 +389,10 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl">
+        <section 
+          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          aria-label={t.landing.stats.title || "Statistika"}
+        >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white">
@@ -469,7 +438,11 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl">
+        <section 
+          id="faq" 
+          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          aria-label={t.landing.faq.title || "Tez-tez so'raladigan savollar"}
+        >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6">
@@ -507,7 +480,10 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="relative py-20 sm:py-24 md:py-32 overflow-hidden">
+        <section 
+          className="relative py-20 sm:py-24 md:py-32 overflow-hidden"
+          aria-label={t.landing.cta.title || "Boshlash"}
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90"></div>
           <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10 text-center">
@@ -534,16 +510,29 @@ export default function LandingPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button 
-                    size="lg" 
-                    asChild
-                    className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <Link href="/register" className="flex items-center gap-2">
-                      {t.common.freeStart}
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                  <>
+                    <Button 
+                      size="lg" 
+                      asChild
+                      variant="outline"
+                      className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <Link href="/login" className="flex items-center gap-2">
+                        <LogIn className="h-5 w-5" />
+                        {t.common.login}
+                      </Link>
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      asChild
+                      className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <Link href="/register" className="flex items-center gap-2">
+                        {t.common.freeStart}
+                        <ArrowRight className="h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </>
                 )}
               </div>
               

@@ -28,6 +28,7 @@ export const ru = {
     start: "Начать",
     freeStart: "Начать бесплатно",
     goToDashboard: "Перейти в панель управления",
+    items: "шт",
   },
 
   // Landing Page
@@ -383,6 +384,12 @@ export const ru = {
   // Header
   header: {
     subscription: "Подписка",
+    nav: {
+      features: "Особенности",
+      howItWorks: "Как это работает",
+      benefits: "Преимущества",
+      faq: "FAQ",
+    },
   },
 
   // User Menu
@@ -392,6 +399,10 @@ export const ru = {
     inactive: "Неактивный",
     phoneNotFound: "Номер телефона отсутствует",
     paymentHistory: "История платежей",
+    paymentHistoryDescription: "Список всех платежей",
+    paymentHistoryEmpty: "История платежей пуста",
+    total: "Всего:",
+    paidCount: "Оплачено:",
     paid: "Оплачено",
     unpaid: "Не оплачено",
     testHistory: "История тестов",
@@ -399,6 +410,27 @@ export const ru = {
     logout: "Выход",
     nextPayment: "Следующий платеж",
     nextPaymentDate: "Дата следующего платежа",
+    language: "Язык",
+    theme: {
+      light: "Светлая",
+      dark: "Темная",
+      animationStyle: "Стиль анимации",
+      switchTo: "Переключить",
+      switchToDark: "Переключить на темную",
+      switchToLight: "Переключить на светлую",
+      animations: {
+        circle: "Круг",
+        circleBlur: "Круг (размытие)",
+        polygon: "Многоугольник",
+        gif: "GIF Маска",
+      },
+      animationDescriptions: {
+        circle: "Круговая анимация расширения",
+        circleBlur: "Круговая с эффектом размытия",
+        polygon: "Анимация затирания",
+        gif: "GIF маска раскрытия (требует URL)",
+      },
+    },
   },
 
   // Quiz
@@ -446,6 +478,20 @@ export const ru = {
   // Footer
   footer: {
     copyright: "© {year} {brand}. Все права защищены.",
+  },
+
+  // Error Boundary
+  errorBoundary: {
+    title: "Произошла ошибка",
+    description: "Произошла непредвиденная ошибка. Пожалуйста, попробуйте еще раз.",
+    unknownError: "Неизвестная ошибка",
+    retry: "Попробовать снова",
+    reload: "Обновить страницу",
+  },
+
+  // Auth Guard
+  authGuard: {
+    loading: "Загрузка...",
   },
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { useNotification } from "@/components/notification-provider"
 import { Forbidden } from "@/components/forbidden"
+import { useTranslation } from "@/hooks/use-translation"
 
 interface AuthGuardProps {
   children: ReactNode
@@ -17,6 +18,7 @@ export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardP
   const [hasRequiredPermission, setHasRequiredPermission] = useState<boolean | null>(null)
   const router = useRouter()
   const { show401Error } = useNotification()
+  const { t } = useTranslation()
 
   // Memoize authentication check to avoid blocking
   const authCheck = useMemo(() => {
@@ -56,7 +58,9 @@ export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardP
         router.push("/login")
       })
     } catch (error) {
-      console.error('Error handling inactive user:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error handling inactive user:', error)
+      }
       startTransition(() => {
         router.push("/login")
       })
@@ -90,7 +94,7 @@ export function AuthGuard({ children, fallback, requiredPermission }: AuthGuardP
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Yuklanmoqda...</p>
+          <p className="text-muted-foreground">{t.authGuard.loading}</p>
         </div>
       </div>
     )

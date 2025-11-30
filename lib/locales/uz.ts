@@ -28,6 +28,7 @@ export const uz = {
     start: "Boshlash",
     freeStart: "Bepul boshlash",
     goToDashboard: "Dashboardga o'tish",
+    items: "ta",
   },
 
   // Landing Page
@@ -383,6 +384,12 @@ export const uz = {
   // Header
   header: {
     subscription: "Obuna",
+    nav: {
+      features: "Xususiyatlar",
+      howItWorks: "Qanday ishlaydi",
+      benefits: "Afzalliklar",
+      faq: "FAQ",
+    },
   },
 
   // User Menu
@@ -392,6 +399,10 @@ export const uz = {
     inactive: "Nofaol",
     phoneNotFound: "Telefon raqami mavjud emas",
     paymentHistory: "To'lov tarixi",
+    paymentHistoryDescription: "Barcha to'lovlar ro'yxati",
+    paymentHistoryEmpty: "To'lovlar tarixi bo'sh",
+    total: "Jami:",
+    paidCount: "To'langan:",
     paid: "To'langan",
     unpaid: "To'lanmagan",
     testHistory: "Test tarixi",
@@ -399,6 +410,27 @@ export const uz = {
     logout: "Chiqish",
     nextPayment: "Keyingi to'lov",
     nextPaymentDate: "Keyingi to'lov sanasi",
+    language: "Til",
+    theme: {
+      light: "Kun",
+      dark: "Tun",
+      animationStyle: "Animatsiya uslubi",
+      switchTo: "O'zgartirish",
+      switchToDark: "Tunga o'tish",
+      switchToLight: "Kunga o'tish",
+      animations: {
+        circle: "Doira",
+        circleBlur: "Doira (blur)",
+        polygon: "Polygon",
+        gif: "GIF Mask",
+      },
+      animationDescriptions: {
+        circle: "Doiraviy kengayish animatsiyasi",
+        circleBlur: "Blur effekti bilan doiraviy",
+        polygon: "Wipe animatsiyasi",
+        gif: "GIF mask reveal (URL talab qiladi)",
+      },
+    },
   },
 
   // Quiz
@@ -446,6 +478,20 @@ export const uz = {
   // Footer
   footer: {
     copyright: "© {year} {brand}. Barcha huquqlar himoyalangan.",
+  },
+
+  // Error Boundary
+  errorBoundary: {
+    title: "Xatolik yuz berdi",
+    description: "Kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+    unknownError: "Noma'lum xatolik",
+    retry: "Qayta urinish",
+    reload: "Sahifani yangilash",
+  },
+
+  // Auth Guard
+  authGuard: {
+    loading: "Yuklanmoqda...",
   },
 }
 

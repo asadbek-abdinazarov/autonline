@@ -88,7 +88,9 @@ export async function safeJsonParse<T>(response: Response | null): Promise<T | n
     
     // Check if content-type indicates JSON
     if (contentType && !contentType.includes('application/json')) {
-      console.warn('Response is not JSON, content-type:', contentType)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Response is not JSON, content-type:', contentType)
+      }
       return null
     }
     
@@ -96,12 +98,16 @@ export async function safeJsonParse<T>(response: Response | null): Promise<T | n
     try {
       return JSON.parse(text) as T
     } catch (parseError) {
-      console.error('Failed to parse JSON response:', parseError)
-      console.error('Response text:', text.substring(0, 200)) // Log first 200 chars
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to parse JSON response:', parseError)
+        console.error('Response text:', text.substring(0, 200)) // Log first 200 chars
+      }
       return null
     }
   } catch (error) {
-    console.error('Error reading response:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error reading response:', error)
+    }
     return null
   }
 }
@@ -186,8 +192,6 @@ export async function handleApiError(error: any): Promise<boolean> {
     if (globalShow429Error) {
       await globalShow429Error(errorMessage)
     } else {
-      // Fallback: show console warning
-      console.warn(errorMessage)
       if (typeof window !== 'undefined') {
         // Try to show alert as fallback
         alert(errorMessage)
@@ -261,22 +265,14 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
         
         // Check if refresh token exists before attempting refresh
         const refreshToken = getRefreshToken()
-        console.log('🟡 [API-UTILS 401 ERROR]', {
-          isTokenExpired,
-          hasRefreshToken: !!refreshToken,
-          errorCode: errorData?.code,
-          errorMessage: errorData?.message
-        })
         
         if (refreshToken && isTokenExpired) {
-          console.log('🟡 [API-UTILS] Attempting to refresh token...')
           try {
             const refreshResult = await refreshAccessToken()
             
             // Check if refresh result is an error object (refresh token expired)
             if (refreshResult && typeof refreshResult === 'object' && 'isRefreshTokenExpired' in refreshResult) {
               const errorObj = refreshResult as any
-              console.log('🔴 [API-UTILS REFRESH TOKEN EXPIRED] Calling logout')
               
               // Refresh token is expired - call logout with shouldCallBackend=true
               await logout(true) // Refresh token expired, call backend logout API
@@ -287,7 +283,6 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
             
             if (refreshResult && typeof refreshResult === 'string') {
               const newToken = refreshResult
-              console.log('🟢 [API-UTILS REFRESH SUCCESS] Retrying request with new token')
               // Retry the request with new token
               headers['Authorization'] = `Bearer ${newToken}`
               const retryResponse = await fetch(url, {
@@ -296,12 +291,10 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
               })
               
               if (retryResponse.ok) {
-                console.log('🟢 [API-UTILS RETRY SUCCESS] Request succeeded after refresh')
                 // Successfully retried with new token, don't redirect to login
                 return retryResponse
               }
               
-              console.log('🟡 [API-UTILS RETRY FAILED] Request failed even after refresh:', retryResponse.status)
               // If retry still fails, return the error response without redirecting
               // The error should be handled by the calling code, not by redirecting to login
               // since refresh token was successful
@@ -309,22 +302,15 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
             } else {
               // Refresh returned null - this could be network error or other issue
               // Don't logout, just return null - refresh token might still be valid
-              console.log('🟡 [API-UTILS REFRESH NULL] Refresh returned null, but NOT logging out (refresh token might still be valid)')
               // Don't throw error, just return null - let calling code handle it
               return null
             }
           } catch (refreshError) {
             // Other errors (network, etc.) - don't logout, return null
-            console.log('🟡 [API-UTILS REFRESH ERROR] Network or other error, NOT logging out:', refreshError)
             // Don't throw, return null to let calling code handle
             return null
           }
         } else {
-          if (!refreshToken) {
-            console.log('🔴 [API-UTILS NO REFRESH TOKEN] Calling logout')
-          } else {
-            console.log('🟡 [API-UTILS NOT TOKEN EXPIRED] Error code is not TOKEN_EXPIRED, calling logout')
-          }
           // No refresh token available - call logout with shouldCallBackend=true
           await logout(true) // Refresh token missing, call backend logout API
           setCurrentUser(null)

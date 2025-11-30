@@ -37,7 +37,9 @@ export function usePaymentHistory() {
         }
       }
     } catch (err) {
-      console.error('Error fetching payment history:', err)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching payment history:', err)
+      }
       setError(err instanceof Error ? err.message : 'To\'lov tarixi yuklanmadi')
     } finally {
       setIsLoading(false)

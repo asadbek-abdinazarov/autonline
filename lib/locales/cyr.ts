@@ -28,6 +28,7 @@ export const cyr = {
     start: "Бошлаш",
     freeStart: "Бепул бошлаш",
     goToDashboard: "Дашбордга ўтиш",
+    items: "та",
   },
 
   // Landing Page
@@ -383,6 +384,12 @@ export const cyr = {
   // Header
   header: {
     subscription: "Обуна",
+    nav: {
+      features: "Хусусиятлар",
+      howItWorks: "Қандай ишлайди",
+      benefits: "Афзалликлар",
+      faq: "FAQ",
+    },
   },
 
   // User Menu
@@ -392,6 +399,10 @@ export const cyr = {
     inactive: "Нофаол",
     phoneNotFound: "Телефон рақами мавжуд эмас",
     paymentHistory: "Тўлов тарихи",
+    paymentHistoryDescription: "Барча тўловлар рўйхати",
+    paymentHistoryEmpty: "Тўловлар тарихи бўш",
+    total: "Жами:",
+    paidCount: "Тўланган:",
     paid: "Тўланган",
     unpaid: "Тўланмаган",
     testHistory: "Тест тарихи",
@@ -399,6 +410,27 @@ export const cyr = {
     logout: "Чиқиш",
     nextPayment: "Кейинги тўлов",
     nextPaymentDate: "Кейинги тўлов санаси",
+    language: "Тил",
+    theme: {
+      light: "Кун",
+      dark: "Тун",
+      animationStyle: "Аниматсия услуби",
+      switchTo: "Ўзгартириш",
+      switchToDark: "Тунга ўтиш",
+      switchToLight: "Кунга ўтиш",
+      animations: {
+        circle: "Доиравый",
+        circleBlur: "Доиравый (blur)",
+        polygon: "Полигон",
+        gif: "GIF Маск",
+      },
+      animationDescriptions: {
+        circle: "Доиравий кенгайтиш аниматсияси",
+        circleBlur: "Blur эффекти билан доиравий",
+        polygon: "Wipe аниматсияси",
+        gif: "GIF маск reveal (URL талаб қилади)",
+      },
+    },
   },
 
   // Quiz
@@ -446,6 +478,20 @@ export const cyr = {
   // Footer
   footer: {
     copyright: "© {year} {brand}. Барча ҳуқуқлар ҳимояланган.",
+  },
+
+  // Error Boundary
+  errorBoundary: {
+    title: "Хатолик юз берди",
+    description: "Кutilmagan хатолик юз берди. Илтимос, қайта уриниб кўринг.",
+    unknownError: "Номаълум хатолик",
+    retry: "Қайта уриниш",
+    reload: "Саҳифани янгилаш",
+  },
+
+  // Auth Guard
+  authGuard: {
+    loading: "Юкланмоқда...",
   },
 }
 

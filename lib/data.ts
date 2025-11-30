@@ -427,7 +427,9 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
   
   // Check if there's already a pending request for topics
   if (pendingRequests.has(requestKey)) {
-    console.log('Deduplicating topics request - reusing pending request')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Deduplicating topics request - reusing pending request')
+    }
     return pendingRequests.get(requestKey)!
   }
   
@@ -478,9 +480,11 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
         return topicsData // Return fallback data
       }
       
-      console.error(`API request failed with status: ${response.status}`)
-      const errorText = await response.text()
-      console.error('Error response:', errorText)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API request failed with status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+      }
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
@@ -491,12 +495,16 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
     try {
       parsedData = JSON.parse(responseText)
     } catch (parseError) {
-      console.error('Failed to parse JSON response:', parseError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to parse JSON response:', parseError)
+      }
       return topicsData
     }
     
     if (!parsedData || !Array.isArray(parsedData) || parsedData.length === 0) {
-      console.warn('Invalid response format, returning fallback data')
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Invalid response format, returning fallback data')
+      }
       return topicsData
     }
     
@@ -542,7 +550,9 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       }))
     }
     } catch (error) {
-      console.error('Error fetching topics from API:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching topics from API:', error)
+      }
       // Check if it's a network error
       const { handleApiError } = await import('./api-utils')
       const isHandled = await handleApiError(error)
@@ -596,7 +606,9 @@ function getCachedLessonData(lessonId: string): QuestionApiResponse | null {
 
     return cachedData.data
   } catch (error) {
-    console.error('Error reading cached lesson data:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error reading cached lesson data:', error)
+    }
     return null
   }
 }
@@ -615,7 +627,9 @@ function setCachedLessonData(lessonId: string, data: QuestionApiResponse): void 
     }
     sessionStorage.setItem(cacheKey, JSON.stringify(cachedData))
   } catch (error) {
-    console.error('Error saving lesson data to cache:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error saving lesson data to cache:', error)
+    }
     // If storage is full, try to clear old cache entries
     try {
       clearExpiredLessonCache()
@@ -624,7 +638,9 @@ function setCachedLessonData(lessonId: string, data: QuestionApiResponse): void 
         timestamp: Date.now(),
       }))
     } catch (retryError) {
-      console.error('Failed to save lesson data to cache after cleanup:', retryError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to save lesson data to cache after cleanup:', retryError)
+      }
     }
   }
 }
@@ -658,7 +674,9 @@ function clearExpiredLessonCache(): void {
 
     keysToRemove.forEach(key => sessionStorage.removeItem(key))
   } catch (error) {
-    console.error('Error clearing expired cache:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error clearing expired cache:', error)
+    }
   }
 }
 
@@ -671,7 +689,9 @@ export function clearLessonCache(lessonId: string): void {
   try {
     sessionStorage.removeItem(getLessonCacheKey(lessonId))
   } catch (error) {
-    console.error('Error clearing lesson cache:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error clearing lesson cache:', error)
+    }
   }
 }
 
@@ -687,14 +707,18 @@ export async function fetchQuestionsByLessonId(
   if (useCache && !forceRefresh) {
     const cachedData = getCachedLessonData(lessonId)
     if (cachedData) {
-      console.log(`Using cached data for lesson ${lessonId}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Using cached data for lesson ${lessonId}`)
+      }
       return cachedData
     }
   }
 
   // Check if there's already a pending request for this lesson
   if (pendingRequests.has(requestKey)) {
-    console.log(`Deduplicating lesson ${lessonId} request - reusing pending request`)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Deduplicating lesson ${lessonId} request - reusing pending request`)
+    }
     return pendingRequests.get(requestKey)!
   }
 
@@ -745,9 +769,11 @@ export async function fetchQuestionsByLessonId(
         throw new Error('Too many requests')
       }
       
-      console.error(`API request failed with status: ${response.status}`)
-      const errorText = await response.text()
-      console.error('Error response:', errorText)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API request failed with status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+      }
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     
@@ -758,7 +784,9 @@ export async function fetchQuestionsByLessonId(
     try {
       parsedData = JSON.parse(responseText)
     } catch (parseError) {
-      console.error('Failed to parse JSON response:', parseError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to parse JSON response:', parseError)
+      }
       throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
     }
     
@@ -834,7 +862,9 @@ export async function fetchQuestionsByLessonId(
     
     return apiData
     } catch (error) {
-      console.error('Error fetching questions from API:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching questions from API:', error)
+      }
       // Check if it's a network error
       const { handleApiError } = await import('./api-utils')
       await handleApiError(error)
@@ -863,12 +893,16 @@ export async function submitLessonHistory(data: LessonHistoryRequest): Promise<v
   try {
     // Validate data before sending
     if (!data || data.lessonId === undefined || data.lessonId === null) {
-      console.error('Invalid lesson history data: lessonId is missing', data)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid lesson history data: lessonId is missing', data)
+      }
       return
     }
     
     if (data.allQuestionsCount === undefined || data.allQuestionsCount === null || data.allQuestionsCount === 0) {
-      console.error('Invalid lesson history data: allQuestionsCount is missing or zero', data)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid lesson history data: allQuestionsCount is missing or zero', data)
+      }
       return
     }
     
@@ -881,14 +915,16 @@ export async function submitLessonHistory(data: LessonHistoryRequest): Promise<v
     
     // Validate that all numbers are valid (not NaN)
     if (isNaN(lessonId) || isNaN(percentage) || isNaN(allQuestionsCount) || isNaN(correctAnswersCount) || isNaN(notCorrectAnswersCount)) {
-      console.error('Invalid lesson history data: Some values are NaN', {
-        originalData: data,
-        lessonId,
-        percentage,
-        allQuestionsCount,
-        correctAnswersCount,
-        notCorrectAnswersCount,
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid lesson history data: Some values are NaN', {
+          originalData: data,
+          lessonId,
+          percentage,
+          allQuestionsCount,
+          correctAnswersCount,
+          notCorrectAnswersCount,
+        })
+      }
       return
     }
     
@@ -904,7 +940,9 @@ export async function submitLessonHistory(data: LessonHistoryRequest): Promise<v
     // Validate body is not empty
     const bodyString = JSON.stringify(requestBody)
     if (!bodyString || bodyString === '{}' || bodyString === 'null') {
-      console.error('Invalid request body: body is empty or null', requestBody)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid request body: body is empty or null', requestBody)
+      }
       return
     }
     
@@ -947,13 +985,17 @@ export async function submitLessonHistory(data: LessonHistoryRequest): Promise<v
         return
       }
       
-      console.error(`API request failed with status: ${response.status}`)
-      const errorText = await response.text()
-      console.error('Error response:', errorText)
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API request failed with status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
   } catch (error) {
-    console.error('Error submitting lesson history:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error submitting lesson history:', error)
+    }
     // Don't throw - we don't want to block the UI if history submission fails
   }
 }

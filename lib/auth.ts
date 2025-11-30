@@ -254,18 +254,10 @@ export async function register(fullName: string, username: string, password: str
  *                            Defaults to true for backward compatibility (manual logout cases).
  */
 export async function logout(shouldCallBackend: boolean = true): Promise<void> {
-  const stackTrace = new Error().stack
-  console.log('🔴 [LOGOUT CALLED]', {
-    shouldCallBackend,
-    timestamp: new Date().toISOString(),
-    stackTrace: stackTrace?.split('\n').slice(0, 5).join('\n')
-  })
-  
   try {
     // Only call backend logout API if shouldCallBackend is true
     // This should only be true when refresh token is missing or expired
     if (shouldCallBackend) {
-      console.log('🔴 [LOGOUT] Calling backend logout API')
       const { buildApiUrl, getDefaultHeaders } = await import('./api-utils')
       const accessToken = getAccessToken()
       
@@ -274,27 +266,21 @@ export async function logout(shouldCallBackend: boolean = true): Promise<void> {
         try {
           const headers = getDefaultHeaders()
           headers['Authorization'] = `Bearer ${accessToken}`
-          const response = await fetch(buildApiUrl('/api/v1/auth/logout'), {
+          await fetch(buildApiUrl('/api/v1/auth/logout'), {
             method: 'POST',
             headers,
           })
-          console.log('🔴 [LOGOUT] Backend logout API response:', response.status)
         } catch (error) {
           // If logout request fails, still clear local storage
-          console.error('🔴 [LOGOUT] Logout request failed:', error)
+          // Silently handle error
         }
-      } else {
-        console.log('🔴 [LOGOUT] No access token, skipping backend call')
       }
-    } else {
-      console.log('🔴 [LOGOUT] Skipping backend logout API call (shouldCallBackend=false)')
     }
   } catch (error) {
     // If there's any error, still clear local storage
-    console.error('🔴 [LOGOUT] Logout error:', error)
+    // Silently handle error
   } finally {
     // Always clear local storage regardless of API call result
-    console.log('🔴 [LOGOUT] Clearing local storage')
     if (typeof window !== "undefined") {
       localStorage.removeItem("user")
       localStorage.removeItem("accessToken")
@@ -414,7 +400,7 @@ export async function refreshAccessToken(): Promise<string | null> {
           }
         } catch (parseError) {
           // If parsing fails, use default message
-          console.error('Failed to parse refresh token error response:', parseError)
+          // Silently handle parse error
         }
         
         // Create error object - don't throw to avoid console error
@@ -430,7 +416,6 @@ export async function refreshAccessToken(): Promise<string | null> {
       }
       // Other errors (network, server errors, etc.) - don't treat as expiration
       // Return null but don't throw - let caller decide what to do
-      console.error('Refresh token API error:', response.status, response.statusText)
       return null
     }
 
@@ -481,7 +466,6 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     return data.accessToken
   } catch (error) {
-    console.error('Error refreshing token:', error)
     // Other errors (network, parsing, etc.) - return null but don't treat as expiration
     // Don't clear tokens here - let the caller handle logout and cleanup
     return null

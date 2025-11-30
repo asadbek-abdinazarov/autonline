@@ -13,7 +13,6 @@ interface ImageModalProps {
 
 export function ImageModal({ isOpen, onClose, imageUrl, alt = "Question image" }: ImageModalProps) {
   useEffect(() => {
-    console.log('ImageModal useEffect - isOpen:', isOpen, 'imageUrl:', imageUrl)
     if (isOpen) {
       document.body.style.overflow = "hidden"
     } else {
@@ -41,14 +40,9 @@ export function ImageModal({ isOpen, onClose, imageUrl, alt = "Question image" }
     }
   }, [isOpen, onClose])
 
-  console.log('ImageModal render - isOpen:', isOpen, 'imageUrl:', imageUrl)
-  
   if (!isOpen) {
-    console.log('ImageModal not rendering - isOpen is false')
     return null
   }
-
-  console.log('ImageModal rendering modal')
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
