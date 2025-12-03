@@ -56,20 +56,27 @@ interface Pageable {
 
 interface StudentsResponse {
   content: Student[]
-  pageable: Pageable
-  totalPages: number
-  last: boolean
-  totalElements: number
-  numberOfElements: number
-  first: boolean
-  size: number
-  number: number
-  sort: {
+  page?: {
+    size: number
+    number: number
+    totalElements: number
+    totalPages: number
+  }
+  // Old format support (fallback)
+  pageable?: Pageable
+  totalPages?: number
+  last?: boolean
+  totalElements?: number
+  numberOfElements?: number
+  first?: boolean
+  size?: number
+  number?: number
+  sort?: {
     unsorted: boolean
     sorted: boolean
     empty: boolean
   }
-  empty: boolean
+  empty?: boolean
 }
 
 export function useStudents() {
@@ -149,14 +156,31 @@ export function useStudents() {
       
       if (data) {
         setStudents(data.content)
-        setPagination({
-          page: data.number,
-          size: data.size,
-          totalPages: data.totalPages,
-          totalElements: data.totalElements,
-          first: data.first,
-          last: data.last,
-        })
+        
+        // New format: pagination data in page object
+        if (data.page) {
+          setPagination({
+            page: data.page.number,
+            size: data.page.size,
+            totalPages: data.page.totalPages,
+            totalElements: data.page.totalElements,
+            first: data.page.number === 0,
+            last: data.page.number >= data.page.totalPages - 1,
+          })
+        } 
+        // Old format: pagination data at root level (fallback)
+        else if (data.number !== undefined && data.totalPages !== undefined) {
+          setPagination({
+            page: data.number,
+            size: data.size || 10,
+            totalPages: data.totalPages,
+            totalElements: data.totalElements || 0,
+            first: data.first || false,
+            last: data.last || false,
+          })
+        } else {
+          throw new Error('Pagination ma\'lumotlari topilmadi')
+        }
       } else {
         throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
       }

@@ -290,12 +290,18 @@ export function UserMenu() {
                   {user?.subscription && (() => {
                     const getSubMeta = () => {
                       switch (user.subscription) {
-                        case 'FULL':
-                          return { label: 'Yillik obuna', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
-                        case 'PRO':
-                          return { label: 'Oylik obuna', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
-                        case 'BASIC':
-                          return { label: 'Oylik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                          case 'FULL':
+                            return { label: 'Yillik obuna', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
+                          case 'PRO':
+                            return { label: 'Oylik obuna', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                          case 'BASIC':
+                            return { label: 'Oylik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                          case 'STUDENT_BASIC':
+                            return { label: 'Asosiy Talaba', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                          case 'STUDENT_PRO':
+                            return { label: 'Professional Talaba', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                          case 'STUDENT_FULL':
+                            return { label: 'To‘liq Talaba', Icon: Star, classes: 'from-amber-500 to-orange-500 text-white' }
                         default:
                           return { label: 'Tekin obuna', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                       }

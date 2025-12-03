@@ -1,4 +1,4 @@
-export type SubscriptionType = 'BASIC' | 'PRO' | 'FULL' | 'FREE'
+export type SubscriptionType = 'BASIC' | 'PRO' | 'FULL' | 'FREE' | 'STUDENT_BASIC' | 'STUDENT_PRO' | 'STUDENT_FULL'
 
 export type Permission =
   | 'VIEW_PAYMENTS'
