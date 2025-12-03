@@ -4,7 +4,7 @@ import { UserMenu } from "@/components/user-menu"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { LogIn, UserPlus, LayoutDashboard } from "lucide-react"
+import { LogIn, UserPlus, LayoutDashboard, Crown } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { usePathname } from "next/navigation"
@@ -166,6 +166,19 @@ export function Header() {
               </Link>
             </nav>
           )}
+          
+          {/* Subscription button - always visible */}
+          <Button 
+            variant="ghost" 
+            asChild 
+            size="sm" 
+            className="flex text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+          >
+            <Link href="/subscription" className="flex items-center gap-1.5" aria-label={t.header.subscription}>
+              <Crown className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden md:inline text-xs sm:text-sm">{t.header.subscription}</span>
+            </Link>
+          </Button>
           
           {/* Login/Register/Dashboard buttons */}
           {isLandingPage && !isLoggedIn && (

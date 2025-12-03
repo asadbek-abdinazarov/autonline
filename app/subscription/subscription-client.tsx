@@ -1,143 +1,125 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Crown, Check, Loader2, Sparkles, Zap, Shield, Star } from "lucide-react"
 import { Footer } from "@/components/footer"
-import { AuthGuard } from "@/components/auth-guard"
 import { useNotification } from "@/components/notification-provider"
-import { useApi } from "@/hooks/use-api"
-import { buildApiUrl } from "@/lib/api-utils"
+import { buildApiUrl, getDefaultHeaders, safeJsonParse } from "@/lib/api-utils"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
 
-interface SubscriptionPlan {
-  id: number
+interface SubscriptionPermission {
+  permissionId: number
   name: string
-  price: number
-  currency: string
-  duration: string
   description: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string | null
+  deletedAt: string | null
+}
+
+interface SubscriptionPlan {
+  subscriptionId: number
+  name: string
+  defName: string
+  description: string
+  price: number
+  buyText: string
   features: string[]
-  popular?: boolean
+  isActive: boolean
+  permissions: SubscriptionPermission[]
+  createdAt: string
+  updatedAt: string | null
+  deletedAt: string | null
 }
 
 export function SubscriptionClient() {
   const { t } = useTranslation()
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { showNotification } = useNotification()
-  const { makeAuthenticatedRequest } = useApi()
 
-  // Mock subscription plans - in real app, fetch from API
-  const plans: SubscriptionPlan[] = [
-    {
-        id: 1,
-        name: "Haftalik obuna",
-        price: 15000,
-        currency: "UZS",
-        duration: "1 hafta",
-        description: "Bir 1 hafta uchun to'liq kirish",
-        features: [
-          "Barcha mavzulardan cheksiz test",
-          "Tasodify testlar",
-          "Barcha yangiliklar"
-        ],
-        popular: false
-      },
-    {
-      id: 2,
-      name: "Oylik obuna",
-      price: 50000,
-      currency: "UZS",
-      duration: "1 oy",
-      description: "Bir oy uchun to'liq kirish",
-      features: [
-        "Barcha mavzulardan cheksiz test",
-        "Tasodify testlar",
-        "Test tarixini ko'rish",
-        "Barcha yangiliklar",
-        "24/7 qo'llab-quvvatlash"
-      ],
-      popular: false
-    },
-    {
-      id: 3,
-      name: "Yillik obuna",
-      price: 500000,
-      currency: "UZS",
-      duration: "12 oy",
-      description: "Bir yil uchun to'liq kirish (2 oy bepul)",
-      features: [
-        "Barcha mavzulardan cheksiz test",
-        "Tasodify testlar",
-        "Test tarixini ko'rish",
-        "Barcha yangiliklar",
-        "24/7 qo'llab-quvvatlash",
-        "Yangi funksiyalar birinchi bo'lib",
-        "Maxsus imkoniyatlar"
-      ],
-      popular: true
+  // Fetch subscription plans from API
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(buildApiUrl('/api/v1/subscription'), {
+          method: 'GET',
+          headers: getDefaultHeaders(),
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await safeJsonParse<SubscriptionPlan[]>(response)
+        
+        if (data && Array.isArray(data)) {
+          // Filter only active plans, exclude FREE plans, and sort by price (ascending)
+          const activePlans = data
+            .filter(plan => plan.isActive && plan.name !== 'FREE' && plan.price > 0)
+            .sort((a, b) => a.price - b.price)
+          
+          // Mark the most expensive plan as popular
+          if (activePlans.length > 0) {
+            activePlans[activePlans.length - 1] = {
+              ...activePlans[activePlans.length - 1],
+            }
+          }
+          
+          setPlans(activePlans)
+        } else {
+          showNotification('Obuna ma\'lumotlarini yuklashda xatolik yuz berdi', 'error')
+        }
+      } catch (error) {
+        console.error('Error fetching subscription plans:', error)
+        showNotification(
+          error instanceof Error ? error.message : 'Obuna ma\'lumotlarini yuklashda xatolik yuz berdi',
+          'error'
+        )
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
 
-  const formatPrice = (price: number, currency: string) => {
-    const formattedNumber = new Intl.NumberFormat('uz-UZ', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price)
-    
-    return `${formattedNumber} ${currency}`
+    fetchPlans()
+  }, [showNotification])
+
+  // Determine if plan is popular (most expensive active plan)
+  const getPopularPlanId = () => {
+    if (plans.length === 0) return null
+    const sortedByPrice = [...plans].sort((a, b) => b.price - a.price)
+    return sortedByPrice[0]?.subscriptionId || null
   }
 
-  const handleSubscribe = async (planId: number) => {
+  const popularPlanId = getPopularPlanId()
+
+  const handleSubscribe = (plan: SubscriptionPlan) => {
     try {
-      setIsProcessing(true)
-
-      // Call API to initiate payment
-      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/payment/create'), {
-        method: 'POST',
-        body: JSON.stringify({
-          planId: planId,
-          returnUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/subscription/success`
-        }),
-      })
-
-      if (response) {
-        const { safeJsonParse } = await import('@/lib/api-utils')
-        const data = await safeJsonParse<{ paymentUrl?: string }>(response)
-        
-        if (!data) {
-          showNotification('To\'lov tizimi bilan bog\'lanildi', 'info')
-          return
-        }
-        
-        // If payment URL is provided, redirect to payment gateway
-        if (data.paymentUrl) {
-          window.location.href = data.paymentUrl
-        } else {
-          showNotification('To\'lov tizimi bilan bog\'lanildi', 'info')
-        }
-      }
+      // Encode buyText for URL
+      const encodedText = encodeURIComponent(plan.buyText)
+      // Open Telegram link with buyText
+      const telegramUrl = `https://t.me/AsadbekAbdinazarov?text=${encodedText}`
+      window.open(telegramUrl, '_blank')
     } catch (error) {
-      console.error('Error initiating payment:', error)
+      console.error('Error opening Telegram:', error)
       showNotification(
-        error instanceof Error ? error.message : 'To\'lovni amalga oshirishda xatolik yuz berdi',
+        error instanceof Error ? error.message : 'Telegram\'ga bog\'lanishda xatolik yuz berdi',
         'error'
       )
-    } finally {
-      setIsProcessing(false)
     }
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
-        <Header />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
+      <Header />
 
-        <main className="flex-1">
+      <main className="flex-1">
           {/* Hero Section */}
           <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 mb-8 sm:mb-12">
             {/* Background gradient blobs */}
@@ -180,23 +162,39 @@ export function SubscriptionClient() {
             <div className="max-w-6xl mx-auto">
 
             {/* Pricing Cards */}
-            <div className={cn(
-              "grid gap-6 mb-12",
-              plans.length === 1 && "grid-cols-1 max-w-md mx-auto",
-              plans.length === 2 && "grid-cols-1 md:grid-cols-2",
-              plans.length === 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-              plans.length >= 4 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            )}>
-              {plans.map((plan, index) => (
-                <div
-                  key={plan.id}
-                  className={cn(
-                    "relative",
-                    plan.popular && plans.length <= 3 && "md:scale-[1.03]",
-                    plan.popular && plans.length >= 4 && "md:scale-[1.02]"
-                  )}
-                >
-                  {plan.popular && (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12 mb-12">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                  <p className="text-muted-foreground">Ma'lumotlar yuklanmoqda...</p>
+                </div>
+              </div>
+            ) : plans.length === 0 ? (
+              <div className="flex items-center justify-center py-12 mb-12">
+                <div className="text-center">
+                  <p className="text-muted-foreground">Obuna rejalari topilmadi</p>
+                </div>
+              </div>
+            ) : (
+              <div className={cn(
+                "grid gap-6 mb-12",
+                plans.length === 1 && "grid-cols-1 max-w-md mx-auto",
+                plans.length === 2 && "grid-cols-1 md:grid-cols-2",
+                plans.length === 3 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+                plans.length >= 4 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              )}>
+                {plans.map((plan, index) => {
+                  const isPopular = plan.subscriptionId === popularPlanId
+                  return (
+                    <div
+                      key={plan.subscriptionId}
+                      className={cn(
+                        "relative",
+                        isPopular && plans.length <= 3 && "md:scale-[1.03]",
+                        isPopular && plans.length >= 4 && "md:scale-[1.02]"
+                      )}
+                    >
+                      {isPopular && (
                     <>
                       <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-20">
                         <div className="relative">
@@ -212,70 +210,67 @@ export function SubscriptionClient() {
                     </>
                   )}
                   
-                  <Card
-                    className={cn(
-                      "h-full relative overflow-hidden transition-all duration-300 flex flex-col",
-                      plan.popular
-                        ? "border-2 border-primary/30 shadow-lg bg-gradient-to-br from-primary/10 via-background/95 to-primary/5 backdrop-blur-sm"
-                        : "border shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm hover:border-primary/20",
-                      "hover:scale-[1.01] hover:-translate-y-0.5"
-                    )}
-                  >
-                    {/* Decorative corner element */}
-                    {plan.popular && (
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full" />
-                    )}
-                    
-                    <CardHeader className="relative pb-3 pt-4 sm:pt-5 px-4 sm:px-6">
-                      <div className="mb-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={cn(
-                            "p-1 sm:p-1.5 rounded-lg flex-shrink-0",
-                            index === 0 
-                              ? "bg-blue-500/10 text-blue-600" 
-                              : "bg-amber-500/10 text-amber-600"
-                          )}>
-                            {index === 0 ? (
-                              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                            ) : (
-                              <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
-                            )}
+                      <Card
+                        className={cn(
+                          "h-full relative overflow-hidden transition-all duration-300 flex flex-col",
+                          isPopular
+                            ? "border-2 border-primary/30 shadow-lg bg-gradient-to-br from-primary/10 via-background/95 to-primary/5 backdrop-blur-sm"
+                            : "border shadow-md hover:shadow-lg bg-background/95 backdrop-blur-sm hover:border-primary/20",
+                          "hover:scale-[1.01] hover:-translate-y-0.5"
+                        )}
+                      >
+                        {/* Decorative corner element */}
+                        {isPopular && (
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full" />
+                        )}
+                        
+                        <CardHeader className="relative pb-3 pt-4 sm:pt-5 px-4 sm:px-6">
+                          <div className="mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={cn(
+                                "p-1 sm:p-1.5 rounded-lg flex-shrink-0",
+                                index === 0 
+                                  ? "bg-blue-500/10 text-blue-600" 
+                                  : "bg-amber-500/10 text-amber-600"
+                              )}>
+                                {index === 0 ? (
+                                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                                ) : (
+                                  <Zap className="h-3 w-3 sm:h-4 sm:w-4" />
+                                )}
+                              </div>
+                              <CardTitle className="text-base sm:text-lg md:text-xl font-bold leading-tight">
+                                {plan.defName}
+                              </CardTitle>
+                            </div>
+                            <CardDescription className="text-xs sm:text-sm mb-2 line-clamp-2">
+                              {plan.description}
+                            </CardDescription>
                           </div>
-                          <CardTitle className="text-base sm:text-lg md:text-xl font-bold leading-tight">
-                            {plan.name}
-                          </CardTitle>
-                        </div>
-                        <CardDescription className="text-xs sm:text-sm mb-2 line-clamp-2">
-                          {plan.description}
-                        </CardDescription>
-                      </div>
-                      
-                      <div className="flex items-baseline gap-1 sm:gap-2 mt-3 mb-2">
-                        <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
-                          {new Intl.NumberFormat('uz-UZ', {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(plan.price)}
-                        </span>
-                        <div className="flex flex-col justify-center">
-                          <span className="text-xs sm:text-sm font-semibold text-muted-foreground">
-                            {plan.currency}
-                          </span>
-                          <span className="text-[10px] sm:text-xs text-muted-foreground">
-                            / {plan.duration}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {plan.popular && (
-                        <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">
-                          <span className="text-xs sm:text-sm">🎁</span>
-                          <span className="text-[10px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
-                            Bonus
-                          </span>
-                        </div>
-                      )}
-                    </CardHeader>
+                          
+                          <div className="flex items-baseline gap-1 sm:gap-2 mt-3 mb-2">
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
+                              {new Intl.NumberFormat('uz-UZ', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                              }).format(plan.price)}
+                            </span>
+                            <div className="flex flex-col justify-center">
+                              <span className="text-xs sm:text-sm font-semibold text-muted-foreground">
+                                UZS
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {isPopular && (
+                            <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">
+                              <span className="text-xs sm:text-sm">🎁</span>
+                              <span className="text-[10px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
+                                Bonus
+                              </span>
+                            </div>
+                          )}
+                        </CardHeader>
                     
                     <CardContent className="space-y-3 pb-4 flex-1 flex flex-col px-4 sm:px-6">
                       <div className="border-t pt-3 flex-1">
@@ -302,38 +297,30 @@ export function SubscriptionClient() {
                         </ul>
                       </div>
                       
-                      <Button
-                        className={cn(
-                          "w-full h-9 sm:h-10 text-[11px] sm:text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 mt-2",
-                          plan.popular
-                            ? "bg-gradient-to-r from-primary via-blue-600 to-primary hover:from-primary/90 hover:via-blue-500 hover:to-primary/90 text-white"
-                            : "bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-100 dark:to-gray-200 hover:from-gray-800 hover:to-gray-700 dark:hover:from-gray-200 dark:hover:to-gray-300 text-white dark:text-gray-900"
-                        )}
-                        size="sm"
-                        onClick={() => handleSubscribe(plan.id)}
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
-                            <span className="hidden sm:inline">Jarayonda...</span>
-                            <span className="sm:hidden">...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Crown className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            <span>Sotib olish</span>
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                        <Button
+                          className={cn(
+                            "w-full h-9 sm:h-10 text-[11px] sm:text-xs md:text-sm font-semibold rounded-lg transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 mt-2",
+                            isPopular
+                              ? "bg-gradient-to-r from-primary via-blue-600 to-primary hover:from-primary/90 hover:via-blue-500 hover:to-primary/90 text-white"
+                              : "bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-100 dark:to-gray-200 hover:from-gray-800 hover:to-gray-700 dark:hover:from-gray-200 dark:hover:to-gray-300 text-white dark:text-gray-900"
+                          )}
+                          size="sm"
+                          onClick={() => handleSubscribe(plan)}
+                        >
+                          <Crown className="mr-1 sm:mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <span>Sotib olish</span>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )
+              })}
             </div>
+            )}
 
             {/* Benefits Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-              <Card className="border-none shadow-md bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent hover:from-blue-500/20 transition-all duration-300 hover:scale-105">
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              <Card className="border-none shadow-md bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent hover:from-blue-500/20 transition-all duration-300 hover:scale-105 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)] max-w-sm">
                 <CardContent className="p-5 text-center">
                   <div className="inline-flex p-3 rounded-xl bg-blue-500/20 mb-3">
                     <Sparkles className="h-5 w-5 text-blue-600" />
@@ -345,7 +332,7 @@ export function SubscriptionClient() {
                 </CardContent>
               </Card>
               
-              <Card className="border-none shadow-md bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent hover:from-green-500/20 transition-all duration-300 hover:scale-105">
+              <Card className="border-none shadow-md bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent hover:from-green-500/20 transition-all duration-300 hover:scale-105 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)] max-w-sm">
                 <CardContent className="p-5 text-center">
                   <div className="inline-flex p-3 rounded-xl bg-green-500/20 mb-3">
                     <Zap className="h-5 w-5 text-green-600" />
@@ -357,7 +344,7 @@ export function SubscriptionClient() {
                 </CardContent>
               </Card>
               
-              <Card className="border-none shadow-md bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent hover:from-orange-500/20 transition-all duration-300 hover:scale-105">
+              <Card className="border-none shadow-md bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent hover:from-orange-500/20 transition-all duration-300 hover:scale-105 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)] max-w-sm">
                 <CardContent className="p-5 text-center">
                   <div className="inline-flex p-3 rounded-xl bg-orange-500/20 mb-3">
                     <Star className="h-5 w-5 text-orange-600 fill-orange-600" />
@@ -392,10 +379,9 @@ export function SubscriptionClient() {
             </Card>
           </div>
           </section>
-        </main>
+      </main>
 
-        <Footer />
-      </div>
-    </AuthGuard>
+      <Footer />
+    </div>
   )
 }

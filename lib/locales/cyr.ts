@@ -406,6 +406,7 @@ export const cyr = {
     paid: "Тўланган",
     unpaid: "Тўланмаган",
     testHistory: "Тест тарихи",
+    students: "Ўқувчилар",
     helpCenter: "Ёрдам маркази",
     logout: "Чиқиш",
     nextPayment: "Кейинги тўлов",
@@ -492,6 +493,40 @@ export const cyr = {
   // Auth Guard
   authGuard: {
     loading: "Юкланмоқда...",
+  },
+
+  // Students
+  students: {
+    title: "Ўқувчилар панели",
+    description: "Барча ўқувчилар рўйхати ва бошқарув",
+    loading: "Ўқувчилар юкланмоқда...",
+    error: "Ўқувчилар юкланмади",
+    empty: "Ўқувчилар мавжуд эмас",
+    emptyDescription: "Ҳозирча ўқувчилар рўйхати бўш",
+    retry: "Қайта уриниш",
+    active: "Фаол",
+    inactive: "Нофаол",
+    nextPayment: "Кейинги тўлов",
+    noSubscription: "Обуна йўқ",
+    subscriptionFull: "Йиллик обуна",
+    subscriptionPro: "Ойлик обуна",
+    subscriptionBasic: "Ойлик обуна",
+    subscriptionFree: "Текин обуна",
+    showing: "Кўрсатилмоқда: {from}-{to} / {total}",
+    deleteConfirmTitle: "Ўқувчини ўчириш",
+    deleteConfirmMessage: "Сиз ростдан ҳам {name} ўқувчисини ўчирмоқчимисиз? Бу амални қайтариб бўлмайди.",
+    delete: "Ўчириш",
+    addStudent: "Ўқувчи қўшиш",
+    addStudentDescription: "Янги ўқувчи маълумотларини киритинг",
+    add: "Қўшиш",
+    adding: "Қўшилмоқда...",
+    addSuccess: "Ўқувчи муваффақиятли қўшилди",
+    addError: "Ўқувчи қўшилмади",
+    nextPaymentDate: "Кейинги тўлов санаси",
+    nextPaymentDateHint: "Ихтиёрий. Бўш қолдириш мумкин",
+    phoneError: "Телефон рақами 9 рақамдан иборат бўлиши керак",
+    phoneErrorOperator: "Телефон рақами нотўғри оператор коди",
+    passwordMismatch: "Пароллар мос келмайди",
   },
 }
 

@@ -406,6 +406,7 @@ export const uz = {
     paid: "To'langan",
     unpaid: "To'lanmagan",
     testHistory: "Test tarixi",
+    students: "O'quvchilar",
     helpCenter: "Yordam markazi",
     logout: "Chiqish",
     nextPayment: "Keyingi to'lov",
@@ -492,6 +493,40 @@ export const uz = {
   // Auth Guard
   authGuard: {
     loading: "Yuklanmoqda...",
+  },
+
+  // Students
+  students: {
+    title: "O'quvchilar paneli",
+    description: "Barcha o'quvchilar ro'yxati va boshqaruv",
+    loading: "O'quvchilar yuklanmoqda...",
+    error: "O'quvchilar yuklanmadi",
+    empty: "O'quvchilar mavjud emas",
+    emptyDescription: "Hozircha o'quvchilar ro'yxati bo'sh",
+    retry: "Qayta urinish",
+    active: "Faol",
+    inactive: "Nofaol",
+    nextPayment: "Keyingi to'lov",
+    noSubscription: "Obuna yo'q",
+    subscriptionFull: "Yillik obuna",
+    subscriptionPro: "Oylik obuna",
+    subscriptionBasic: "Oylik obuna",
+    subscriptionFree: "Tekin obuna",
+    showing: "Ko'rsatilmoqda: {from}-{to} / {total}",
+    deleteConfirmTitle: "O'quvchini o'chirish",
+    deleteConfirmMessage: "Siz rostdan ham {name} o'quvchisini o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.",
+    delete: "O'chirish",
+    addStudent: "O'quvchi qo'shish",
+    addStudentDescription: "Yangi o'quvchi ma'lumotlarini kiriting",
+    add: "Qo'shish",
+    adding: "Qo'shilmoqda...",
+    addSuccess: "O'quvchi muvaffaqiyatli qo'shildi",
+    addError: "O'quvchi qo'shilmadi",
+    nextPaymentDate: "Keyingi to'lov sanasi",
+    nextPaymentDateHint: "Bo'sh qoldirish mumkin emas!",
+    phoneError: "Telefon raqami 9 raqamdan iborat bo'lishi kerak",
+    phoneErrorOperator: "Telefon raqami noto'g'ri operator kodi",
+    passwordMismatch: "Parollar mos kelmaydi",
   },
 }
 

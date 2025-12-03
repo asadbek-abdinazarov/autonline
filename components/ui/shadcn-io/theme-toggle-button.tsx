@@ -35,6 +35,7 @@ export interface ThemeToggleButtonProps {
   onClick?: () => void
   disabled?: boolean
   showAnimationMenu?: boolean // Show submenu for animation variants
+  asChild?: boolean // Allow using as child component (e.g., in DropdownMenuItem)
   translations?: {
     light?: string
     dark?: string
@@ -95,6 +96,7 @@ export const ThemeToggleButton = ({
   onClick,
   disabled = false,
   showAnimationMenu = false,
+  asChild = false,
   translations,
 }: ThemeToggleButtonProps) => {
   const ANIMATION_VARIANTS = getAnimationVariants(translations)
@@ -105,7 +107,7 @@ export const ThemeToggleButton = ({
         return stored
       }
     }
-    return propVariant || 'circle'
+    return propVariant || 'circle-blur'
   })
   const [gifUrl, setGifUrl] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -623,6 +625,7 @@ export const ThemeToggleButton = ({
       size={showLabel ? 'default' : 'icon'}
       onClick={handleClick}
       disabled={disabled}
+      asChild={asChild}
       className={cn(
         'relative overflow-hidden transition-all',
         showLabel && 'gap-2',

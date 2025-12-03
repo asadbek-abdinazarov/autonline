@@ -406,6 +406,7 @@ export const ru = {
     paid: "Оплачено",
     unpaid: "Не оплачено",
     testHistory: "История тестов",
+    students: "Ученики",
     helpCenter: "Центр помощи",
     logout: "Выход",
     nextPayment: "Следующий платеж",
@@ -492,6 +493,40 @@ export const ru = {
   // Auth Guard
   authGuard: {
     loading: "Загрузка...",
+  },
+
+  // Students
+  students: {
+    title: "Панель учеников",
+    description: "Список всех учеников и управление",
+    loading: "Загрузка учеников...",
+    error: "Не удалось загрузить учеников",
+    empty: "Ученики отсутствуют",
+    emptyDescription: "Список учеников пуст",
+    retry: "Повторить",
+    active: "Активный",
+    inactive: "Неактивный",
+    nextPayment: "Следующий платеж",
+    noSubscription: "Нет подписки",
+    subscriptionFull: "Годовая подписка",
+    subscriptionPro: "Месячная подписка",
+    subscriptionBasic: "Месячная подписка",
+    subscriptionFree: "Бесплатная подписка",
+    showing: "Показано: {from}-{to} / {total}",
+    deleteConfirmTitle: "Удалить ученика",
+    deleteConfirmMessage: "Вы действительно хотите удалить ученика {name}? Это действие нельзя отменить.",
+    delete: "Удалить",
+    addStudent: "Добавить ученика",
+    addStudentDescription: "Введите данные нового ученика",
+    add: "Добавить",
+    adding: "Добавление...",
+    addSuccess: "Ученик успешно добавлен",
+    addError: "Не удалось добавить ученика",
+    nextPaymentDate: "Дата следующего платежа",
+    nextPaymentDateHint: "Необязательно. Можно оставить пустым",
+    phoneError: "Номер телефона должен состоять из 9 цифр",
+    phoneErrorOperator: "Неверный код оператора телефона",
+    passwordMismatch: "Пароли не совпадают",
   },
 }
 

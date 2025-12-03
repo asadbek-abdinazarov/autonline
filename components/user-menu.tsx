@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight } from "lucide-react"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users } from "lucide-react"
 import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
 import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
@@ -152,6 +152,10 @@ export function UserMenu() {
 
   const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
 
+  const hasTeacherRole = () => {
+    return Array.isArray(user?.roles) && user!.roles!.includes('TEACHER')
+  }
+
   const handleDropdownOpen = () => {
     if (!hasLoadedPaymentHistory && hasPermission('VIEW_PAYMENTS')) {
       fetchPaymentHistory()
@@ -164,6 +168,10 @@ export function UserMenu() {
     router.push("/history")
   }, [router])
 
+  const handleStudentsClick = useCallback(() => {
+    router.push("/students")
+  }, [router])
+
   const handleLanguageChange = useCallback((lang: Language) => {
     if (lang !== language) {
       setLanguage(lang)
@@ -171,8 +179,55 @@ export function UserMenu() {
   }, [setLanguage, language])
 
   const handleThemeToggle = useCallback(() => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
+    // Inject circle-blur animation styles
+    const styleId = `theme-transition-${Date.now()}`
+    const style = document.createElement('style')
+    style.id = styleId
+
+    const css = `
+      @supports (view-transition-name: root) {
+        ::view-transition-old(root) {
+          animation: none;
+        }
+        ::view-transition-new(root) {
+          animation: circle-blur-expand 0.5s ease-out;
+          transform-origin: center;
+          filter: blur(0);
+        }
+        @keyframes circle-blur-expand {
+          from {
+            clip-path: circle(0% at 50% 50%);
+            filter: blur(4px);
+          }
+          to {
+            clip-path: circle(150% at 50% 50%);
+            filter: blur(0);
+          }
+        }
+      }
+    `
+
+    style.textContent = css
+    document.head.appendChild(style)
+
+    // Start view transition if supported
+    if ('startViewTransition' in document) {
+      ;(document as any).startViewTransition(() => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark'
+        setTheme(newTheme)
+      })
+    } else {
+      const newTheme = theme === 'dark' ? 'light' : 'dark'
+      setTheme(newTheme)
+    }
+
+    // Clean up styles after transition
+    setTimeout(() => {
+      const styleEl = document.getElementById(styleId)
+      if (styleEl) {
+        styleEl.remove()
+      }
+    }, 3000)
   }, [theme, setTheme])
 
   const paidCount = useMemo(() => {
@@ -182,11 +237,7 @@ export function UserMenu() {
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" className="h-11 w-11 border border-border">
-        {user ? (
-          <User className="h-7 w-7 text-primary" />
-        ) : (
-          <MoreVertical className="h-4 w-4" />
-        )}
+        <MoreVertical className="h-4 w-4" />
       </Button>
     )
   }
@@ -240,20 +291,20 @@ export function UserMenu() {
                     const getSubMeta = () => {
                       switch (user.subscription) {
                         case 'FULL':
-                          return { label: 'FULL', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
+                          return { label: 'Yillik obuna', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
                         case 'PRO':
-                          return { label: 'PRO', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                          return { label: 'Oylik obuna', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                         case 'BASIC':
-                          return { label: 'BASIC', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                          return { label: 'Oylik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                         default:
-                          return { label: 'FREE', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
+                          return { label: 'Tekin obuna', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                       }
                     }
                     const { label, Icon, classes } = getSubMeta()
                     return (
                       <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? '' : ''}`}>
-                        <Icon className={`h-3 w-3 ${label === 'FREE' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`} />
-                        <span className={`text-xs font-semibold ${label === 'FREE' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`}>{label}</span>
+                        <Icon className={`h-3 w-3 ${label === 'Tekin obuna' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`} />
+                        <span className={`text-xs font-semibold ${label === 'Tekin obuna' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`}>{label}</span>
                       </div>
                     )
                   })()}
@@ -284,6 +335,16 @@ export function UserMenu() {
               >
                 <History className="mr-2 h-4 w-4" />
                 {t.userMenu.testHistory}
+              </DropdownMenuItem>
+            )}
+
+            {hasTeacherRole() && (
+              <DropdownMenuItem 
+                onClick={handleStudentsClick}
+                className="cursor-pointer"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                {t.userMenu.students}
               </DropdownMenuItem>
             )}
 
@@ -440,25 +501,21 @@ export function UserMenu() {
           </div>
         </div>
 
-
-    {/* Subscription */}
-    <DropdownMenuItem asChild>
-          <Link 
-            href="/subscription" 
-            className="flex items-center cursor-pointer text-amber-600 dark:text-amber-400"
-          >
-            <Crown className="mr-2 h-4 w-4" />
-            <span>{t.header.subscription}</span>
-          </Link>
-        </DropdownMenuItem>
-
         {/* Theme Switcher */}
-        <ThemeToggleButton
-          theme={theme === "dark" ? "dark" : "light"}
-          onClick={handleThemeToggle}
-          showAnimationMenu={true}
-          translations={t.userMenu.theme}
-        />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault()
+            handleThemeToggle()
+          }}
+        >
+          {theme === "dark" ? (
+            <Moon className="mr-2 h-4 w-4" />
+          ) : (
+            <Sun className="mr-2 h-4 w-4" />
+          )}
+          <span>{theme === "dark" ? (t.userMenu.theme?.dark || "Tun") : (t.userMenu.theme?.light || "Kun")}</span>
+        </DropdownMenuItem>
 
         
         {/* Submenu Portal */}
