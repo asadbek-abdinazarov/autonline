@@ -542,6 +542,13 @@ export const ru = {
     resultsEmpty: "Пока нет результатов.",
     resultsCorrect: "Правильно",
     resultsWrong: "Неправильно",
+    studentLabel: "Ученик",
+    subscriptionLabel: "Подписка",
+    searchPlaceholder: "Поиск по имени пользователя или номеру телефона...",
+    searchEmpty: "Результаты не найдены",
+    searchEmptyDescription: "По запросу ученики не найдены.",
+    fullName: "Полное имя",
+    actions: "Действия",
   },
 }
 

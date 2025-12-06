@@ -59,7 +59,7 @@ export function HistoryClient() {
 
   return (
     <AuthGuard requiredPermission="VIEW_TEST_HISTORY">
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
         <Header />
         <main className="container mx-auto px-4 py-8 sm:py-12">
           <div className="max-w-6xl mx-auto space-y-8">
@@ -85,7 +85,7 @@ export function HistoryClient() {
             {!isLoading && !error && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Total Tests Card */}
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -100,7 +100,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Passed Tests Card */}
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -115,7 +115,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Average Score Card */}
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -132,7 +132,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Success Rate Card */}
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-colors">
+                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -175,7 +175,7 @@ export function HistoryClient() {
 
             {/* Empty State */}
             {!isLoading && !error && lessonHistory.length === 0 && (
-              <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
                 <CardContent className="py-20 text-center">
                   <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-6">
                     <BookOpen className="h-16 w-16 text-muted-foreground" />

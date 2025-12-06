@@ -21,7 +21,7 @@ export function TopicCard({ topic }: TopicCardProps) {
   const isLongTitle = localizedTitle.length > 44
 
   return (
-    <Card className="group hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl w-full h-[280px] flex flex-col">
+    <Card className="group hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl w-full h-[280px] flex flex-col">
       <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300">

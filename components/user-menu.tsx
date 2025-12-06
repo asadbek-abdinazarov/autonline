@@ -332,27 +332,6 @@ export function UserMenu() {
               </DropdownMenuLabel>
             )}
 
-            <DropdownMenuSeparator />
-
-            {hasPermission('VIEW_TEST_HISTORY') && (
-              <DropdownMenuItem 
-                onClick={handleHistoryClick}
-                className="cursor-pointer"
-              >
-                <History className="mr-2 h-4 w-4" />
-                {t.userMenu.testHistory}
-              </DropdownMenuItem>
-            )}
-
-            {hasTeacherRole() && (
-              <DropdownMenuItem 
-                onClick={handleStudentsClick}
-                className="cursor-pointer"
-              >
-                <Users className="mr-2 h-4 w-4" />
-                {t.userMenu.students}
-              </DropdownMenuItem>
-            )}
 
             {showPaymentHistory && hasPermission('VIEW_PAYMENTS') && paymentHistory.length > 0 && (
               <>
@@ -370,7 +349,7 @@ export function UserMenu() {
                   
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-300/50 dark:via-slate-700/50 to-transparent mb-3 transition-colors duration-300" />
                   
-                  <div className="bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
+                  <div className="bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
                     <div className={`p-2 ${paymentHistory.length > 2 ? 'max-h-48 overflow-y-auto' : ''}`}>
                       {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -392,7 +371,7 @@ export function UserMenu() {
                           {paymentHistory.map((payment, index) => (
                             <div 
                               key={index}
-                              className="group relative overflow-hidden rounded-lg bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-md hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                              className="group relative overflow-hidden rounded-lg bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-md hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
                             >
                               <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
                                 payment.isPaid 
@@ -472,6 +451,29 @@ export function UserMenu() {
             <DropdownMenuSeparator />
           </>
         )}
+
+{hasTeacherRole() && (
+              <DropdownMenuItem 
+                onClick={handleStudentsClick}
+                className="cursor-pointer"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                {t.userMenu.students}
+              </DropdownMenuItem>
+            )}
+
+            {hasPermission('VIEW_TEST_HISTORY') && (
+              <DropdownMenuItem 
+                onClick={handleHistoryClick}
+                className="cursor-pointer"
+              >
+                <History className="mr-2 h-4 w-4" />
+                {t.userMenu.testHistory}
+              </DropdownMenuItem>
+            )}
+
+<DropdownMenuSeparator />
+
 
         {/* Language Switcher */}
         <div 

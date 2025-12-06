@@ -542,6 +542,13 @@ export const cyr = {
     resultsEmpty: "Ҳозирча натижалар мавжуд эмас.",
     resultsCorrect: "Тўғри",
     resultsWrong: "Нотўғри",
+    studentLabel: "Ўқувчи",
+    subscriptionLabel: "Обуна",
+    searchPlaceholder: "Username ёки телефон рақами бўйича қидириш...",
+    searchEmpty: "Натижалар топилмади",
+    searchEmptyDescription: "Қидирув бўйича ўқувчилар топилмади.",
+    fullName: "Тўлиқ исм",
+    actions: "Амаллар",
   },
 }
 

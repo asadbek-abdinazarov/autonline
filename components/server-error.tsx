@@ -25,7 +25,7 @@ export function ServerError() {
       </div>
 
       <div className="w-full max-w-md">
-        <Card className="border-2 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 bg-card/80 backdrop-blur-sm">
+        <Card className="border-2 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
           <CardHeader className="text-center">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
               <AlertTriangle className="h-10 w-10 text-destructive" />

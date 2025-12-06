@@ -7,7 +7,7 @@ import { AuthGuard } from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Loader2, Users, Phone, Calendar, User, XCircle, CheckCircle, Trash2, UserPlus, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Loader2, Users, Phone, Calendar, User, XCircle, CheckCircle, Trash2, UserPlus, Eye, EyeOff, Search } from "lucide-react"
 import Link from "next/link"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { getCurrentUser } from "@/lib/auth"
@@ -88,6 +88,18 @@ export function StudentsClient() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [phoneError, setPhoneError] = useState("")
   const [passwordError, setPasswordError] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchPagination, setSearchPagination] = useState<{
+    page: number
+    size: number
+    totalPages: number
+    totalElements: number
+    first: boolean
+    last: boolean
+  } | null>(null)
+  const [searchCurrentPage, setSearchCurrentPage] = useState(0)
   const pageSize = 9
 
   const { students, isLoading, error, pagination, fetchStudents } = useStudents()
@@ -103,6 +115,133 @@ export function StudentsClient() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage])
+
+  // Search function
+  const handleSearch = async (query: string, page: number = 0) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setSearchPagination(null)
+      setIsSearching(false)
+      return
+    }
+
+    try {
+      setIsSearching(true)
+      
+      // Get access token
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      
+      // Map frontend language to API language format
+      const apiLanguage = language === 'cyr' ? 'oz' : language === 'ru' ? 'ru' : 'uz'
+      
+      const { buildApiUrl, getDefaultHeaders, safeJsonParse } = await import('@/lib/api-utils')
+      
+      const headers: Record<string, string> = {
+        ...getDefaultHeaders(),
+        'Accept-Language': apiLanguage,
+        'accept': '*/*',
+      }
+      
+      // Add Authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
+      const response = await fetch(buildApiUrl(`/api/v1/students/search?value=${encodeURIComponent(query.trim())}&page=${page}&size=${pageSize}`), {
+        method: 'GET',
+        headers,
+      })
+      
+      if (!response.ok) {
+        // Handle errors
+        if (response.status === 401) {
+          const { handleApiError } = await import('@/lib/api-utils')
+          await handleApiError({ status: 401 })
+          return
+        }
+        
+        if (response.status >= 500 && response.status < 600) {
+          const { handleApiError } = await import('@/lib/api-utils')
+          await handleApiError({ status: response.status })
+          return
+        }
+        
+        setSearchResults([])
+        setSearchPagination(null)
+        return
+      }
+      
+      // API returns object with content and page
+      const data = await safeJsonParse<{
+        content: any[]
+        page: {
+          size: number
+          number: number
+          totalElements: number
+          totalPages: number
+        }
+      }>(response)
+      
+      if (data) {
+        if (data.content && Array.isArray(data.content)) {
+          setSearchResults(data.content)
+        } else {
+          setSearchResults([])
+        }
+        
+        if (data.page) {
+          setSearchPagination({
+            page: data.page.number,
+            size: data.page.size,
+            totalPages: data.page.totalPages,
+            totalElements: data.page.totalElements,
+            first: data.page.number === 0,
+            last: data.page.number >= data.page.totalPages - 1,
+          })
+        } else {
+          setSearchPagination(null)
+        }
+      } else {
+        setSearchResults([])
+        setSearchPagination(null)
+      }
+    } catch (err) {
+      console.error('Error searching students:', err)
+      setSearchResults([])
+      setSearchPagination(null)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Debounce search - 0.3 seconds
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setSearchPagination(null)
+      setIsSearching(false)
+      setSearchCurrentPage(0)
+      return
+    }
+
+    // Reset to first page when search query changes
+    setSearchCurrentPage(0)
+
+    const timeoutId = setTimeout(() => {
+      handleSearch(searchQuery, 0)
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
+  // Handle search pagination
+  useEffect(() => {
+    if (searchQuery.trim() && searchCurrentPage >= 0) {
+      handleSearch(searchQuery, searchCurrentPage)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchCurrentPage])
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null
@@ -625,10 +764,132 @@ export function StudentsClient() {
     )
   }
 
+  // Render search pagination
+  const renderSearchPagination = () => {
+    // Agar pagination ma'lumotlari bo'lmasa, ko'rsatilmaydi
+    if (!searchPagination) return null
+
+    const totalPages = Number(searchPagination.totalPages) || 0
+    const current = Number(searchPagination.page) || 0
+    const totalElements = Number(searchPagination.totalElements) || 0
+
+    // Agar totalPages yoki current noto'g'ri bo'lsa, pagination ko'rsatilmaydi
+    if (!totalPages || isNaN(totalPages) || isNaN(current)) return null
+
+    // Agar umumiy o'quvchilar soni pageSize dan kichik yoki teng bo'lsa, pagination ko'rsatilmaydi
+    if (totalElements <= pageSize) return null
+
+    // Agar faqat 1 sahifa bo'lsa, pagination ko'rsatilmaydi
+    if (totalPages <= 1) return null
+
+    // Agar sahifalar soni 7 tadan kam bo'lsa, barcha sahifalarni ko'rsat
+    if (totalPages <= 7) {
+      const pageNumbers: number[] = []
+      for (let i = 0; i < totalPages; i++) {
+        pageNumbers.push(i)
+      }
+      return (
+        <Pagination className="mt-6">
+          <PaginationContent>
+            {pageNumbers.map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setSearchCurrentPage(pageNum)
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  isActive={pageNum === current}
+                  className="cursor-pointer"
+                  href="#"
+                >
+                  {pageNum + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+          </PaginationContent>
+        </Pagination>
+      )
+    }
+
+    // Ko'p sahifalar bo'lsa, ellipsis bilan ko'rsat
+    const pages: (number | 'ellipsis')[] = []
+    
+    // Birinchi sahifa
+    pages.push(0)
+
+    // Ellipsis va o'rtadagi sahifalar
+    if (current > 2) {
+      pages.push('ellipsis')
+    }
+
+    // Joriy sahifa atrofidagi sahifalar
+    const start = Math.max(1, current - 1)
+    const end = Math.min(totalPages - 2, current + 1)
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    // Ellipsis va oxirgi sahifa
+    if (current < totalPages - 3) {
+      pages.push('ellipsis')
+    }
+    
+    // Oxirgi sahifa
+    pages.push(totalPages - 1)
+
+    // Duplikatlarni olib tashlash va faqat raqamlarni saqlash
+    const uniquePages: (number | 'ellipsis')[] = []
+    const seen = new Set<string | number>()
+    
+    for (const page of pages) {
+      const key = page === 'ellipsis' ? 'ellipsis' : page
+      if (!seen.has(key)) {
+        seen.add(key)
+        uniquePages.push(page)
+      }
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          {uniquePages
+            .filter((page) => page === 'ellipsis' || (typeof page === 'number' && !isNaN(page)))
+            .map((page, index) => {
+              if (page === 'ellipsis') {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )
+              }
+              const pageNum = Number(page)
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setSearchCurrentPage(pageNum)
+                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
+                    isActive={pageNum === current}
+                    className="cursor-pointer"
+                    href="#"
+                  >
+                    {pageNum + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            })}
+        </PaginationContent>
+      </Pagination>
+    )
+  }
+
   return (
     <AuthGuard>
       {hasTeacherRole() ? (
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col transition-colors duration-300">
           <Header />
           <main className="container mx-auto px-4 py-8 sm:py-12 flex-1">
             <div className="max-w-6xl mx-auto space-y-8">
@@ -849,6 +1110,34 @@ export function StudentsClient() {
                     </DialogContent>
                   </Dialog>
                 </div>
+
+                {/* Search Input */}
+                <div className="relative max-w-md">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder={t.students.searchPlaceholder || "Username yoki telefon raqami bo'yicha qidirish..."}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {searchQuery && !isSearching && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery("")
+                          setSearchResults([])
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </section>
 
               {/* Loading State */}
@@ -877,8 +1166,8 @@ export function StudentsClient() {
               )}
 
               {/* Empty State */}
-              {!isLoading && !error && students.length === 0 && (
-                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              {!isLoading && !error && !searchQuery.trim() && students.length === 0 && (
+                <Card className="border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/80 dark:bg-slate-800/95 backdrop-blur-xl shadow-lg dark:shadow-slate-900/40">
                   <CardContent className="py-20 text-center">
                     <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-6">
                       <Users className="h-16 w-16 text-muted-foreground" />
@@ -889,14 +1178,174 @@ export function StudentsClient() {
                 </Card>
               )}
 
+              {/* Search Results - Card Format (Same as regular students) */}
+              {!isLoading && !error && searchQuery.trim() && !isSearching && searchResults.length > 0 && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {searchResults.map((student) => (
+                    <Card
+                      key={student.userId}
+                      className="relative border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700/95 transition-all duration-300 hover:shadow-xl hover:shadow-slate-900/20 dark:hover:shadow-slate-900/60 hover:border-slate-400/50 dark:hover:border-slate-500/80 shadow-lg dark:shadow-slate-900/40"
+                    >
+                      {/* Delete Button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full"
+                              disabled={deletingId === student.userId}
+                            >
+                              {deletingId === student.userId ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{t.students.deleteConfirmTitle || "O'quvchini o'chirish"}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {interpolate(t.students.deleteConfirmMessage || "Siz rostdan ham {name} o'quvchisini o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.", {
+                                  name: student.fullName || student.username
+                                })}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteStudent(student.userId)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                {t.students.delete || t.common.delete}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+
+                      <CardContent className="p-4 sm:p-5">
+                        <div className="space-y-3 pr-8">
+                          {/* Header with Name and Status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-base sm:text-lg font-bold text-foreground mb-0.5 break-words">
+                                {student.fullName || student.username}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground truncate">@{student.username}</p>
+                            </div>
+                            <Badge
+                              variant={student.isActive ? "default" : "secondary"}
+                              className={`flex-shrink-0 text-xs ${
+                                student.isActive
+                                  ? "bg-green-500 hover:bg-green-600 text-white"
+                                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              {student.isActive ? (
+                                <>
+                                  <CheckCircle className="h-3 w-3" />
+                                  <span className="hidden sm:inline ml-1">{t.students.active || t.userMenu.active}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-3 w-3" />
+                                  <span className="hidden sm:inline ml-1">{t.students.inactive || t.userMenu.inactive}</span>
+                                </>
+                              )}
+                            </Badge>
+                          </div>
+
+                          {/* Phone Number */}
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">{student.phoneNumber}</span>
+                          </div>
+
+                          {/* Subscription */}
+                          {student.subscription && (
+                            <div className="flex items-center gap-2">
+                              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                              <Badge
+                                className={`text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-full truncate max-w-[140px] sm:max-w-[160px] ${getSubscriptionBadgeClasses(student.subscription)}`}
+                              >
+                                {getSubscriptionName(student.subscription)}
+                              </Badge>
+                            </div>
+                          )}
+
+                          {/* Next Payment Date */}
+                          {student.nextPaymentDate && (
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="truncate">
+                                {t.students.nextPayment || t.userMenu.nextPaymentDate}: {formatDate(student.nextPaymentDate)}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Results Button */}
+                          <div className="pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-center"
+                              onClick={() => handleOpenResults(student)}
+                            >
+                              {t.students.results || "Natijalari"}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Search Pagination Info */}
+                {searchPagination && searchPagination.totalElements > 0 && (
+                  <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
+                    <p>
+                      {interpolate(t.students.showing || "Ko'rsatilmoqda: {from}-{to} / {total}", {
+                        from: (searchPagination.page * pageSize + 1).toString(),
+                        to: Math.min((searchPagination.page + 1) * pageSize, searchPagination.totalElements).toString(),
+                        total: searchPagination.totalElements.toString(),
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                {/* Search Pagination Controls */}
+                {renderSearchPagination()}
+                </>
+              )}
+
+              {/* Search Empty State */}
+              {!isLoading && !error && searchQuery.trim() && !isSearching && searchResults.length === 0 && (
+                <Card className="border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/80 dark:bg-slate-800/95 backdrop-blur-xl shadow-lg dark:shadow-slate-900/40">
+                  <CardContent className="py-20 text-center">
+                    <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-6">
+                      <Search className="h-16 w-16 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 text-foreground">
+                      {t.students.searchEmpty || "Natijalar topilmadi"}
+                    </h3>
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                      {t.students.searchEmptyDescription || `"${searchQuery}" bo'yicha o'quvchilar topilmadi.`}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Students Grid */}
-              {!isLoading && !error && students.length > 0 && (
+              {!isLoading && !error && !searchQuery.trim() && students.length > 0 && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {students.map((student) => (
                       <Card
                         key={student.userId}
-                        className="relative border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 hover:shadow-md"
+                        className="relative border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700/95 transition-all duration-300 hover:shadow-xl hover:shadow-slate-900/20 dark:hover:shadow-slate-900/60 hover:border-slate-400/50 dark:hover:border-slate-500/80 shadow-lg dark:shadow-slate-900/40"
                       >
                         {/* Delete Button */}
                         <div className="absolute top-2 right-2 z-10">
@@ -1013,7 +1462,7 @@ export function StudentsClient() {
                   </div>
 
                   {/* Pagination Info */}
-                  {pagination.totalElements > 0 && (
+                  {!searchQuery.trim() && pagination.totalElements > 0 && (
                     <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
                       <p>
                         {interpolate(t.students.showing || "Ko'rsatilmoqda: {from}-{to} / {total}", {
@@ -1026,7 +1475,7 @@ export function StudentsClient() {
                   )}
 
                   {/* Pagination Controls */}
-                  {renderPagination()}
+                  {!searchQuery.trim() && renderPagination()}
                 </>
               )}
             </div>
@@ -1133,7 +1582,7 @@ export function StudentsClient() {
                         {lessonHistories.map((history) => (
                           <div
                             key={history.lessonHistoryId}
-                            className="rounded-lg border border-border/60 bg-card/60 px-3 py-2.5 flex flex-col gap-1.5"
+                            className="rounded-lg border border-border/60 bg-white/80 dark:bg-slate-900/50 px-3 py-2.5 flex flex-col gap-1.5"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2 min-w-0">

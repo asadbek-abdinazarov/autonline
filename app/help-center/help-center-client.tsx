@@ -35,7 +35,7 @@ export function HelpCenterClient() {
 
               <div className="text-center">
                 <div className="max-w-4xl mx-auto space-y-6">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
                     <Sparkles className="h-4 w-4 text-blue-500" />
                     <span>{t.helpCenter.title}</span>
                   </div>
@@ -57,7 +57,7 @@ export function HelpCenterClient() {
             <div className="max-w-5xl mx-auto">
 
             {/* About the Application */}
-              <Card className="mb-6 sm:mb-8 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+              <Card className="mb-6 sm:mb-8 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
               <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
@@ -91,7 +91,7 @@ export function HelpCenterClient() {
             </Card>
 
             {/* Contact Information */}
-              <Card className="mb-6 sm:mb-8 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+              <Card className="mb-6 sm:mb-8 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
               <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
@@ -173,7 +173,7 @@ export function HelpCenterClient() {
             </Card>
 
             {/* FAQ Section */}
-              <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+              <Card className="border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
               <CardHeader className="px-4 sm:px-6">
                   <div className="flex items-center gap-2 sm:gap-3 mb-2">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">

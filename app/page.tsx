@@ -196,7 +196,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-5xl mx-auto space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300">
                 <Sparkles className="h-4 w-4 text-blue-500" />
                 <span>{t.landing.hero.badge}</span>
               </div>
@@ -282,7 +282,7 @@ export default function LandingPage() {
                 return (
                   <div
                     key={index}
-                    className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                    className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
                   >
                     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${feature.color} opacity-10`} />
                     <div className="relative p-6">
@@ -322,7 +322,7 @@ export default function LandingPage() {
                 const Icon = step.icon
                 return (
                   <div key={index} className="relative group">
-                    <div className="relative overflow-hidden rounded-xl bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 h-full">
+                    <div className="relative overflow-hidden rounded-xl bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 h-full">
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                       <div className="relative p-6 text-center">
                         <div className="relative w-20 h-20 mx-auto mb-6">
@@ -416,7 +416,7 @@ export default function LandingPage() {
                   return (
                     <div
                       key={index}
-                      className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 text-center"
+                      className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 text-center"
                     >
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                       <div className="relative p-6">
@@ -459,7 +459,7 @@ export default function LandingPage() {
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                  className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
                 >
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                   <div className="relative p-6">

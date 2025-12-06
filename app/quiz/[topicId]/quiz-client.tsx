@@ -431,7 +431,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
 
       <main className="flex-1">
         {/* Header Section - Minimal and Clean */}
-        <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <div className="border-b border-border bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="sm" asChild>

@@ -42,7 +42,7 @@ export function NewsCard({ news }: NewsCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border border-slate-300/50 dark:border-slate-700/50 bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow border border-slate-300/50 dark:border-slate-700/50 bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl">
       <div className="relative h-48 w-full">
         <Image 
           src={news.newsPhoto || "/placeholder.svg"} 

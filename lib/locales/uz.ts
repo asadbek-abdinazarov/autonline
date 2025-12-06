@@ -542,6 +542,13 @@ export const uz = {
     resultsEmpty: "Hozircha natijalar mavjud emas.",
     resultsCorrect: "To'g'ri",
     resultsWrong: "Noto'g'ri",
+    studentLabel: "O'quvchi",
+    subscriptionLabel: "Obuna",
+    searchPlaceholder: "Username yoki telefon raqami bo'yicha qidirish...",
+    searchEmpty: "Natijalar topilmadi",
+    searchEmptyDescription: "Qidiruv bo'yicha o'quvchilar topilmadi.",
+    fullName: "To'liq ism",
+    actions: "Amallar",
   },
 }
 

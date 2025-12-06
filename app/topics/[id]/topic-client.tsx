@@ -133,7 +133,7 @@ export default function TopicClient({ topicId }: TopicClientProps) {
 
             <div className="text-center">
               <div className="max-w-4xl mx-auto space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
                   <Sparkles className="h-4 w-4 text-blue-500" />
                   <span>{lessonData ? getLocalizedLessonName(lessonData, language) : t.topics.testInfo}</span>
                 </div>
@@ -153,7 +153,7 @@ export default function TopicClient({ topicId }: TopicClientProps) {
         {/* Content Section */}
         <section className="container mx-auto px-4 py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
-          <Card className="mb-6 sm:mb-8 md:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-card/80 backdrop-blur-sm">
+          <Card className="mb-6 sm:mb-8 md:mb-10 border-2 shadow-xl hover:shadow-2xl transition-shadow duration-300 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
             <CardHeader className="pb-4 sm:pb-6 px-4 sm:px-6">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
                 <div className="text-5xl sm:text-6xl md:text-7xl filter drop-shadow-lg">{lessonData.lessonIcon || "📚"}</div>
@@ -199,7 +199,7 @@ export default function TopicClient({ topicId }: TopicClientProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-2 shadow-lg bg-card/80 backdrop-blur-sm">
+          <Card className="border-2 shadow-lg bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
             <CardHeader className="px-4 sm:px-6">
               <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

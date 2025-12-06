@@ -76,7 +76,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl transition-colors duration-300">
+        <Card className="border-2 border-slate-300/50 dark:border-slate-700/50 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl transition-colors duration-300">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{t.login.title}</CardTitle>
             <CardDescription className="text-base text-slate-600 dark:text-slate-400">{t.login.description}</CardDescription>
