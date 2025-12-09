@@ -11,6 +11,7 @@ import { useNotification } from "@/components/notification-provider"
 import { buildApiUrl, getDefaultHeaders, safeJsonParse } from "@/lib/api-utils"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
+import { getCurrentUser } from "@/lib/auth"
 
 interface SubscriptionPermission {
   permissionId: number
@@ -42,6 +43,12 @@ export function SubscriptionClient() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { showNotification } = useNotification()
+  const [backLink, setBackLink] = useState("/")
+  
+  useEffect(() => {
+    const user = getCurrentUser()
+    setBackLink(user ? "/home" : "/")
+  }, [])
 
   // Fetch subscription plans from API
   useEffect(() => {
@@ -131,7 +138,7 @@ export function SubscriptionClient() {
             <div className="container mx-auto px-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                  <Link href="/home" className="flex items-center gap-2">
+                  <Link href={backLink} className="flex items-center gap-2">
                     <ArrowLeft className="h-5 w-5" />
                     {t.common.back}
                   </Link>

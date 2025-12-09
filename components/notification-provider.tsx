@@ -92,15 +92,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }
         
         if (refreshResult && typeof refreshResult === 'string') {
-          // Refresh successful - token is a string
-          // setTimeout(() => {
-          //   window.location.reload()
-          // }, 700)
-          // Refresh successful - reload page to retry all requests with new token
+          // Refresh successful - save flag and reload page
           console.log('🟢 [SHOW401ERROR] Refresh successful - reloading page to continue process')
-          toast.success("Sessiya yangilandi. Davom etishingiz mumkin, qandaydur kamchilik yuzaga kelsa sahifani yangilang!.", { duration: 4000 })
           
-          // Small delay to show success message, then reload
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('tokenRefreshed', 'true')
+          }
+          
+          // Reload page immediately - notification will be shown after reload
+          window.location.reload()
           
         } else {
           // Refresh failed but refresh token still exists (network error, etc.)
@@ -125,6 +125,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const showError = useCallback((message: string) => {
     // Show toast notification as error
     toast.error(message, { duration: 5000 })
+  }, [])
+
+  // Check for token refresh flag on page load and show notification
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const tokenRefreshed = localStorage.getItem('tokenRefreshed')
+    if (tokenRefreshed === 'true') {
+      // Kichik kechikish bilan notification ko'rsatish
+      const timer = setTimeout(() => {
+        toast.success("Sessiya yangilandi. Davom etishingiz mumkin, qandaydur kamchilik yuzaga kelsa sahifani yangilang!.", { duration: 4000 })
+        localStorage.removeItem('tokenRefreshed')
+      }, 400)
+      
+      return () => clearTimeout(timer)
+    }
   }, [])
 
   // Set global notification handlers

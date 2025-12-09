@@ -157,6 +157,14 @@ export function Header() {
                 {t.header.nav.benefits}
               </Link>
               <Link 
+                href="/#stats" 
+                onClick={(e) => handleSmoothScroll(e, 'stats')}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-md px-2 py-1 hover:scale-105 active:scale-95"
+                aria-label={t.landing.stats.title || t.header.nav.stats}
+              >
+                {t.header.nav.stats}
+              </Link>
+              <Link 
                 href="/#faq" 
                 onClick={(e) => handleSmoothScroll(e, 'faq')}
                 className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-md px-2 py-1 hover:scale-105 active:scale-95"

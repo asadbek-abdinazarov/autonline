@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,9 +8,16 @@ import { ArrowLeft, HelpCircle, Mail, Phone, MessageCircle, BookOpen, Info, Exte
 import Link from "next/link"
 import { Footer } from "@/components/footer"
 import { useTranslation } from "@/hooks/use-translation"
+import { getCurrentUser } from "@/lib/auth"
 
 export function HelpCenterClient() {
   const { t } = useTranslation()
+  const [backLink, setBackLink] = useState("/")
+  
+  useEffect(() => {
+    const user = getCurrentUser()
+    setBackLink(user ? "/home" : "/")
+  }, [])
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
       <Header />
@@ -26,7 +34,7 @@ export function HelpCenterClient() {
             <div className="container mx-auto px-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                 <Button variant="ghost" size="lg" asChild className="hover:scale-105 transition-transform text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                  <Link href="/home" className="flex items-center gap-2">
+                  <Link href={backLink} className="flex items-center gap-2">
                     <ArrowLeft className="h-5 w-5" />
                     {t.common.back}
                   </Link>

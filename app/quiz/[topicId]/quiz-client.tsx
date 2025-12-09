@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo, startTransition } from "react"
 import { useRouter } from "next/navigation"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, type Permission } from "@/lib/auth"
 import { Header } from "@/components/header"
 import { fetchQuestionsByLessonId, submitLessonHistory, type QuestionApiResponse, type QuestionData, getLocalizedLessonName, clearLessonCache } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, History } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
@@ -28,6 +28,9 @@ interface QuizClientProps {
 export default function QuizClient({ topicId }: QuizClientProps) {
   const { t, language } = useTranslation()
   const router = useRouter()
+  const user = getCurrentUser()
+  const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
+  const canViewHistory = hasPermission('VIEW_TEST_HISTORY')
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -543,6 +546,14 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   <Button variant="outline" className="flex-1 bg-transparent" asChild>
                     <Link href="/home">{t.quiz.homePage}</Link>
                   </Button>
+                  {canViewHistory && (
+                    <Button variant="outline" className="flex-1 bg-transparent" asChild>
+                      <Link href="/history" className="flex items-center gap-2 justify-center">
+                        <History className="h-4 w-4" />
+                        {t.history.title || t.userMenu.testHistory}
+                      </Link>
+                    </Button>
+                  )}
                   <Button className="flex-1" onClick={handleRetry}>
                     {t.common.retry}
                   </Button>

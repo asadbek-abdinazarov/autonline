@@ -274,6 +274,7 @@ export function UserMenu() {
           )}
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="end" className="w-[95vw] sm:w-[420px] max-h-[85vh] mx-2 sm:mx-0 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 transition-colors duration-300">
         {/* User Info - only when logged in */}
         {user && (
@@ -469,10 +470,11 @@ export function UserMenu() {
               >
                 <History className="mr-2 h-4 w-4" />
                 {t.userMenu.testHistory}
+                <DropdownMenuSeparator />
               </DropdownMenuItem>
             )}
 
-<DropdownMenuSeparator />
+
 
 
         {/* Language Switcher */}

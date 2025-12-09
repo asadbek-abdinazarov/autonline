@@ -168,16 +168,16 @@ export default function HomeClient() {
            {/* Special Features Section */}
            {canViewRandom && (
             <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 dark:from-violet-500/10 dark:via-purple-500/10 dark:to-fuchsia-500/10 border border-violet-500/20 dark:border-violet-500/20 p-8 sm:p-12 backdrop-blur-xl">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/10 dark:via-indigo-500/10 dark:to-purple-500/10 border border-blue-500/20 dark:border-blue-500/20 p-8 sm:p-12 backdrop-blur-xl">
                 {/* Background decoration */}
                 <div className="absolute inset-0 -z-10">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 dark:bg-violet-500/20 rounded-full blur-3xl"></div>
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/20 dark:bg-fuchsia-500/20 rounded-full blur-3xl"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 dark:bg-purple-500/20 rounded-full blur-3xl"></div>
                 </div>
 
                 <div className="max-w-4xl mx-auto text-center space-y-6">
                   <div className="flex items-center justify-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                       <Sparkles className="h-8 w-8 text-white" />
                     </div>
                     <div>
@@ -190,7 +190,7 @@ export default function HomeClient() {
                     <Button 
                       asChild 
                       size="lg" 
-                      className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
                     >
                       <Link href="/quiz/random" className="flex items-center gap-3">
                         <Shuffle className="h-5 w-5" />

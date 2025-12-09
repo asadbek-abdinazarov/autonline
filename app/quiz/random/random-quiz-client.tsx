@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, type Permission } from "@/lib/auth"
 import { Header } from "@/components/header"
 import { submitLessonHistory, type QuestionApiResponse, type QuestionData, type QuestionDataNew, getLocalizedLessonName } from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
@@ -36,6 +36,9 @@ export default function RandomQuizClient() {
   const { t, language } = useTranslation()
   const router = useRouter()
   const { makeAuthenticatedRequest } = useApi()
+  const user = getCurrentUser()
+  const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
+  const canViewHistory = hasPermission('VIEW_TEST_HISTORY')
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -433,10 +436,10 @@ export default function RandomQuizClient() {
           <div className="max-w-3xl mx-auto">
             {/* Hero Section */}
             <div className="text-center mb-8 sm:mb-12 space-y-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg mb-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg mb-4">
                 <Target className="h-10 w-10 text-white" />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 {t.quiz.selectQuestionCount}
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto">
@@ -474,7 +477,7 @@ export default function RandomQuizClient() {
                             "relative group h-24 sm:h-28 rounded-xl border-2 transition-all duration-300",
                             "hover:scale-105 hover:shadow-lg",
                             isSelected
-                              ? "bg-gradient-to-br from-violet-500 to-fuchsia-500 border-violet-500 text-white shadow-lg"
+                              ? "bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500 text-white shadow-lg"
                               : "bg-card border-border hover:border-primary/50"
                           )}
                         >
@@ -484,7 +487,7 @@ export default function RandomQuizClient() {
                           </div>
                           {isSelected && (
                             <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                              <CheckCircle2 className="h-4 w-4 text-violet-600" />
+                              <CheckCircle2 className="h-4 w-4 text-blue-600" />
                             </div>
                           )}
                         </button>
@@ -575,7 +578,7 @@ export default function RandomQuizClient() {
                     size="lg"
                     onClick={handleStartQuiz}
                     disabled={isCustomMode && (!customInterval || parseInt(customInterval, 10) < 5 || parseInt(customInterval, 10) > 100)}
-                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                   >
                     <Play className="mr-2 h-5 w-5" />
                     {t.quiz.startQuiz}
@@ -801,6 +804,14 @@ export default function RandomQuizClient() {
                   <Button variant="outline" className="flex-1 bg-transparent" asChild>
                     <Link href="/home">{t.quiz.homePage}</Link>
                   </Button>
+                  {canViewHistory && (
+                    <Button variant="outline" className="flex-1 bg-transparent" asChild>
+                      <Link href="/history" className="flex items-center gap-2 justify-center">
+                        <History className="h-4 w-4" />
+                        {t.history.title || t.userMenu.testHistory}
+                      </Link>
+                    </Button>
+                  )}
                   <Button className="flex-1" onClick={handleRetry}>
                     {t.quiz.newRandomTest}
                   </Button>

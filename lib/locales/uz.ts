@@ -21,13 +21,13 @@ export const uz = {
     viewAll: "Barchasini ko'rish",
     showLess: "Kamroq ko'rsatish",
     showMore: "Ko'proq ko'rsatish",
-    dashboard: "Dashboard",
+    dashboard: "Mashg'ulot",
     login: "Kirish",
     logout: "Chiqish",
     register: "Ro'yxatdan o'tish",
     start: "Boshlash",
     freeStart: "Bepul boshlash",
-    goToDashboard: "Dashboardga o'tish",
+    goToDashboard: "Mashg'ulotga o'tish",
     items: "ta",
   },
 
@@ -38,7 +38,7 @@ export const uz = {
       title: "Haydovchilik Guvohnomasi",
       subtitle: "Imtihoniga Tayyorlaning",
       description: "Professional tayyorgarlik platformasi orqali haydovchilik imtihoniga muvaffaqiyatli tayyorlaning. {count} test savollari va professional materiallar.",
-      countText: "500+",
+      countText: "1000+",
       videoGuide: "Video qo'llanma",
       moreInfo: "Ko'proq ma'lumot",
     },
@@ -137,7 +137,7 @@ export const uz = {
       subtitle: "Bizning natijalarimiz va muvaffaqiyatlarimiz",
       items: [
         {
-          value: "500+",
+          value: "1000+",
           label: "Test savollari",
           description: "Barcha mavzular bo'yicha",
         },
@@ -154,7 +154,7 @@ export const uz = {
         {
           value: "To'lovlar",
           label: "Muvaffaqiyatli to'lovlar",
-          description: "",
+          description: "Platformamiz uchun amalga oshirilgan to'lovlar",
         },
       ],
     },
@@ -191,7 +191,7 @@ export const uz = {
     cta: {
       title: "Imtihonga Tayyorlanishni Boshlaymizmi?",
       description: "AutOnline platformasiga qo'shiling va haydovchilik guvohnomasi imtihoniga muvaffaqiyatli tayyorlaning. {count} test savollari va professional materiallar sizni kutmoqda.",
-      countText: "500+",
+      countText: "1000+",
       helpCenter: "Yordam markazi",
       contact: {
         phone: "+998 77 010 80 60",
@@ -318,7 +318,7 @@ export const uz = {
       whatIsAnswer: "AutOnline - bu haydovchilik guvohnomasi imtihonlariga tayyorlanish uchun zamonaviy va qulay platforma. Bizning platformamiz orqali siz turli mavzularda test topshirishingiz, bilimingizni oshirishingiz va imtihonga yaxshi tayyorlashingiz mumkin.",
       features: "Asosiy imkoniyatlar",
       featuresList: [
-        "Turli mavzularda 500+ professional testlar",
+        "Turli mavzularda 1000+ professional testlar",
         "Real vaqtda batafsil natijalarni ko'rish",
         "Test tarixini to'liq kuzatish va statistika",
         "Haydovchilik sohasidagi so'ngi yangiliklardan xabardor bo'lish",
@@ -388,6 +388,7 @@ export const uz = {
       features: "Xususiyatlar",
       howItWorks: "Qanday ishlaydi",
       benefits: "Afzalliklar",
+      stats: "Statistika",
       faq: "FAQ",
     },
   },

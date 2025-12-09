@@ -55,6 +55,8 @@ export default function LandingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [statsValues, setStatsValues] = useState<string[]>(["500+", "1000+", "95%", "24/7"])
   const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [animatedStats, setAnimatedStats] = useState<number[]>([0, 0, 0, 0])
+  const [hasAnimated, setHasAnimated] = useState(false)
 
   // Memoize stats with translations
   const stats = useMemo(() => [
@@ -133,6 +135,64 @@ export default function LandingPage() {
     fetchStatistics()
   }, [t])
 
+  // Counter animation for stats
+  useEffect(() => {
+    if (!isLoadingStats && statsValues.length > 0 && !hasAnimated) {
+      const duration = 2000 // 2 seconds
+      const steps = 60
+      const interval = duration / steps
+      
+      const timers: NodeJS.Timeout[] = []
+      
+      statsValues.forEach((statValue, index) => {
+        // Extract number from string (e.g., "500+" -> 500)
+        const numStr = statValue.replace(/[^0-9]/g, '')
+        const targetNum = parseInt(numStr) || 0
+        const suffix = statValue.replace(/[0-9]/g, '') // Get +, %, etc.
+        
+        if (targetNum === 0) {
+          // If no number found, skip animation
+          setAnimatedStats(prev => {
+            const newStats = [...prev]
+            newStats[index] = 0
+            return newStats
+          })
+          return
+        }
+        
+        let currentStep = 0
+        const increment = targetNum / steps
+        
+        const timer = setInterval(() => {
+          currentStep++
+          setAnimatedStats(prev => {
+            const newStats = [...prev]
+            newStats[index] = Math.min(Math.floor(increment * currentStep), targetNum)
+            return newStats
+          })
+          
+          if (currentStep >= steps) {
+            clearInterval(timer)
+            setAnimatedStats(prev => {
+              const newStats = [...prev]
+              newStats[index] = targetNum
+              return newStats
+            })
+            if (index === statsValues.length - 1) {
+              setHasAnimated(true)
+            }
+          }
+        }, interval)
+        
+        timers.push(timer)
+      })
+      
+      return () => {
+        timers.forEach(timer => clearInterval(timer))
+      }
+    }
+  }, [isLoadingStats, statsValues, hasAnimated])
+
   // Get features from translations (first 6 items)
   const features = t.landing.features.items.slice(0, 6).map((item, index) => {
     const icons = [BookOpen, Clock, BarChart3, Newspaper, Award, Zap]
@@ -184,7 +244,7 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section 
-          className="relative overflow-hidden pt-16 sm:pt-24 md:pt-32 pb-16 sm:pb-24 md:pb-32"
+          className="relative overflow-hidden pt-16 sm:pt-24 md:pt-18 pb-22 sm:pb-24 md:pb-22"
           aria-label={t.landing.hero.title || "Asosiy bo'lim"}
         >
           {/* Background gradient blobs */}
@@ -196,12 +256,12 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-5xl mx-auto space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in" style={{ animationDelay: '100ms', animationDuration: '600ms' }}>
                 <Sparkles className="h-4 w-4 text-blue-500" />
                 <span>{t.landing.hero.badge}</span>
               </div>
 
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-balance leading-tight">
+              <h1 className="text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   {t.landing.hero.title}
                 </span>
@@ -209,11 +269,11 @@ export default function LandingPage() {
                 <span className="text-slate-900 dark:text-white">{t.landing.hero.subtitle}</span>
               </h1>
 
-              <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance">
+              <p className="text-xl sm:text-1xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '400ms', animationDuration: '800ms' }}>
                 {interpolate(t.landing.hero.description, { count: t.landing.hero.countText })}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '600ms', animationDuration: '600ms' }}>
                 {isLoggedIn ? (
                   <Button size="lg" asChild className="text-lg px-10 py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
                     <Link href="/home" className="flex items-center gap-2">
@@ -238,22 +298,6 @@ export default function LandingPage() {
                   </>
                 )}
               </div>
-
-              {/* Stats Preview */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 max-w-4xl mx-auto">
-                {stats.map((stat, index) => {
-                  const Icon = stat.icon
-                  return (
-                    <div key={index} className="text-center group">
-                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-3 group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{stat.value}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">{stat.label}</div>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           </div>
         </section>
@@ -261,18 +305,18 @@ export default function LandingPage() {
         {/* Features Section */}
         <section 
           id="features" 
-          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          className="py-20 sm:py-22 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.features.title || "Xususiyatlar"}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6 animate-in fade-in" style={{ animationDelay: '100ms', animationDuration: '600ms' }}>
                 <Star className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.features.title}
               </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '300ms', animationDuration: '800ms' }}>
                 {t.landing.features.subtitle}
               </p>
             </div>
@@ -282,15 +326,16 @@ export default function LandingPage() {
                 return (
                   <div
                     key={index}
-                    className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                    className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 animate-in scale-in"
+                    style={{ animationDelay: `${400 + index * 100}ms`, animationDuration: '600ms' }}
                   >
                     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${feature.color} opacity-10`} />
                     <div className="relative p-6">
                       <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                         <Icon className="h-8 w-8 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{feature.title}</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-white mb-2">{feature.title}</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-white leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
@@ -304,16 +349,16 @@ export default function LandingPage() {
         {/* How It Works Section */}
         <section 
           id="how-it-works" 
-          className="py-20 sm:py-24 md:py-32 relative overflow-hidden"
+          className="py-20 sm:py-22 md:py-22 relative overflow-hidden"
           aria-label={t.landing.howItWorks.title || "Qanday ishlaydi"}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"></div>
           <div className="container mx-auto px-4 relative">
             <div className="text-center mb-16 sm:mb-20">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '100ms', animationDuration: '800ms' }}>
                 {t.landing.howItWorks.title}
               </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.howItWorks.subtitle}
               </p>
             </div>
@@ -322,7 +367,7 @@ export default function LandingPage() {
                 const Icon = step.icon
                 return (
                   <div key={index} className="relative group">
-                    <div className="relative overflow-hidden rounded-xl bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 h-full">
+                    <div className="relative overflow-hidden rounded-xl bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 h-full animate-in scale-in" style={{ animationDelay: `${300 + index * 100}ms`, animationDuration: '600ms' }}>
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                       <div className="relative p-6 text-center">
                         <div className="relative w-20 h-20 mx-auto mb-6">
@@ -350,16 +395,16 @@ export default function LandingPage() {
         {/* Benefits Section */}
         <section 
           id="benefits" 
-          className="py-20 sm:py-24 md:py-32 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden"
+          className="py-20 sm:py-24 md:py-29 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden"
           aria-label={t.landing.benefits.title || "Afzalliklar"}
         >
           <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-16 sm:mb-20">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '100ms', animationDuration: '800ms' }}>
                 {t.landing.benefits.title}
               </h2>
-              <p className="text-xl text-white/90 max-w-3xl mx-auto">
+              <p className="text-xl text-white/90 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.benefits.subtitle}
               </p>
             </div>
@@ -369,7 +414,8 @@ export default function LandingPage() {
                 return (
                   <div
                     key={index}
-                    className="group relative overflow-hidden rounded-xl bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/10 hover:-translate-y-0.5"
+                    className="group relative overflow-hidden rounded-xl bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 hover:border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/10 hover:-translate-y-0.5 animate-in scale-in"
+                    style={{ animationDelay: `${300 + index * 100}ms`, animationDuration: '600ms' }}
                   >
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-white/10 to-white/5" />
                     <div className="relative p-6">
@@ -390,15 +436,16 @@ export default function LandingPage() {
 
         {/* Stats Section */}
         <section 
-          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          id="stats"
+          className="py-20 sm:py-24 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.stats.title || "Statistika"}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '100ms', animationDuration: '800ms' }}>
                 {t.landing.stats.title}
               </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.stats.subtitle}
               </p>
             </div>
@@ -416,14 +463,17 @@ export default function LandingPage() {
                   return (
                     <div
                       key={index}
-                      className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 text-center"
+                      className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 text-center animate-in scale-in"
+                      style={{ animationDelay: `${300 + index * 100}ms`, animationDuration: '600ms' }}
                     >
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                       <div className="relative p-6">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-4 group-hover:scale-110 transition-transform duration-300">
                           <Icon className="h-8 w-8 text-white" />
                         </div>
-                        <div className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-2">{stat.value}</div>
+                        <div className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-2">
+                          {animatedStats[index] > 0 ? `${animatedStats[index]}${stat.value.replace(/[0-9]/g, '')}` : stat.value}
+                        </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{stat.label}</h3>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
                           {stat.description}
@@ -440,18 +490,18 @@ export default function LandingPage() {
         {/* FAQ Section */}
         <section 
           id="faq" 
-          className="py-20 sm:py-24 md:py-32 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
+          className="py-20 sm:py-24 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.faq.title || "Tez-tez so'raladigan savollar"}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 sm:mb-20">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6">
+              {/* <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6">
                 <HelpCircle className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white">
+              </div> */}
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '100ms', animationDuration: '800ms' }}>
                 {t.landing.faq.title}
               </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.faq.subtitle}
               </p>
             </div>
@@ -459,7 +509,8 @@ export default function LandingPage() {
               {faqs.map((faq, index) => (
                 <div
                   key={index}
-                  className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5"
+                  className="group relative overflow-hidden rounded-xl bg-slate-50/90 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/10 dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 animate-in scale-in"
+                  style={{ animationDelay: `${300 + index * 100}ms`, animationDuration: '600ms' }}
                 >
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                   <div className="relative p-6">
@@ -481,23 +532,23 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section 
-          className="relative py-20 sm:py-24 md:py-32 overflow-hidden"
+          className="relative py-20 sm:py-24 md:py-22 overflow-hidden"
           aria-label={t.landing.cta.title || "Boshlash"}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90"></div>
           <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5 dark:opacity-10"></div>
           <div className="container mx-auto px-4 relative z-10 text-center">
             <div className="max-w-4xl mx-auto space-y-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-xl mb-6 shadow-lg">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-xl mb-6 shadow-lg animate-in fade-in" style={{ animationDelay: '100ms', animationDuration: '600ms' }}>
                 <Crown className="h-10 w-10 text-white" />
               </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.cta.title}
               </h2>
-              <p className="text-xl sm:text-2xl text-white/90 max-w-2xl mx-auto">
+              <p className="text-xl sm:text-2xl text-white/90 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '400ms', animationDuration: '800ms' }}>
                 {interpolate(t.landing.cta.description, { count: t.landing.cta.countText })}
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '600ms', animationDuration: '600ms' }}>
                 {isLoggedIn ? (
                   <Button 
                     size="lg" 
