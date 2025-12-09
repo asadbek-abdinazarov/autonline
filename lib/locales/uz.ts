@@ -510,7 +510,7 @@ export const uz = {
     noSubscription: "Obuna yo'q",
     subscriptionFull: "Yillik obuna",
     subscriptionPro: "Oylik obuna",
-    subscriptionBasic: "Oylik obuna",
+    subscriptionBasic: "Haftalik obuna",
     subscriptionFree: "Tekin obuna",
     subscriptionStudentBasic: "Asosiy Talaba",
     subscriptionStudentPro: "Professional Talaba",

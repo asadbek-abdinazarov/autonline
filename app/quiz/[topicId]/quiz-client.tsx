@@ -14,6 +14,7 @@ import { ArrowLeft, CheckCircle2, ZoomIn } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
+import { buildApiUrl } from "@/lib/api-utils"
 
 interface UserAnswer {
   selectedAnswer: number
@@ -56,6 +57,8 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   }, [score])
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [currentImageUrl, setCurrentImageUrl] = useState("")
+  const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
+  const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
   const hasFetchedRef = useRef<string | null>(null)
   const hasSubmittedHistoryRef = useRef(false)
@@ -184,6 +187,27 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }, [currentQuestionIndex, userAnswers])
 
+  // Load image when question changes
+  useEffect(() => {
+    const loadCurrentImage = async () => {
+      const currentQuestion = questions[currentQuestionIndex]
+      if (currentQuestion?.photo) {
+        const imageUrl = await loadImageUrl(currentQuestion.photo)
+        setCurrentImageSrc(imageUrl)
+      } else {
+        setCurrentImageSrc("")
+      }
+    }
+
+    if (questions.length > 0) {
+      loadCurrentImage()
+    }
+
+    // Don't revoke blob URLs in cleanup - they're cached and should persist
+    // Only revoke when component unmounts (handled in separate effect)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex, questions])
+
   // Clear auto-skip timeout when component unmounts or question changes
   useEffect(() => {
     return () => {
@@ -192,6 +216,18 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       }
     }
   }, [autoSkipTimeout])
+
+  // Cleanup blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      imageUrlCache.forEach((url) => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Submit lesson history when results are shown
   useEffect(() => {
@@ -270,6 +306,100 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         </main>
       </div>
     )
+  }
+
+  // Function to validate if a blob URL is still valid
+  const isValidBlobUrl = (url: string): Promise<boolean> => {
+    if (!url.startsWith('blob:')) return Promise.resolve(true) // Non-blob URLs are considered valid
+    
+    return new Promise((resolve) => {
+      const img = new Image()
+      let resolved = false
+      
+      img.onload = () => {
+        if (!resolved) {
+          resolved = true
+          resolve(true)
+        }
+      }
+      
+      img.onerror = () => {
+        if (!resolved) {
+          resolved = true
+          resolve(false)
+        }
+      }
+      
+      img.src = url
+      // Timeout after 2 seconds if image doesn't load
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true
+          resolve(false)
+        }
+      }, 2000)
+    })
+  }
+
+  // Function to load image with authentication
+  const loadImageUrl = async (photoKey: string): Promise<string> => {
+    // Check cache first and validate the URL
+    if (imageUrlCache.has(photoKey)) {
+      const cachedUrl = imageUrlCache.get(photoKey)!
+      
+      // For blob URLs, verify they're still valid
+      if (cachedUrl.startsWith('blob:')) {
+        const isValid = await isValidBlobUrl(cachedUrl)
+        if (isValid) {
+          return cachedUrl
+        } else {
+          // Blob URL is invalid (revoked), remove from cache and reload
+          console.log('Cached blob URL is invalid, reloading image:', photoKey)
+          setImageUrlCache(prev => {
+            const newCache = new Map(prev)
+            newCache.delete(photoKey)
+            return newCache
+          })
+        }
+      } else {
+        // Non-blob URLs are always valid
+        return cachedUrl
+      }
+    }
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(photoKey)}`)
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to load image: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      
+      // Cache the blob URL
+      setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
+      
+      return blobUrl
+    } catch (error) {
+      console.error('Error loading image:', error)
+      // Return empty string or a placeholder
+      return ''
+    }
   }
 
   const currentQuestion = questions[currentQuestionIndex]
@@ -569,18 +699,17 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   </div>
 
                   {/* Image - if exists */}
-                  {currentQuestion.photo && (
+                  {currentQuestion.photo && currentImageSrc && (
                     <div className="flex justify-center">
                       <div className="relative group max-w-md w-full">
                         <img
-                          src={`https://api.rulionline.uz/storage/${currentQuestion.photo}`}
+                          src={currentImageSrc}
                           alt={t.quiz.questionImage}
                           className="w-full h-auto max-h-80 object-contain rounded-lg border border-border shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                            setCurrentImageUrl(imageUrl)
+                            setCurrentImageUrl(currentImageSrc)
                             setIsImageModalOpen(true)
                           }}
                         />
@@ -589,8 +718,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            const imageUrl = `https://api.rulionline.uz/storage/${currentQuestion.photo}`
-                            setCurrentImageUrl(imageUrl)
+                            setCurrentImageUrl(currentImageSrc)
                             setIsImageModalOpen(true)
                           }}
                         >

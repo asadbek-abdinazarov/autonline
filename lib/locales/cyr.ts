@@ -510,7 +510,7 @@ export const cyr = {
     noSubscription: "Обуна йўқ",
     subscriptionFull: "Йиллик обуна",
     subscriptionPro: "Ойлик обуна",
-    subscriptionBasic: "Ойлик обуна",
+    subscriptionBasic: "Ҳафталик обуна",
     subscriptionFree: "Текин обуна",
     subscriptionStudentBasic: "Асосий Талаба",
     subscriptionStudentPro: "Professional Талаба",

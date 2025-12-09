@@ -15,10 +15,6 @@ export interface LessonHistoryItem {
   notCorrectAnswersCount: number
   allQuestionCount: number
   createdDate: string
-  // Localized fields from API (if available)
-  nameUz?: string
-  nameOz?: string
-  nameRu?: string
 }
 
 export interface LessonHistoryResponse {
@@ -71,35 +67,52 @@ export function useLessonHistory() {
           successRate: data.successRate,
         })
         
-        // Fetch topics to get lesson icons and names
-        try {
-          const topics = await fetchTopicsFromApi()
-          const topicsMap = new Map(topics.map(topic => [topic.id, { icon: topic.icon, name: topic.title }]))
-          
-          // Enrich history data with icons and names from topics
-          const enrichedData = data.lessonHistories.map((historyItem) => {
-            // If icon already exists in API response, use it
-            if (historyItem.lessonIcon) {
-              return historyItem
-            }
+        // Check if we need to fetch topics (only if some items are missing icons)
+        const needsIcons = data.lessonHistories.some(
+          (item) => !item.lessonIcon && item.lessonId
+        )
+        
+        if (needsIcons) {
+          // Only fetch topics if we actually need icons
+          try {
+            const topics = await fetchTopicsFromApi()
+            const topicsMap = new Map(topics.map(topic => [topic.id, { icon: topic.icon, name: topic.title }]))
             
-            // Try to find icon by lessonId
-            if (historyItem.lessonId) {
-              const topic = topicsMap.get(historyItem.lessonId.toString())
-              if (topic) {
-                return { ...historyItem, lessonIcon: topic.icon }
+            // Enrich history data with icons and names from topics
+            const enrichedData = data.lessonHistories.map((historyItem) => {
+              // If icon already exists in API response, use it
+              if (historyItem.lessonIcon) {
+                return historyItem
               }
-            }
+              
+              // Try to find icon by lessonId
+              if (historyItem.lessonId) {
+                const topic = topicsMap.get(historyItem.lessonId.toString())
+                if (topic) {
+                  return { ...historyItem, lessonIcon: topic.icon }
+                }
+              }
+              
+              // Default icon if not found
+              return { ...historyItem, lessonIcon: '📚' }
+            })
             
-            // Default icon if not found
-            return { ...historyItem, lessonIcon: '📚' }
-          })
-          
+            setLessonHistory(enrichedData)
+          } catch (topicsError) {
+            console.error('Error fetching topics for icons:', topicsError)
+            // Still set history data even if topics fetch fails
+            // Add default icons for items that don't have them
+            const enrichedData = data.lessonHistories.map((item) => 
+              item.lessonIcon ? item : { ...item, lessonIcon: '📚' }
+            )
+            setLessonHistory(enrichedData)
+          }
+        } else {
+          // All items already have icons or no lessonId, just add default icons where missing
+          const enrichedData = data.lessonHistories.map((item) => 
+            item.lessonIcon ? item : { ...item, lessonIcon: '📚' }
+          )
           setLessonHistory(enrichedData)
-        } catch (topicsError) {
-          console.error('Error fetching topics for icons:', topicsError)
-          // Still set history data even if topics fetch fails
-          setLessonHistory(data.lessonHistories)
         }
       }
     } catch (err) {

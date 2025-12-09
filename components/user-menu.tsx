@@ -295,7 +295,7 @@ export function UserMenu() {
                           case 'PRO':
                             return { label: 'Oylik obuna', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                           case 'BASIC':
-                            return { label: 'Oylik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                            return { label: 'Haftalik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                           case 'STUDENT_BASIC':
                             return { label: 'Asosiy Talaba', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                           case 'STUDENT_PRO':

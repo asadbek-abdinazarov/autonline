@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { Header } from "@/components/header"
 import { AuthGuard } from "@/components/auth-guard"
 import { useLessonHistory } from "@/hooks/use-lesson-history"
@@ -16,6 +16,7 @@ import { getLocalizedLessonName } from "@/lib/data"
 export function HistoryClient() {
   const { t, language } = useTranslation()
   const { lessonHistory, stats, isLoading, error, fetchLessonHistory } = useLessonHistory()
+  const hasFetchedRef = useRef(false)
 
   const getHistoryLessonName = (history: { lessonName: string | null; nameUz?: string; nameOz?: string; nameRu?: string }) => {
     if (history.nameUz || history.nameOz || history.nameRu) {
@@ -32,8 +33,15 @@ export function HistoryClient() {
   }
 
   useEffect(() => {
+    // Prevent duplicate requests
+    if (hasFetchedRef.current) {
+      return
+    }
+
+    hasFetchedRef.current = true
     fetchLessonHistory()
-  }, [fetchLessonHistory])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -57,6 +65,11 @@ export function HistoryClient() {
     }
   }
 
+  const getPercentageColor = (percentage: number) => {
+    if (percentage >= 80) return "bg-green-500 text-white dark:bg-green-600"
+    if (percentage >= 60) return "bg-orange-500 text-white dark:bg-orange-600"
+    return "bg-red-500 text-white dark:bg-red-600"
+  }
   return (
     <AuthGuard requiredPermission="VIEW_TEST_HISTORY">
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300">
@@ -85,7 +98,7 @@ export function HistoryClient() {
             {!isLoading && !error && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {/* Total Tests Card */}
-                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
+                <Card className="border-border/50">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -100,7 +113,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Passed Tests Card */}
-                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
+                <Card className="border-border/50">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -115,7 +128,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Average Score Card */}
-                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
+                <Card className="border-border/50">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -132,7 +145,7 @@ export function HistoryClient() {
                 </Card>
 
                 {/* Success Rate Card */}
-                <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-900/60 transition-colors">
+                <Card className="border-border/50">
                   <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -175,7 +188,7 @@ export function HistoryClient() {
 
             {/* Empty State */}
             {!isLoading && !error && lessonHistory.length === 0 && (
-              <Card className="border-border/50 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm">
+              <Card className="border-border/50">
                 <CardContent className="py-20 text-center">
                   <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-6">
                     <BookOpen className="h-16 w-16 text-muted-foreground" />
@@ -201,75 +214,62 @@ export function HistoryClient() {
                     return (
                       <Card
                         key={history.lessonHistoryId}
-                        className={cn(
-                          "border transition-all duration-300 hover:shadow-md hover:border-primary/50 cursor-pointer",
-                          isPassed
-                            ? "border-green-500/30 bg-gradient-to-r from-green-500/5 to-emerald-500/5 hover:from-green-500/10 hover:to-emerald-500/10"
-                            : "border-red-500/30 bg-gradient-to-r from-red-500/5 to-rose-500/5 hover:from-red-500/10 hover:to-rose-500/10",
-                        )}
+                      
                       >
-                        <CardContent className="py-3 sm:py-4 px-4 sm:px-6">
-                          <div className="flex flex-col gap-3 sm:gap-4">
-                            {/* Top: Lesson Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                                <span className="text-xl sm:text-2xl flex-shrink-0" role="img" aria-label="lesson icon">
-                                  {history.lessonIcon || "📚"}
-                                </span>
-                                <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                                  {getHistoryLessonName(history)}
-                                </h3>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                                  <span className="truncate">{formatDate(history.createdDate)}</span>
-                                </div>
-                                <span className="text-muted-foreground/50 hidden sm:inline">•</span>
-                                <span className="hidden sm:inline">
-                                  {totalQuestions} {t.history.totalQuestions?.toLowerCase() || "questions"}
-                                </span>
-                              </div>
-                            </div>
+                         <CardContent className="py-3 px-4 sm:px-5">
+        <div className="flex items-start justify-between gap-3">
+          {/* Lesson Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg sm:text-xl flex-shrink-0" role="img" aria-label="lesson icon">
+                {history.lessonIcon || "📚"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-semibold text-foreground truncate">
+                  {getHistoryLessonName(history)}
+                </h3>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground ml-9">
+              <Calendar className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{formatDate(history.createdDate)}</span>
+            </div>
+          </div>
 
-                            {/* Bottom: Stats and Score */}
-                            <div className="flex items-center justify-between gap-2 sm:gap-4 pt-2 border-t border-border/50">
-                              {/* Correct Answers */}
-                              <div className="text-center flex-1">
-                                <div className="flex items-center justify-center gap-1 mb-1">
-                                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
-                                  <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
-                                    {t.history.correctAnswers || "Correct"}
-                                  </span>
-                                </div>
-                                <p className="text-lg sm:text-xl font-bold text-foreground">{history.correctAnswersCount}</p>
-                              </div>
+          {/* Stats - Horizontal layout */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Correct Answers */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-0.5">
+                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-green-600 dark:text-green-400">
+                {history.correctAnswersCount}
+              </p>
+            </div>
 
-                              {/* Incorrect Answers */}
-                              <div className="text-center flex-1">
-                                <div className="flex items-center justify-center gap-1 mb-1">
-                                  <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
-                                  <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
-                                    {t.history.incorrectAnswers || "Incorrect"}
-                                  </span>
-                                </div>
-                                <p className="text-lg sm:text-xl font-bold text-foreground">{history.notCorrectAnswersCount}</p>
-                              </div>
+            {/* Incorrect Answers */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-0.5">
+                <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-red-600 dark:text-red-400">
+                {history.notCorrectAnswersCount}
+              </p>
+            </div>
 
-                              {/* Score Badge */}
-                              <Badge
-                                className={cn(
-                                  "px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base font-bold whitespace-nowrap flex-shrink-0",
-                                  isPassed
-                                    ? "bg-green-600 hover:bg-green-700 text-white"
-                                    : "bg-red-600 hover:bg-red-700 text-white",
-                                )}
-                              >
-                                {history.percentage}%
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardContent>
+            {/* Score Badge */}
+            <Badge
+              className={cn(
+                "px-3 py-1.5 text-sm sm:text-base font-bold whitespace-nowrap",
+                getPercentageColor(history.percentage || 0),
+              )}
+            >
+              {history.percentage}%
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
                       </Card>
                     )
                   })}

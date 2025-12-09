@@ -510,7 +510,7 @@ export const ru = {
     noSubscription: "Нет подписки",
     subscriptionFull: "Годовая подписка",
     subscriptionPro: "Месячная подписка",
-    subscriptionBasic: "Месячная подписка",
+    subscriptionBasic: "Еженедельно подписка",
     subscriptionFree: "Бесплатная подписка",
     subscriptionStudentBasic: "Главная Студент",
     subscriptionStudentPro: "Профессиональный студент",
