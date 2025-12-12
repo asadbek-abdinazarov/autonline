@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft, Image as ImageIcon, Signpost } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import Link from "next/link"
 
 // Memoized Traffic Sign Item Component to prevent unnecessary re-renders
 const TrafficSignItem = memo(({ 
@@ -317,6 +318,16 @@ export function TrafficSignsClient() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300 flex flex-col">
       <Header />
       <main className="flex-1">
+        {/* Back Button */}
+        <div className="container mx-auto px-4 pt-4 sm:pt-6">
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+            <Link href="/home" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              {t.common?.back || "Orqaga"}
+            </Link>
+          </Button>
+        </div>
+
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12">
           {/* Background gradient blobs */}

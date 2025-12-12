@@ -76,6 +76,13 @@ export function StudentsClient() {
       lessonIcon?: string
     }[]
   >([])
+  const [lessonHistoryPage, setLessonHistoryPage] = useState(0)
+  const [lessonHistoryPagination, setLessonHistoryPagination] = useState<{
+    size: number
+    number: number
+    totalElements: number
+    totalPages: number
+  } | null>(null)
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -314,14 +321,22 @@ export function StudentsClient() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleOpenResults = async (student: any) => {
+  const handleOpenResults = async (student: any, page: number = 0) => {
     try {
-      setSelectedStudent(student)
-      setIsResultsDialogOpen(true)
+      if (page === 0) {
+        setSelectedStudent(student)
+        setIsResultsDialogOpen(true)
+        setLessonHistoryPage(0)
+      } else {
+        setLessonHistoryPage(page)
+      }
       setIsResultsLoading(true)
       setResultsError(null)
-      setLessonStats(null)
-      setLessonHistories([])
+      if (page === 0) {
+        setLessonStats(null)
+        setLessonHistories([])
+        setLessonHistoryPagination(null)
+      }
 
       const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
       const apiLanguage = language === 'cyr' ? 'oz' : language === 'ru' ? 'ru' : 'uz'
@@ -337,7 +352,8 @@ export function StudentsClient() {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      const response = await fetch(buildApiUrl(`/api/v1/lesson-history/student/${student.userId}`), {
+      const pageSize = 4
+      const response = await fetch(buildApiUrl(`/api/v1/lesson-history/student/${student.userId}?page=${page}&size=${pageSize}`), {
         method: 'GET',
         headers,
       })
@@ -367,18 +383,26 @@ export function StudentsClient() {
       type LessonHistoryResponse = {
         totalTests: number
         passed: number
-        averageScore: number
-        successRate: number
+        averageScore: number | string
+        successRate: number | string
         lessonHistories: {
-          lessonName: string
-          allQuestionCount: number
-          createdDate: string
-          lessonHistoryId: number
-          correctAnswersCount: number
-          percentage: number
-          lessonIcon: string
-          notCorrectAnswersCount: number
-        }[]
+          content: {
+            lessonName: string
+            allQuestionCount: number
+            createdDate: string
+            lessonHistoryId: number
+            correctAnswersCount: number
+            percentage: number
+            lessonIcon: string
+            notCorrectAnswersCount: number
+          }[]
+          page: {
+            size: number
+            number: number
+            totalElements: number
+            totalPages: number
+          }
+        }
       }
 
       const data = await safeJsonParse<LessonHistoryResponse>(response)
@@ -390,10 +414,22 @@ export function StudentsClient() {
       setLessonStats({
         totalTests: data.totalTests,
         passed: data.passed,
-        averageScore: data.averageScore,
-        successRate: data.successRate,
+        averageScore: typeof data.averageScore === 'string' ? parseFloat(data.averageScore) : data.averageScore,
+        successRate: typeof data.successRate === 'string' ? parseFloat(data.successRate) : data.successRate,
       })
-      setLessonHistories(data.lessonHistories || [])
+      
+      if (data.lessonHistories?.content) {
+        setLessonHistories(data.lessonHistories.content)
+      } else if (Array.isArray(data.lessonHistories)) {
+        // Fallback for old format
+        setLessonHistories(data.lessonHistories as any)
+      } else {
+        setLessonHistories([])
+      }
+      
+      if (data.lessonHistories?.page) {
+        setLessonHistoryPagination(data.lessonHistories.page)
+      }
     } catch (err) {
       console.error('Error fetching lesson history for student:', err)
       const message =
@@ -401,6 +437,13 @@ export function StudentsClient() {
       setResultsError(message)
     } finally {
       setIsResultsLoading(false)
+    }
+  }
+
+  const handleLessonHistoryPageChange = (page: number, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    if (selectedStudent) {
+      handleOpenResults(selectedStudent, page)
     }
   }
 
@@ -1236,7 +1279,7 @@ export function StudentsClient() {
                         </AlertDialog>
                       </div>
 
-                      <CardHeader className="pb-3 flex-shrink-0">
+                      <CardHeader className="pb-2 flex-shrink-0 min-h-[80px]">
                         <div className="flex items-start gap-4">
                           <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <User className="h-6 w-6 text-blue-500 dark:text-blue-400" />
@@ -1281,16 +1324,22 @@ export function StudentsClient() {
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0 flex-1 flex flex-col">
-                        <div className="space-y-2 mb-4 mt-2">
+                        <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 mb-2 mt-1">
+                          {/* Username */}
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">{student.username}</span>
+                          </div>
+                          
                           {/* Phone Number */}
-                          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                             <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="truncate">{student.phoneNumber}</span>
                           </div>
 
                           {/* Next Payment Date */}
                           {student.nextPaymentDate && (
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                               <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="truncate">
                                 {t.students.nextPayment || t.userMenu.nextPaymentDate}: {formatDate(student.nextPaymentDate)}
@@ -1299,7 +1348,7 @@ export function StudentsClient() {
                           )}
                         </div>
                         <Button
-                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
+                          className="w-full mt-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
                           onClick={() => handleOpenResults(student)}
                         >
                           <span className="font-medium transition-colors duration-200">{t.students.results || "Natijalari"}</span>
@@ -1392,7 +1441,7 @@ export function StudentsClient() {
                           </AlertDialog>
                         </div>
 
-                        <CardHeader className="pb-3 flex-shrink-0">
+                        <CardHeader className="pb-2 flex-shrink-0 min-h-[80px]">
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                               <User className="h-6 w-6 text-blue-500 dark:text-blue-400" />
@@ -1437,16 +1486,22 @@ export function StudentsClient() {
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0 flex-1 flex flex-col">
-                          <div className="space-y-2 mb-4 mt-2">
+                          <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 mb-2 mt-1">
+                            {/* Username */}
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="truncate">{student.username}</span>
+                            </div>
+                            
                             {/* Phone Number */}
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                               <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="truncate">{student.phoneNumber}</span>
                             </div>
 
                             {/* Next Payment Date */}
                             {student.nextPaymentDate && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                                 <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                                 <span className="truncate">
                                   {t.students.nextPayment || t.userMenu.nextPaymentDate}: {formatDate(student.nextPaymentDate)}
@@ -1455,7 +1510,7 @@ export function StudentsClient() {
                             )}
                           </div>
                           <Button
-                            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
+                            className="w-full mt-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
                             onClick={() => handleOpenResults(student)}
                           >
                             <span className="font-medium transition-colors duration-200">{t.students.results || "Natijalari"}</span>
@@ -1633,6 +1688,140 @@ export function StudentsClient() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Lesson History Pagination */}
+                    {lessonHistoryPagination && lessonHistoryPagination.totalPages > 1 && (
+                      <div className="mt-4">
+                        {(() => {
+                          const totalPages = Number(lessonHistoryPagination.totalPages) || 0
+                          const current = Number(lessonHistoryPagination.number) || 0
+                          
+                          if (totalPages <= 1) return null
+
+                          if (totalPages <= 7) {
+                            const pageNumbers: number[] = []
+                            for (let i = 0; i < totalPages; i++) {
+                              pageNumbers.push(i)
+                            }
+                            return (
+                              <Pagination className="mt-4">
+                                <PaginationContent>
+                                  {current > 0 && (
+                                    <PaginationItem>
+                                      <PaginationPrevious
+                                        onClick={(e) => handleLessonHistoryPageChange(current - 1, e)}
+                                        className="cursor-pointer"
+                                        href="#"
+                                      />
+                                    </PaginationItem>
+                                  )}
+                                  {pageNumbers.map((pageNum) => (
+                                    <PaginationItem key={pageNum}>
+                                      <PaginationLink
+                                        onClick={(e) => handleLessonHistoryPageChange(pageNum, e)}
+                                        isActive={pageNum === current}
+                                        className="cursor-pointer"
+                                        href="#"
+                                      >
+                                        {pageNum + 1}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  ))}
+                                  {current < totalPages - 1 && (
+                                    <PaginationItem>
+                                      <PaginationNext
+                                        onClick={(e) => handleLessonHistoryPageChange(current + 1, e)}
+                                        className="cursor-pointer"
+                                        href="#"
+                                      />
+                                    </PaginationItem>
+                                  )}
+                                </PaginationContent>
+                              </Pagination>
+                            )
+                          }
+
+                          const pages: (number | 'ellipsis')[] = []
+                          pages.push(0)
+
+                          if (current > 2) {
+                            pages.push('ellipsis')
+                          }
+
+                          const start = Math.max(1, current - 1)
+                          const end = Math.min(totalPages - 2, current + 1)
+                          for (let i = start; i <= end; i++) {
+                            pages.push(i)
+                          }
+
+                          if (current < totalPages - 3) {
+                            pages.push('ellipsis')
+                          }
+                          
+                          pages.push(totalPages - 1)
+
+                          const uniquePages: (number | 'ellipsis')[] = []
+                          const seen = new Set<string | number>()
+                          
+                          for (const page of pages) {
+                            const key = page === 'ellipsis' ? 'ellipsis' : page
+                            if (!seen.has(key)) {
+                              seen.add(key)
+                              uniquePages.push(page)
+                            }
+                          }
+
+                          return (
+                            <Pagination className="mt-4">
+                              <PaginationContent>
+                                {current > 0 && (
+                                  <PaginationItem>
+                                    <PaginationPrevious
+                                      onClick={(e) => handleLessonHistoryPageChange(current - 1, e)}
+                                      className="cursor-pointer"
+                                      href="#"
+                                    />
+                                  </PaginationItem>
+                                )}
+                                {uniquePages
+                                  .filter((page) => page === 'ellipsis' || (typeof page === 'number' && !isNaN(page)))
+                                  .map((page, index) => {
+                                    if (page === 'ellipsis') {
+                                      return (
+                                        <PaginationItem key={`ellipsis-${index}`}>
+                                          <PaginationEllipsis />
+                                        </PaginationItem>
+                                      )
+                                    }
+                                    const pageNum = Number(page)
+                                    return (
+                                      <PaginationItem key={pageNum}>
+                                        <PaginationLink
+                                          onClick={(e) => handleLessonHistoryPageChange(pageNum, e)}
+                                          isActive={pageNum === current}
+                                          className="cursor-pointer"
+                                          href="#"
+                                        >
+                                          {pageNum + 1}
+                                        </PaginationLink>
+                                      </PaginationItem>
+                                    )
+                                  })}
+                                {current < totalPages - 1 && (
+                                  <PaginationItem>
+                                    <PaginationNext
+                                      onClick={(e) => handleLessonHistoryPageChange(current + 1, e)}
+                                      className="cursor-pointer"
+                                      href="#"
+                                    />
+                                  </PaginationItem>
+                                )}
+                              </PaginationContent>
+                            </Pagination>
+                          )
+                        })()}
                       </div>
                     )}
                   </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Header } from "@/components/header"
 import { AuthGuard } from "@/components/auth-guard"
 import { useLessonHistory } from "@/hooks/use-lesson-history"
@@ -12,10 +12,21 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { getLocalizedLessonName } from "@/lib/data"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 
 export function HistoryClient() {
   const { t, language } = useTranslation()
-  const { lessonHistory, stats, isLoading, error, fetchLessonHistory } = useLessonHistory()
+  const { lessonHistory, pagination, stats, isLoading, error, fetchLessonHistory } = useLessonHistory()
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 20
   const hasFetchedRef = useRef(false)
 
   const getHistoryLessonName = (history: { lessonName: string | null; nameUz?: string; nameOz?: string; nameRu?: string }) => {
@@ -33,15 +44,15 @@ export function HistoryClient() {
   }
 
   useEffect(() => {
-    // Prevent duplicate requests
-    if (hasFetchedRef.current) {
-      return
-    }
-
-    hasFetchedRef.current = true
-    fetchLessonHistory()
+    fetchLessonHistory(currentPage, pageSize)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [currentPage])
+
+  const handlePageChange = (page: number, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -69,6 +80,140 @@ export function HistoryClient() {
     if (percentage >= 80) return "bg-green-500 text-white dark:bg-green-600"
     if (percentage >= 60) return "bg-orange-500 text-white dark:bg-orange-600"
     return "bg-red-500 text-white dark:bg-red-600"
+  }
+
+  const renderPagination = () => {
+    if (!pagination) return null
+
+    const totalPages = Number(pagination.totalPages) || 0
+    const current = Number(pagination.number) || 0
+    const totalElements = Number(pagination.totalElements) || 0
+
+    if (!totalPages || isNaN(totalPages) || isNaN(current)) return null
+    if (totalElements <= pageSize) return null
+    if (totalPages <= 1) return null
+
+    if (totalPages <= 7) {
+      const pageNumbers: number[] = []
+      for (let i = 0; i < totalPages; i++) {
+        pageNumbers.push(i)
+      }
+      return (
+        <Pagination className="mt-6">
+          <PaginationContent>
+            {current > 0 && (
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={(e) => handlePageChange(current - 1, e)}
+                  className="cursor-pointer"
+                  href="#"
+                />
+              </PaginationItem>
+            )}
+            {pageNumbers.map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={(e) => handlePageChange(pageNum, e)}
+                  isActive={pageNum === current}
+                  className="cursor-pointer"
+                  href="#"
+                >
+                  {pageNum + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            {current < totalPages - 1 && (
+              <PaginationItem>
+                <PaginationNext
+                  onClick={(e) => handlePageChange(current + 1, e)}
+                  className="cursor-pointer"
+                  href="#"
+                />
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
+      )
+    }
+
+    const pages: (number | 'ellipsis')[] = []
+    pages.push(0)
+
+    if (current > 2) {
+      pages.push('ellipsis')
+    }
+
+    const start = Math.max(1, current - 1)
+    const end = Math.min(totalPages - 2, current + 1)
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    if (current < totalPages - 3) {
+      pages.push('ellipsis')
+    }
+    
+    pages.push(totalPages - 1)
+
+    const uniquePages: (number | 'ellipsis')[] = []
+    const seen = new Set<string | number>()
+    
+    for (const page of pages) {
+      const key = page === 'ellipsis' ? 'ellipsis' : page
+      if (!seen.has(key)) {
+        seen.add(key)
+        uniquePages.push(page)
+      }
+    }
+
+    return (
+      <Pagination className="mt-6">
+        <PaginationContent>
+          {current > 0 && (
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={(e) => handlePageChange(current - 1, e)}
+                className="cursor-pointer"
+                href="#"
+              />
+            </PaginationItem>
+          )}
+          {uniquePages
+            .filter((page) => page === 'ellipsis' || (typeof page === 'number' && !isNaN(page)))
+            .map((page, index) => {
+              if (page === 'ellipsis') {
+                return (
+                  <PaginationItem key={`ellipsis-${index}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )
+              }
+              const pageNum = Number(page)
+              return (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    onClick={(e) => handlePageChange(pageNum, e)}
+                    isActive={pageNum === current}
+                    className="cursor-pointer"
+                    href="#"
+                  >
+                    {pageNum + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            })}
+          {current < totalPages - 1 && (
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => handlePageChange(current + 1, e)}
+                className="cursor-pointer"
+                href="#"
+              />
+            </PaginationItem>
+          )}
+        </PaginationContent>
+      </Pagination>
+    )
   }
   return (
     <AuthGuard requiredPermission="VIEW_TEST_HISTORY">
@@ -179,7 +324,7 @@ export function HistoryClient() {
                     <XCircle className="h-12 w-12 text-destructive" />
                   </div>
                   <p className="text-lg text-foreground mb-8">{error}</p>
-                  <Button onClick={fetchLessonHistory} variant="outline" size="lg">
+                  <Button onClick={(e) => { e.preventDefault(); fetchLessonHistory(currentPage, pageSize); }} variant="outline" size="lg">
                     {t.common.retry}
                   </Button>
                 </CardContent>
@@ -274,6 +419,7 @@ export function HistoryClient() {
                     )
                   })}
                 </div>
+                {renderPagination()}
               </section>
             )}
           </div>

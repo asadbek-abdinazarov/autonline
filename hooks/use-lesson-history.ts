@@ -17,16 +17,27 @@ export interface LessonHistoryItem {
   createdDate: string
 }
 
+export interface LessonHistoryPage {
+  size: number
+  number: number
+  totalElements: number
+  totalPages: number
+}
+
 export interface LessonHistoryResponse {
   totalTests: number
   passed: number
-  averageScore: number
-  successRate: number
-  lessonHistories: LessonHistoryItem[]
+  averageScore: number | string
+  successRate: number | string
+  lessonHistories: {
+    content: LessonHistoryItem[]
+    page: LessonHistoryPage
+  }
 }
 
 export function useLessonHistory() {
   const [lessonHistory, setLessonHistory] = useState<LessonHistoryItem[]>([])
+  const [pagination, setPagination] = useState<LessonHistoryPage | null>(null)
   const [stats, setStats] = useState<{
     totalTests: number
     passed: number
@@ -42,12 +53,12 @@ export function useLessonHistory() {
   const [error, setError] = useState<string | null>(null)
   const { makeAuthenticatedRequest } = useApi()
 
-  const fetchLessonHistory = useCallback(async () => {
+  const fetchLessonHistory = useCallback(async (page: number = 0, size: number = 20) => {
     try {
       setIsLoading(true)
       setError(null)
       
-      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/lesson-history'), {
+      const response = await makeAuthenticatedRequest(buildApiUrl(`/api/v1/lesson-history?page=${page}&size=${size}`), {
         method: 'GET',
       })
       
@@ -59,16 +70,23 @@ export function useLessonHistory() {
           return
         }
         
-        // Set stats from API response
+        // Set stats from API response (convert string to number if needed)
         setStats({
           totalTests: data.totalTests,
           passed: data.passed,
-          averageScore: data.averageScore,
-          successRate: data.successRate,
+          averageScore: typeof data.averageScore === 'string' ? parseFloat(data.averageScore) : data.averageScore,
+          successRate: typeof data.successRate === 'string' ? parseFloat(data.successRate) : data.successRate,
         })
         
+        // Set pagination
+        if (data.lessonHistories?.page) {
+          setPagination(data.lessonHistories.page)
+        }
+        
+        const histories = data.lessonHistories?.content || []
+        
         // Check if we need to fetch topics (only if some items are missing icons)
-        const needsIcons = data.lessonHistories.some(
+        const needsIcons = histories.some(
           (item) => !item.lessonIcon && item.lessonId
         )
         
@@ -79,7 +97,7 @@ export function useLessonHistory() {
             const topicsMap = new Map(topics.map(topic => [topic.id, { icon: topic.icon, name: topic.title }]))
             
             // Enrich history data with icons and names from topics
-            const enrichedData = data.lessonHistories.map((historyItem) => {
+            const enrichedData = histories.map((historyItem) => {
               // If icon already exists in API response, use it
               if (historyItem.lessonIcon) {
                 return historyItem
@@ -102,14 +120,14 @@ export function useLessonHistory() {
             console.error('Error fetching topics for icons:', topicsError)
             // Still set history data even if topics fetch fails
             // Add default icons for items that don't have them
-            const enrichedData = data.lessonHistories.map((item) => 
+            const enrichedData = histories.map((item) => 
               item.lessonIcon ? item : { ...item, lessonIcon: '📚' }
             )
             setLessonHistory(enrichedData)
           }
         } else {
           // All items already have icons or no lessonId, just add default icons where missing
-          const enrichedData = data.lessonHistories.map((item) => 
+          const enrichedData = histories.map((item) => 
             item.lessonIcon ? item : { ...item, lessonIcon: '📚' }
           )
           setLessonHistory(enrichedData)
@@ -125,6 +143,7 @@ export function useLessonHistory() {
 
   return {
     lessonHistory,
+    pagination,
     stats,
     isLoading,
     error,
