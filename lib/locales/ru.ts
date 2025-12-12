@@ -228,6 +228,16 @@ export const ru = {
       title: "Специальные возможности",
       description: "Эксклюзивные функции нашей платформы",
       randomQuizButton: "Начать случайный тест",
+      trafficSignsButton: "Дорожные знаки",
+    },
+    trafficSigns: {
+      title: "Дорожные знаки",
+      loading: "Загрузка...",
+      error: "Данные не загружены",
+      backToCategories: "Вернуться к категориям",
+      noCategories: "Категории не найдены",
+      noSigns: "Знаки не найдены",
+      retry: "Повторить",
     },
   },
 

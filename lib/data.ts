@@ -999,3 +999,163 @@ export async function submitLessonHistory(data: LessonHistoryRequest): Promise<v
     // Don't throw - we don't want to block the UI if history submission fails
   }
 }
+
+// Traffic Signs API Types
+export interface TrafficSignCategory {
+  trafficSignsCategoriesId: number
+  name: string
+  icon: string
+  description: string
+}
+
+export interface TrafficSign {
+  trafficSignsId: number
+  name: string
+  description: string
+  photo: string
+  isActive: boolean
+  createdAt: string
+}
+
+// API Functions for Traffic Signs
+export async function fetchTrafficSignCategories(): Promise<TrafficSignCategory[]> {
+  try {
+    // Get access token - only on client side
+    let token: string | null = null
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('accessToken')
+    }
+    
+    // Call backend API through centralized base URL
+    const { buildApiUrl, safeJsonParse, getDefaultHeaders } = await import('./api-utils')
+    
+    const headers: Record<string, string> = {
+      ...getDefaultHeaders(),
+    }
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(buildApiUrl('/api/v1/traffic-sign-categories'), {
+      method: 'GET',
+      headers,
+    })
+    
+    if (!response.ok) {
+      // Handle server errors (500-599)
+      if (response.status >= 500 && response.status < 600) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: response.status })
+        throw new Error('Server error')
+      }
+      
+      // Handle 401 errors globally
+      if (response.status === 401) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 401 })
+        throw new Error('Authentication required')
+      }
+      
+      // Handle 429 errors globally
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        throw new Error('Too many requests')
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API request failed with status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await safeJsonParse<TrafficSignCategory[]>(response)
+    if (!data) {
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
+    
+    return data
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching traffic sign categories:', error)
+    }
+    const { handleApiError } = await import('./api-utils')
+    await handleApiError(error)
+    throw error
+  }
+}
+
+export async function fetchTrafficSignsByCategory(categoryId: number): Promise<TrafficSign[]> {
+  try {
+    // Get access token - only on client side
+    let token: string | null = null
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('accessToken')
+    }
+    
+    // Call backend API through centralized base URL
+    const { buildApiUrl, safeJsonParse, getDefaultHeaders } = await import('./api-utils')
+    
+    const headers: Record<string, string> = {
+      ...getDefaultHeaders(),
+    }
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(buildApiUrl(`/api/v1/traffic-signs/category/${categoryId}`), {
+      method: 'GET',
+      headers,
+    })
+    
+    if (!response.ok) {
+      // Handle server errors (500-599)
+      if (response.status >= 500 && response.status < 600) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: response.status })
+        throw new Error('Server error')
+      }
+      
+      // Handle 401 errors globally
+      if (response.status === 401) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 401 })
+        throw new Error('Authentication required')
+      }
+      
+      // Handle 429 errors globally
+      if (response.status === 429) {
+        const { handleApiError } = await import('./api-utils')
+        await handleApiError({ status: 429 })
+        throw new Error('Too many requests')
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`API request failed with status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await safeJsonParse<TrafficSign[]>(response)
+    if (!data) {
+      throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+    }
+    
+    return data
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching traffic signs by category:', error)
+    }
+    const { handleApiError } = await import('./api-utils')
+    await handleApiError(error)
+    throw error
+  }
+}

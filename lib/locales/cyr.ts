@@ -228,6 +228,16 @@ export const cyr = {
       title: "Махсус Имкониятлар",
       description: "Платформамизнинг эксклюзив функционаллари",
       randomQuizButton: "Тасодифий тестни бошлаш",
+      trafficSignsButton: "Йўл ҳаракати белгилари",
+    },
+    trafficSigns: {
+      title: "Йўл ҳаракати белгилари",
+      loading: "Юкланмоқда...",
+      error: "Маълумотлар юкланмади",
+      backToCategories: "Категорияларга қайтиш",
+      noCategories: "Категориялар топилмади",
+      noSigns: "Белгилар топилмади",
+      retry: "Қайта уриниш",
     },
   },
 

@@ -228,6 +228,16 @@ export const uz = {
       title: "Mahsus Imkoniyatlar",
       description: "Platformamizning eksklyuziv funksiyalari",
       randomQuizButton: "Tasodify testni boshlash",
+      trafficSignsButton: "Yo'l harakati belgilari",
+    },
+    trafficSigns: {
+      title: "Yo'l harakati belgilari",
+      loading: "Yuklanmoqda...",
+      error: "Ma'lumotlar yuklanmadi",
+      backToCategories: "Kategoriyalarga qaytish",
+      noCategories: "Kategoriyalar topilmadi",
+      noSigns: "Belgilar topilmadi",
+      retry: "Qayta urinish",
     },
   },
 

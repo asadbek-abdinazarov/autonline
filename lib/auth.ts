@@ -7,6 +7,7 @@ export type Permission =
   | 'LIMITED_TOPICS'
   | 'VIEW_NEWS'
   | 'VIEW_TEST_HISTORY'
+  | 'VIEW_TRAFFIC_SIGNS'
 
 export interface User {
   id: number

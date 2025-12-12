@@ -10,7 +10,7 @@ import { useNews } from "@/hooks/use-news"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
 import Link from "next/link"
-import { BookOpen, Newspaper, Loader2, Shuffle, Sparkles, TrendingUp, ArrowRight, Award } from "lucide-react"
+import { BookOpen, Newspaper, Loader2, Shuffle, Sparkles, TrendingUp, ArrowRight, Award, Signpost } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { getCurrentUser, type Permission } from "@/lib/auth"
 
@@ -22,6 +22,7 @@ export default function HomeClient() {
   const canViewAllTopics = hasPermission('VIEW_ALL_TOPICS')
   const canViewLimitedTopics = hasPermission('LIMITED_TOPICS')
   const canViewRandom = hasPermission('VIEW_RANDOM')
+  const canViewTrafficSigns = hasPermission('VIEW_TRAFFIC_SIGNS')
   const [topics, setTopics] = useState<Topic[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -186,7 +187,7 @@ export default function HomeClient() {
                     </div>
                   </div>
                   
-                  <div className="pt-4">
+                  <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center justify-center">
                     <Button 
                       asChild 
                       size="lg" 
@@ -197,6 +198,18 @@ export default function HomeClient() {
                         {t.home.specialFeatures.randomQuizButton}
                       </Link>
                     </Button>
+                    {canViewTrafficSigns && (
+                      <Button 
+                        asChild
+                        size="lg" 
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
+                      >
+                        <Link href="/traffic-signs" className="flex items-center gap-3">
+                          <Signpost className="h-5 w-5" />
+                          {t.home.specialFeatures.trafficSignsButton}
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

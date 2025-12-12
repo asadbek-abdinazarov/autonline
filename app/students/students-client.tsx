@@ -5,7 +5,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { AuthGuard } from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Loader2, Users, Phone, Calendar, User, XCircle, CheckCircle, Trash2, UserPlus, Eye, EyeOff, Search } from "lucide-react"
 import Link from "next/link"
@@ -1195,7 +1195,7 @@ export function StudentsClient() {
                     {searchResults.map((student) => (
                     <Card
                       key={student.userId}
-                      className="relative border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700/95 transition-all duration-300 hover:shadow-xl hover:shadow-slate-900/20 dark:hover:shadow-slate-900/60 hover:border-slate-400/50 dark:hover:border-slate-500/80 shadow-lg dark:shadow-slate-900/40"
+                      className="group relative hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl w-full h-[280px] flex flex-col"
                     >
                       {/* Delete Button */}
                       <div className="absolute top-2 right-2 z-10">
@@ -1236,78 +1236,74 @@ export function StudentsClient() {
                         </AlertDialog>
                       </div>
 
-                      <CardContent className="p-4 sm:p-5">
-                        <div className="space-y-3 pr-8">
-                          {/* Header with Name and Status */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-base sm:text-lg font-bold text-foreground mb-0.5 break-words">
-                                {student.fullName || student.username}
-                              </h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground truncate">@{student.username}</p>
-                            </div>
-                            <Badge
-                              variant={student.isActive ? "default" : "secondary"}
-                              className={`flex-shrink-0 text-xs ${
-                                student.isActive
-                                  ? "bg-green-500 hover:bg-green-600 text-white"
-                                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                              }`}
-                            >
-                              {student.isActive ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3" />
-                                  <span className="hidden sm:inline ml-1">{t.students.active || t.userMenu.active}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="h-3 w-3" />
-                                  <span className="hidden sm:inline ml-1">{t.students.inactive || t.userMenu.inactive}</span>
-                                </>
-                              )}
-                            </Badge>
+                      <CardHeader className="pb-3 flex-shrink-0">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <User className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                           </div>
-
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-2">
+                              <CardTitle className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200 flex-1 pr-8">
+                                {student.fullName || student.username}
+                              </CardTitle>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <Badge
+                                variant={student.isActive ? "default" : "secondary"}
+                                className={`text-xs font-medium ${
+                                  student.isActive
+                                    ? "bg-green-500 hover:bg-green-600 text-white"
+                                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                                }`}
+                              >
+                                {student.isActive ? (
+                                  <>
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    {t.students.active || t.userMenu.active}
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="w-3 h-3 mr-1" />
+                                    {t.students.inactive || t.userMenu.inactive}
+                                  </>
+                                )}
+                              </Badge>
+                              {student.subscription && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs font-medium ${getSubscriptionBadgeClasses(student.subscription)}`}
+                                >
+                                  {getSubscriptionName(student.subscription)}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 flex-1 flex flex-col">
+                        <div className="space-y-2 mb-4 mt-2">
                           {/* Phone Number */}
-                          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                             <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="truncate">{student.phoneNumber}</span>
                           </div>
 
-                          {/* Subscription */}
-                          {student.subscription && (
-                            <div className="flex items-center gap-2">
-                              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-                              <Badge
-                                className={`text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-full truncate max-w-[140px] sm:max-w-[160px] ${getSubscriptionBadgeClasses(student.subscription)}`}
-                              >
-                                {getSubscriptionName(student.subscription)}
-                              </Badge>
-                            </div>
-                          )}
-
                           {/* Next Payment Date */}
                           {student.nextPaymentDate && (
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                               <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="truncate">
                                 {t.students.nextPayment || t.userMenu.nextPaymentDate}: {formatDate(student.nextPaymentDate)}
                               </span>
                             </div>
                           )}
-
-                          {/* Results Button */}
-                          <div className="pt-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-center"
-                              onClick={() => handleOpenResults(student)}
-                            >
-                              {t.students.results || "Natijalari"}
-                            </Button>
-                          </div>
                         </div>
+                        <Button
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
+                          onClick={() => handleOpenResults(student)}
+                        >
+                          <span className="font-medium transition-colors duration-200">{t.students.results || "Natijalari"}</span>
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
@@ -1355,7 +1351,7 @@ export function StudentsClient() {
                     {students.map((student) => (
                       <Card
                         key={student.userId}
-                        className="relative border-2 border-slate-300/50 dark:border-slate-600/70 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl hover:bg-white dark:hover:bg-slate-700/95 transition-all duration-300 hover:shadow-xl hover:shadow-slate-900/20 dark:hover:shadow-slate-900/60 hover:border-slate-400/50 dark:hover:border-slate-500/80 shadow-lg dark:shadow-slate-900/40"
+                        className="group relative hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl w-full h-[280px] flex flex-col"
                       >
                         {/* Delete Button */}
                         <div className="absolute top-2 right-2 z-10">
@@ -1396,76 +1392,74 @@ export function StudentsClient() {
                           </AlertDialog>
                         </div>
 
-                        <CardContent className="p-4 sm:p-5">
-                          <div className="space-y-3 pr-8">
-                            {/* Header with Name and Status */}
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-base sm:text-lg font-bold text-foreground mb-0.5 break-words">
-                                  {student.fullName || student.username}
-                                </h3>
-                                <p className="text-xs sm:text-sm text-muted-foreground truncate">@{student.username}</p>
-                              </div>
-                              <Badge
-                                variant={student.isActive ? "default" : "secondary"}
-                                className={`flex-shrink-0 text-xs ${
-                                  student.isActive
-                                    ? "bg-green-500 hover:bg-green-600 text-white"
-                                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                }`}
-                              >
-                                {student.isActive ? (
-                                  <>
-                                    <CheckCircle className="h-3 w-3" />
-                                    <span className="hidden sm:inline ml-1">{t.students.active || t.userMenu.active}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle className="h-3 w-3" />
-                                    <span className="hidden sm:inline ml-1">{t.students.inactive || t.userMenu.inactive}</span>
-                                  </>
-                                )}
-                              </Badge>
+                        <CardHeader className="pb-3 flex-shrink-0">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <User className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                             </div>
-
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-2">
+                                <CardTitle className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1 line-clamp-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200 flex-1 pr-8">
+                                  {student.fullName || student.username}
+                                </CardTitle>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <Badge
+                                  variant={student.isActive ? "default" : "secondary"}
+                                  className={`text-xs font-medium ${
+                                    student.isActive
+                                      ? "bg-green-500 hover:bg-green-600 text-white"
+                                      : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                                  }`}
+                                >
+                                  {student.isActive ? (
+                                    <>
+                                      <CheckCircle className="w-3 h-3 mr-1" />
+                                      {t.students.active || t.userMenu.active}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-3 h-3 mr-1" />
+                                      {t.students.inactive || t.userMenu.inactive}
+                                    </>
+                                  )}
+                                </Badge>
+                                {student.subscription && (
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs font-medium ${getSubscriptionBadgeClasses(student.subscription)}`}
+                                  >
+                                    {getSubscriptionName(student.subscription)}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 flex-1 flex flex-col">
+                          <div className="space-y-2 mb-4 mt-2">
                             {/* Phone Number */}
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                               <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="truncate">{student.phoneNumber}</span>
                             </div>
 
-                            {/* Subscription */}
-                            <div className="flex items-center gap-2">
-                              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-                              <Badge
-                                className={`text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-full truncate max-w-[140px] sm:max-w-[160px] ${getSubscriptionBadgeClasses(student.subscription)}`}
-                              >
-                                {getSubscriptionName(student.subscription)}
-                              </Badge>
-                            </div>
-
                             {/* Next Payment Date */}
                             {student.nextPaymentDate && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                                 <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                                 <span className="truncate">
                                   {t.students.nextPayment || t.userMenu.nextPaymentDate}: {formatDate(student.nextPaymentDate)}
                                 </span>
                               </div>
                             )}
-
-                            {/* Results Button */}
-                            <div className="pt-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-center"
-                                onClick={() => handleOpenResults(student)}
-                              >
-                                {t.students.results || "Natijalari"}
-                              </Button>
-                            </div>
                           </div>
+                          <Button
+                            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 transition-all duration-300"
+                            onClick={() => handleOpenResults(student)}
+                          >
+                            <span className="font-medium transition-colors duration-200">{t.students.results || "Natijalari"}</span>
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}
