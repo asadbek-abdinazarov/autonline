@@ -141,8 +141,16 @@ export function UserBlockListener() {
     }
 
     // WebSocket URL ni yaratamiz
-    const wsBaseUrl = getApiBaseUrl().replace(/^https?:\/\//, "").replace(/\/+$/, "")
-    const wsUrl = `http://${wsBaseUrl}/ws`
+    // HTTPS sahifadan secure WebSocket (wss://) ishlatish kerak
+    const apiBaseUrl = getApiBaseUrl()
+    // Sahifa protocol'ini ham tekshiramiz (HTTPS sahifadan HTTP WebSocket ishlatib bo'lmaydi)
+    const isPageSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const isApiSecure = apiBaseUrl.startsWith('https://')
+    // Agar sahifa yoki API secure bo'lsa, secure WebSocket ishlatamiz
+    const isSecure = isPageSecure || isApiSecure
+    const wsBaseUrl = apiBaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+    const wsProtocol = isSecure ? 'https' : 'http' // SockJS https:// ishlatadi, u o'zi wss:// ga o'tkazadi
+    const wsUrl = `${wsProtocol}://${wsBaseUrl}/ws`
 
     // Qayta ulanish funksiyasi
     const attemptReconnect = () => {
