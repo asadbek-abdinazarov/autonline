@@ -111,13 +111,11 @@ export function UserBlockListener() {
     // Logout handler funksiyasi
     const handleLogout = async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("User blocked — logging out...")
-        }
         shouldReconnectRef.current = false
         
         // Logout funksiyasini chaqiramiz (bu backend ga ham request yuboradi)
-        await logout()
+        // User block bo'lgan holat, shuning uchun isManualLogout = false (notification ko'rsatiladi)
+        await logout(true, false)
         
         // LocalStorage ni tozalaymiz
         if (typeof window !== "undefined") {
@@ -146,10 +144,6 @@ export function UserBlockListener() {
     const wsBaseUrl = getApiBaseUrl().replace(/^https?:\/\//, "").replace(/\/+$/, "")
     const wsUrl = `http://${wsBaseUrl}/ws`
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log("🔌 Connecting to WebSocket:", wsUrl)
-    }
-
     // Qayta ulanish funksiyasi
     const attemptReconnect = () => {
       if (!shouldReconnectRef.current) {
@@ -161,15 +155,8 @@ export function UserBlockListener() {
       const currentToken = localStorage.getItem("accessToken")
       
       if (!currentUser || !currentToken) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("User logged out, skipping reconnect")
-        }
         isConnectingRef.current = false
         return
-      }
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log("🔄 Attempting to reconnect WebSocket...")
       }
       
       // 3 soniyadan keyin qayta ulanish
@@ -192,9 +179,6 @@ export function UserBlockListener() {
         Authorization: `Bearer ${accessToken}`,
       },
       onConnect: () => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("✅ Connected to WebSocket")
-        }
         isConnectingRef.current = false
 
         // Userga tegishli kanalni subscribe qilamiz
@@ -222,18 +206,12 @@ export function UserBlockListener() {
         attemptReconnect()
       },
       onWebSocketClose: () => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("🔌 WebSocket disconnected")
-        }
         isConnectingRef.current = false
         
         // Qayta ulanishni boshlash
         attemptReconnect()
       },
       onDisconnect: () => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("🔌 STOMP disconnected")
-        }
         isConnectingRef.current = false
         
         // Qayta ulanishni boshlash
@@ -262,9 +240,6 @@ export function UserBlockListener() {
         if (user && accessToken) {
           const isConnected = stompClientRef.current?.connected
           if (!isConnected && shouldReconnectRef.current) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log("📄 Page visible, checking WebSocket connection...")
-            }
             isConnectingRef.current = false
             connectWebSocket()
           }

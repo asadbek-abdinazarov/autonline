@@ -114,7 +114,7 @@ export function HelpCenterClient() {
               <CardContent className="px-4 sm:px-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {/* Email */}
-                  <a 
+                  {/* <a 
                     href="mailto:a.abdinazarov@student.pdp.university" 
                       className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 rounded-xl border-2 hover:border-primary/50 hover:scale-105 transition-all duration-300 bg-card hover:shadow-lg"
                   >
@@ -126,10 +126,10 @@ export function HelpCenterClient() {
                       <p className="text-xs sm:text-sm text-muted-foreground truncate">a.abdinazarov@student.pdp.university</p>
                     </div>
                       <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
-                  </a>
+                  </a> */}
 
                   {/* Phone */}
-                  <a 
+                  {/* <a 
                     href="tel:+998770108060" 
                       className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 md:p-5 rounded-xl border-2 hover:border-primary/50 hover:scale-105 transition-all duration-300 bg-card hover:shadow-lg"
                   >
@@ -141,7 +141,7 @@ export function HelpCenterClient() {
                       <p className="text-xs sm:text-sm text-muted-foreground">+998 77 010 80 60</p>
                     </div>
                       <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
-                  </a>
+                  </a> */}
 
                   {/* Telegram */}
                   <a 

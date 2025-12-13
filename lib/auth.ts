@@ -254,8 +254,13 @@ export async function register(fullName: string, username: string, password: str
  * @param shouldCallBackend - If true, calls backend logout API. Should only be true when refresh token is missing or expired.
  *                            Defaults to true for backward compatibility (manual logout cases).
  */
-export async function logout(shouldCallBackend: boolean = true): Promise<void> {
+export async function logout(shouldCallBackend: boolean = true, isManualLogout: boolean = false): Promise<void> {
   try {
+    // Mark as manual logout if user initiated it
+    if (isManualLogout && typeof window !== "undefined") {
+      localStorage.setItem("isManualLogout", "true")
+    }
+
     // Only call backend logout API if shouldCallBackend is true
     // This should only be true when refresh token is missing or expired
     if (shouldCallBackend) {

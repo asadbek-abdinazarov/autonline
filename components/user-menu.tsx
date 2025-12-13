@@ -105,7 +105,7 @@ export function UserMenu() {
   }, [isLanguageSubmenuOpen])
 
   const handleLogout = async () => {
-    await logout()
+    await logout(true, true) // isManualLogout = true
     setCurrentUser(null)
     router.push("/login")
   }

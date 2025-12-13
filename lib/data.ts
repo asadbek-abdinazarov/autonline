@@ -427,9 +427,6 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
   
   // Check if there's already a pending request for topics
   if (pendingRequests.has(requestKey)) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Deduplicating topics request - reusing pending request')
-    }
     return pendingRequests.get(requestKey)!
   }
   
@@ -707,18 +704,12 @@ export async function fetchQuestionsByLessonId(
   if (useCache && !forceRefresh) {
     const cachedData = getCachedLessonData(lessonId)
     if (cachedData) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Using cached data for lesson ${lessonId}`)
-      }
       return cachedData
     }
   }
 
   // Check if there's already a pending request for this lesson
   if (pendingRequests.has(requestKey)) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Deduplicating lesson ${lessonId} request - reusing pending request`)
-    }
     return pendingRequests.get(requestKey)!
   }
 

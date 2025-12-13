@@ -76,27 +76,19 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   // Header: cyr (kirilcha) -> API: oz (kirilcha)  
   // Header: ru (ruscha) -> API: ru (ruscha)
   const selectedLanguage = useMemo(() => {
-    // Debug: log to identify the issue
-    console.log('[Quiz] Header language:', language, 'Type:', typeof language)
-    
     // Force check: ensure we're using the correct mapping
     let result: 'oz' | 'uz' | 'ru'
     if (language === 'uz') {
       result = 'uz' // Lotincha o'zbekcha - API da uz key
-      console.log('[Quiz] Mapped to uz (lotincha)')
     } else if (language === 'cyr') {
       result = 'oz' // Kirilcha o'zbekcha - API da oz key
-      console.log('[Quiz] Mapped to oz (kirilcha)')
     } else if (language === 'ru') {
       result = 'ru' // Ruscha - API da ru key
-      console.log('[Quiz] Mapped to ru (ruscha)')
     } else {
       // Default to lotincha o'zbekcha
       result = 'uz'
-      console.log('[Quiz] Default mapped to uz (lotincha)')
     }
     
-    console.log('[Quiz] Final selectedLanguage:', result)
     return result
   }, [language])
 
@@ -357,7 +349,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
           return cachedUrl
         } else {
           // Blob URL is invalid (revoked), remove from cache and reload
-          console.log('Cached blob URL is invalid, reloading image:', photoKey)
           setImageUrlCache(prev => {
             const newCache = new Map(prev)
             newCache.delete(photoKey)
@@ -439,10 +430,8 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     let isCorrect = false
     if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
       isCorrect = currentQuestion.answers.isCorrect[answerIndex] === true
-      console.log('[Quiz] isCorrect array:', currentQuestion.answers.isCorrect, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
     } else if (currentQuestion.answers.status) {
       isCorrect = answerIndex === currentQuestion.answers.status - 1
-      console.log('[Quiz] Using status field:', currentQuestion.answers.status, 'answerIndex:', answerIndex, 'isCorrect:', isCorrect)
     } else {
       console.warn('[Quiz] No isCorrect array or status field found for question:', currentQuestion.questionId)
     }

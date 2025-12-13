@@ -314,7 +314,6 @@ export default function RandomQuizClient() {
           return cachedUrl
         } else {
           // Blob URL is invalid (revoked), remove from cache and reload
-          console.log('Cached blob URL is invalid, reloading image:', photoKey)
           setImageUrlCache(prev => {
             const newCache = new Map(prev)
             newCache.delete(photoKey)

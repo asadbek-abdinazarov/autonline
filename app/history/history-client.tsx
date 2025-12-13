@@ -26,7 +26,7 @@ export function HistoryClient() {
   const { t, language } = useTranslation()
   const { lessonHistory, pagination, stats, isLoading, error, fetchLessonHistory } = useLessonHistory()
   const [currentPage, setCurrentPage] = useState(0)
-  const pageSize = 20
+  const pageSize = 10
   const hasFetchedRef = useRef(false)
 
   const getHistoryLessonName = (history: { lessonName: string | null; nameUz?: string; nameOz?: string; nameRu?: string }) => {

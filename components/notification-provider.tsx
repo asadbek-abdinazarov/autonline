@@ -38,26 +38,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const show401Error = useCallback(async (message?: string) => {
     const errorMessage = message || "Sizning sessiyangiz tugagan. Tizimga qaytadan kirish kerak."
 
-    console.log('🟡 [SHOW401ERROR] Called', {
-      message,
-      timestamp: new Date().toISOString()
-    })
+    // Check if this is a manual logout - if so, don't show notification
+    if (typeof window !== "undefined") {
+      const isManualLogout = localStorage.getItem("isManualLogout") === "true"
+      if (isManualLogout) {
+        localStorage.removeItem("isManualLogout")
+        setCurrentUser(null)
+        startTransition(() => {
+          router.push("/login")
+        })
+        return
+      }
+    }
 
     // Check if refresh token exists
     const { getRefreshToken } = await import('@/lib/auth')
     const refreshToken = getRefreshToken()
-    
-    console.log('🟡 [SHOW401ERROR] Refresh token status:', {
-      hasRefreshToken: !!refreshToken,
-      refreshTokenLength: refreshToken?.length || 0
-    })
     
     // IMPORTANT: If refresh token exists, it means logout was NOT called yet
     // This should NOT happen if refresh was successful, but if refresh failed due to network error,
     // we should NOT logout or redirect. Only logout/redirect if refresh token is missing (already cleared by logout)
     if (!refreshToken) {
       // Refresh token is missing - logout was already called, just redirect
-      console.log('🟡 [SHOW401ERROR] Refresh token missing - logout already called, redirecting')
       setCurrentUser(null)
       // Use startTransition to make redirect non-blocking
       startTransition(() => {
@@ -67,8 +69,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       toast.error(errorMessage, { duration: 4500 })
     } else {
       // Refresh token exists - try to refresh access token and continue the process
-      console.log('🟡 [SHOW401ERROR] Refresh token exists - attempting to refresh access token...')
-      
       try {
         const { refreshAccessToken } = await import('@/lib/auth')
         const refreshResult = await refreshAccessToken()
@@ -76,7 +76,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         // Check if refresh result is an error object (refresh token expired)
         if (refreshResult && typeof refreshResult === 'object' && 'isRefreshTokenExpired' in refreshResult) {
           const errorObj = refreshResult as any
-          console.log('🔴 [SHOW401ERROR] Refresh token expired - calling logout')
           
           // Refresh token expired - call logout
           await logout(true)
@@ -93,8 +92,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         
         if (refreshResult && typeof refreshResult === 'string') {
           // Refresh successful - save flag and reload page
-          console.log('🟢 [SHOW401ERROR] Refresh successful - reloading page to continue process')
-          
           if (typeof window !== 'undefined') {
             localStorage.setItem('tokenRefreshed', 'true')
           }
@@ -104,12 +101,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           
         } else {
           // Refresh failed but refresh token still exists (network error, etc.)
-          console.log('🟡 [SHOW401ERROR] Refresh failed but refresh token still exists - showing retry message')
           toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.", { duration: 4500 })
         }
       } catch (refreshError) {
         // Other errors (network, etc.) - show error but don't logout
-        console.log('🟡 [SHOW401ERROR] Refresh error (not expired):', refreshError)
         toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.", { duration: 4500 })
       }
     }
