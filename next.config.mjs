@@ -9,7 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  output: 'standalone',
   async rewrites() {
     const apiBase = 'https://autonline-backend-production.up.railway.app'
     return [
