@@ -34,7 +34,7 @@ export function getApiBaseUrl(): string {
   // Default to production API if no env var is set (for Railway deployment)
   return (fromEnv && fromEnv.trim().length > 0) 
     ? fromEnv 
-    : 'http://localhost:8080'
+    : 'https://autonline-backend-production.up.railway.app'
 }
 
 export function buildApiUrl(path: string): string {
