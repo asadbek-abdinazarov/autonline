@@ -15,6 +15,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
 import { buildApiUrl } from "@/lib/api-utils"
+import { loadImageWithCache } from "@/lib/image-loader"
 
 interface UserAnswer {
   selectedAnswer: number
@@ -303,90 +304,21 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     )
   }
 
-  // Function to validate if a blob URL is still valid
-  const isValidBlobUrl = (url: string): Promise<boolean> => {
-    if (!url.startsWith('blob:')) return Promise.resolve(true) // Non-blob URLs are considered valid
-    
-    return new Promise((resolve) => {
-      const img = new Image()
-      let resolved = false
-      
-      img.onload = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(true)
-        }
-      }
-      
-      img.onerror = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }
-      
-      img.src = url
-      // Timeout after 2 seconds if image doesn't load
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }, 2000)
-    })
-  }
-
-  // Function to load image with authentication
+  // Function to load image with authentication and cache support
   const loadImageUrl = async (photoKey: string): Promise<string> => {
-    // Check cache first and validate the URL
+    // Check cache first
     if (imageUrlCache.has(photoKey)) {
-      const cachedUrl = imageUrlCache.get(photoKey)!
-      
-      // For blob URLs, verify they're still valid
-      if (cachedUrl.startsWith('blob:')) {
-        const isValid = await isValidBlobUrl(cachedUrl)
-        if (isValid) {
-          return cachedUrl
-        } else {
-          // Blob URL is invalid (revoked), remove from cache and reload
-          setImageUrlCache(prev => {
-            const newCache = new Map(prev)
-            newCache.delete(photoKey)
-            return newCache
-          })
-        }
-      } else {
-        // Non-blob URLs are always valid
-        return cachedUrl
-      }
+      return imageUrlCache.get(photoKey)!
     }
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-      const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(photoKey)}`)
+      // Use centralized image loader with ETag and cache support
+      const blobUrl = await loadImageWithCache(photoKey)
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+      if (blobUrl) {
+        // Cache the blob URL in component state
+        setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
       }
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      
-      // Cache the blob URL
-      setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
       
       return blobUrl
     } catch (error) {
