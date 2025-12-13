@@ -10,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
-    const apiBase = 'https://autonline-backend-production.up.railway.app'
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'https://autonline-backend-production.up.railway.app'
     return [
       {
         source: '/api/backend/:path*',
