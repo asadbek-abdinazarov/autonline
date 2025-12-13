@@ -11,7 +11,7 @@ const nextConfig = {
   },
   output: 'standalone',
   async rewrites() {
-    const apiBase = 'http://autonline-backend-production.up.railway.app'
+    const apiBase = 'https://autonline-backend-production.up.railway.app'
     return [
       {
         source: '/api/backend/:path*',
