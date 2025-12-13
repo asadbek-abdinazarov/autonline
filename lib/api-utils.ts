@@ -31,7 +31,10 @@ export function getApiBaseUrl(): string {
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     process.env.API_BASE_URL
 
-  return (fromEnv && fromEnv.trim().length > 0) ? fromEnv : 'http://localhost:8080'
+  // Default to production API if no env var is set (for Railway deployment)
+  return (fromEnv && fromEnv.trim().length > 0) 
+    ? fromEnv 
+    : 'https://autonline-backend-production.up.railway.app'
 }
 
 export function buildApiUrl(path: string): string {
