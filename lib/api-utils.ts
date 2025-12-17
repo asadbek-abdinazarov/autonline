@@ -92,6 +92,7 @@ export async function safeJsonParse<T>(response: Response | null): Promise<T | n
     }
     
     // Try to parse JSON
+
     try {
       return JSON.parse(text) as T
     } catch (parseError) {
