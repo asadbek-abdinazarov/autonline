@@ -485,6 +485,7 @@ export const cyr = {
     questions: "савол",
     progress: "Жараён",
     score: "Балл",
+    timeRemaining: "Қолган вақт",
   },
 
   // Footer
@@ -526,6 +527,9 @@ export const cyr = {
     subscriptionStudentBasic: "Асосий Талаба",
     subscriptionStudentPro: "Professional Талаба",
     subscriptionStudentFull: "Тўлиқ Талаба",
+    subscriptionTeacherBasic: "Асосий Ўқитувчи",
+    subscriptionTeacherPro: "Professional Ўқитувчи",
+    subscriptionTeacherFull: "Тўлиқ Ўқитувчи",
     showing: "Кўрсатилмоқда: {from}-{to} / {total}",
     deleteConfirmTitle: "Ўқувчини ўчириш",
     deleteConfirmMessage: "Сиз ростдан ҳам {name} ўқувчисини ўчирмоқчимисиз? Бу амални қайтариб бўлмайди.",
