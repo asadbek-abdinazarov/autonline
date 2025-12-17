@@ -266,6 +266,11 @@ export function StudentsClient() {
     
     const name = subscription.name || ''
 
+    // Teacher-specific subscription types
+    if (name === 'BASIC_TEACHER') return t.students.subscriptionTeacherBasic || "Asosiy O'qituvchi"
+    if (name === 'PRO_TEACHER') return t.students.subscriptionTeacherPro || "Professional O'qituvchi"
+    if (name === 'FULL_TEACHER') return t.students.subscriptionTeacherFull || "To'liq O'qituvchi"
+
     // Student-specific subscription types
     if (name === 'STUDENT_BASIC') return t.students.subscriptionStudentBasic || "Asosiy Talaba"
     if (name === 'STUDENT_PRO') return t.students.subscriptionStudentPro || "Professional Talaba"
@@ -286,6 +291,17 @@ export function StudentsClient() {
     }
 
     const name = subscription.name || ''
+
+    // O'qituvchi obunalari – alohida ranglar va border bilan
+    if (name === 'BASIC_TEACHER') {
+      return "bg-emerald-500 text-white border-2 border-emerald-400"
+    }
+    if (name === 'PRO_TEACHER') {
+      return "bg-purple-500 text-white border-2 border-purple-400"
+    }
+    if (name === 'FULL_TEACHER') {
+      return "bg-rose-500 text-white border-2 border-rose-400"
+    }
 
     // To'liq/yillik obunalar – yorqin yashil
     if (name === 'FULL' || name === 'STUDENT_FULL') {

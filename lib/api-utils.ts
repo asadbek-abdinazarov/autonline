@@ -24,19 +24,13 @@ export function setGlobalErrorHandler(showError: (message: string) => void) {
   globalShowError = showError
 }
 
-// Centralized API base URL helpers
+// Import centralized API configuration
+import { getApiBaseUrl as getApiBaseUrlFromConfig } from './api-config'
+
+// Re-export for backward compatibility
 export function getApiBaseUrl(): string {
-  // Prefer public env for client-side availability
-  const fromEnv =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.API_BASE_URL
-
-  // Default to production API if no env var is set (for Railway deployment)
-  return (fromEnv && fromEnv.trim().length > 0) 
-    ? fromEnv 
-    : 'https://autonline-backend-production.up.railway.app'
+  return getApiBaseUrlFromConfig()
 }
-
 export function buildApiUrl(path: string): string {
   const base = getApiBaseUrl().replace(/\/+$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`

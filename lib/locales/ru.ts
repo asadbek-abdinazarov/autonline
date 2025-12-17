@@ -485,6 +485,7 @@ export const ru = {
     questions: "вопрос",
     progress: "Прогресс",
     score: "Балл",
+    timeRemaining: "Оставшееся время",
   },
 
   // Footer
@@ -526,6 +527,9 @@ export const ru = {
     subscriptionStudentBasic: "Главная Студент",
     subscriptionStudentPro: "Профессиональный студент",
     subscriptionStudentFull: "Полный студент",
+    subscriptionTeacherBasic: "Основной Учитель",
+    subscriptionTeacherPro: "Профессиональный Учитель",
+    subscriptionTeacherFull: "Полный Учитель",
     showing: "Показано: {from}-{to} / {total}",
     deleteConfirmTitle: "Удалить ученика",
     deleteConfirmMessage: "Вы действительно хотите удалить ученика {name}? Это действие нельзя отменить.",

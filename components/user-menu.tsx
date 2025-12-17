@@ -303,6 +303,12 @@ export function UserMenu() {
                             return { label: 'Professional Talaba', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                           case 'STUDENT_FULL':
                             return { label: 'To‘liq Talaba', Icon: Star, classes: 'from-amber-500 to-orange-500 text-white' }
+                          case 'BASIC_TEACHER':
+                            return { label: 'Asosiy O\'qituvchi', Icon: Users, classes: 'from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50' }
+                          case 'PRO_TEACHER':
+                            return { label: 'Professional O\'qituvchi', Icon: Users, classes: 'from-purple-500 to-indigo-500 text-white border-2 border-purple-400/50' }
+                          case 'FULL_TEACHER':
+                            return { label: 'To\'liq O\'qituvchi', Icon: Users, classes: 'from-rose-500 to-pink-500 text-white border-2 border-rose-400/50' }
                         default:
                           return { label: 'Tekin obuna', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                       }

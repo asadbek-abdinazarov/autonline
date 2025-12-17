@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History, Menu } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useTranslation } from "@/hooks/use-translation"
 import { useApi } from "@/hooks/use-api"
 import { buildApiUrl } from "@/lib/api-utils"
@@ -50,20 +51,20 @@ export default function RandomQuizClient() {
   const [isAnswered, setIsAnswered] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
-  
+
   // Keep refs in sync with state
   useEffect(() => {
     userAnswersRef.current = userAnswers
   }, [userAnswers])
-  
+
   useEffect(() => {
     answeredQuestionsRef.current = answeredQuestions
   }, [answeredQuestions])
-  
+
   useEffect(() => {
     currentQuestionIndexRef.current = currentQuestionIndex
   }, [currentQuestionIndex])
-  
+
   useEffect(() => {
     scoreRef.current = score
   }, [score])
@@ -102,7 +103,7 @@ export default function RandomQuizClient() {
       // Default to lotincha o'zbekcha
       result = 'uz'
     }
-    
+
     return result
   }, [language])
 
@@ -113,7 +114,7 @@ export default function RandomQuizClient() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const url = buildApiUrl(`/api/v1/random-quiz?interval=${questionCount}`)
       const response = await makeAuthenticatedRequest(url, {
         method: 'GET',
@@ -125,7 +126,7 @@ export default function RandomQuizClient() {
 
       const { safeJsonParse } = await import('@/lib/api-utils')
       const apiData = await safeJsonParse<RandomQuizApiResponse>(response)
-      
+
       if (!apiData) {
         throw new Error('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
       }
@@ -200,7 +201,7 @@ export default function RandomQuizClient() {
       }
       questionCount = customValue
     }
-    
+
     setError(null)
     setShowIntervalSelector(false)
     hasFetchedRef.current = false
@@ -221,7 +222,7 @@ export default function RandomQuizClient() {
     // Only refetch if quiz has started (not showing interval selector) and language changed
     if (!showIntervalSelector && questions.length > 0) {
       const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
-      
+
       if (languageChanged && currentQuestionCountRef.current !== null) {
         // Save current userAnswers before refetching (to preserve user's answers when language changes)
         // Use refs to get the latest values without causing dependency issues
@@ -229,11 +230,11 @@ export default function RandomQuizClient() {
         const savedAnsweredQuestions = new Map(answeredQuestionsRef.current)
         const savedCurrentIndex = currentQuestionIndexRef.current
         const savedScore = scoreRef.current
-        
+
         // Reset fetch ref and update language
         previousLanguageRef.current = language
         hasFetchedRef.current = false
-        
+
         // Refetch with new language
         fetchRandomQuiz(currentQuestionCountRef.current).then(() => {
           // Restore userAnswers after refetch (preserve user's progress)
@@ -279,12 +280,12 @@ export default function RandomQuizClient() {
     try {
       // Use centralized image loader with ETag and cache support
       const blobUrl = await loadImageWithCache(photoKey)
-      
+
       if (blobUrl) {
         // Cache the blob URL in component state
         setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
       }
-      
+
       return blobUrl
     } catch (error) {
       console.error('Error loading image:', error)
@@ -465,7 +466,7 @@ export default function RandomQuizClient() {
                       </div>
                     </div>
                   </button>
-                  
+
                   {isCustomMode && (
                     <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
                       <div className="relative">
@@ -656,7 +657,7 @@ export default function RandomQuizClient() {
         setShowResults(true)
       }
     }, 1500)
-    
+
     setAutoSkipTimeout(timeout)
   }
 
@@ -681,71 +682,78 @@ export default function RandomQuizClient() {
     setScore(0)
     hasFetchedRef.current = false
     hasSubmittedHistoryRef.current = false
-    
+
     setShowIntervalSelector(true)
   }
+
+  // Calculate progress percentage
+  const progressPercentage = questions.length > 0 ? Math.round((answeredQuestions.size / questions.length) * 100) : 0
 
   if (showResults) {
     const percentage = Math.round((score / questions.length) * 100)
     const passed = percentage >= 70
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="container mx-auto px-4 py-4 sm:py-8">
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-center text-2xl sm:text-3xl">{t.quiz.results}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="text-center">
-                  <div
-                    className={cn(
-                      "inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full mb-4",
-                      passed ? "bg-success/20" : "bg-error/20",
-                    )}
-                  >
-                    <span className={cn("text-4xl sm:text-5xl font-bold", passed ? "text-success" : "text-error")}>
-                      {percentage}%
-                    </span>
+        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="max-w-md w-full animate-in fade-in zoom-in-95 duration-500">
+            <Card className="border-none shadow-xl bg-card">
+              <CardContent className="pt-8 pb-8 px-6 space-y-8">
+                <div className="text-center space-y-4">
+                  <div className="relative mx-auto w-32 h-32">
+                    <div className={cn(
+                      "absolute inset-0 rounded-full opacity-20 animate-pulse",
+                      passed ? "bg-success" : "bg-error"
+                    )} />
+                    <div className={cn(
+                      "relative w-full h-full rounded-full border-4 flex items-center justify-center bg-background",
+                      passed ? "border-success text-success" : "border-error text-error"
+                    )}>
+                      <span className="text-4xl font-bold">{percentage}%</span>
+                    </div>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2">{passed ? t.quiz.congratulations : t.quiz.unfortunately}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {passed ? t.quiz.passedMessage : t.quiz.failedMessage}
-                  </p>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-                  <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.totalQuestions}</p>
-                    <p className="text-xl sm:text-2xl font-bold">{questions.length}</p>
-                  </div>
-                  <div className="p-3 sm:p-4 bg-success/20 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.correctAnswers}</p>
-                    <p className="text-xl sm:text-2xl font-bold text-success">{score}</p>
-                  </div>
-                  <div className="p-3 sm:p-4 bg-error/20 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.incorrectAnswers}</p>
-                    <p className="text-xl sm:text-2xl font-bold text-error">{questions.length - score}</p>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold">{passed ? t.quiz.congratulations : t.quiz.unfortunately}</h3>
+                    <p className="text-muted-foreground">
+                      {passed ? t.quiz.passedMessage : t.quiz.failedMessage}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <Button variant="outline" className="flex-1 bg-transparent" asChild>
-                    <Link href="/home">{t.quiz.homePage}</Link>
-                  </Button>
-                  {canViewHistory && (
-                    <Button variant="outline" className="flex-1 bg-transparent" asChild>
-                      <Link href="/history" className="flex items-center gap-2 justify-center">
-                        <History className="h-4 w-4" />
-                        {t.history.title || t.userMenu.testHistory}
-                      </Link>
-                    </Button>
-                  )}
-                  <Button className="flex-1" onClick={handleRetry}>
+                <div className="grid grid-cols-3 gap-4 text-center divide-x divide-border">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.totalQuestions}</p>
+                    <p className="text-xl font-bold">{questions.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.correctAnswers}</p>
+                    <p className="text-xl font-bold text-success">{score}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.incorrectAnswers}</p>
+                    <p className="text-xl font-bold text-error">{questions.length - score}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  <Button className="w-full text-lg h-12" onClick={handleRetry}>
                     {t.quiz.newRandomTest}
                   </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="h-11" asChild>
+                      <Link href="/home">{t.quiz.homePage}</Link>
+                    </Button>
+                    {canViewHistory && (
+                      <Button variant="outline" className="h-11" asChild>
+                        <Link href="/history">
+                          <History className="h-4 w-4 mr-2" />
+                          {t.history?.title || "Tarix"}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -756,258 +764,238 @@ export default function RandomQuizClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-muted/20 flex flex-col overflow-hidden">
       <Header />
 
-      <main className="flex-1">
-        {/* Header Section - Minimal and Clean */}
-        <div className="border-b border-border bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Top Bar */}
+        <div className="lg:hidden bg-background border-b px-4 py-3 shrink-0 z-30 space-y-3 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="-ml-2">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[85vw] sm:w-[350px] overflow-y-auto">
+                  <SheetHeader className="mb-6">
+                    <SheetTitle>{t.quiz.questionNavigator}</SheetTitle>
+                  </SheetHeader>
+
+                  <div className="space-y-6">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{t.quiz.timeRemaining}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex items-end justify-between mb-4">
+                          <span className="text-3xl font-bold">{answeredQuestions.size}</span>
+                          <span className="text-muted-foreground mb-1">/ {questions.length}</span>
+                        </div>
+                        <QuestionNavigator
+                          totalQuestions={questions.length}
+                          currentQuestion={currentQuestionIndex}
+                          answeredQuestions={answeredQuestions}
+                          onQuestionClick={handleQuestionClick}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/home" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline text-sm">{t.quiz.back}</span>
+                <Link href="/home" className="text-muted-foreground">
+                  <ArrowLeft className="h-5 w-5" />
                 </Link>
               </Button>
-              <div className="h-5 w-px bg-border hidden sm:block"></div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{lessonData?.lessonIcon || '🎲'}</span>
-                <span className="text-sm font-medium text-foreground hidden sm:inline">{lessonData ? getLocalizedLessonName(lessonData, language) : t.quiz.randomTest}</span>
+            </div>
+
+            <div className="flex-1 mx-4">
+              <div className="flex justify-between text-xs font-medium text-muted-foreground mb-1.5">
+                <span>{currentQuestionIndex + 1} / {questions.length}</span>
+                <span>{progressPercentage}%</span>
+              </div>
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300 ease-out"
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-primary/10 text-primary">
-                {selectedLanguage === 'uz' ? "O'Z" : selectedLanguage === 'oz' ? 'УЗ' : 'РУ'}
-              </span>
+            <div className="flex items-center">
+              <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} minimal />
             </div>
           </div>
         </div>
 
-        {/* Main Content Grid - Sidebar + Quiz */}
-        <div className="container mx-auto px-4 py-6 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <aside className="lg:col-span-1">
-              <div className="sticky top-24 space-y-4">
-                {/* Timer Card */}
-                <Card className="bg-gradient-to-br from-primary/5 via-primary/0 to-transparent border-primary/20">
-                  <CardContent className="pt-6">
-                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={isAnswered} />
-                  </CardContent>
-                </Card>
+        <div className="flex-1 flex gap-6 lg:p-8 overflow-hidden">
+          {/* Desktop Sidebar - Scrollable */}
+          <aside className="hidden lg:block w-80 flex-shrink-0 h-full overflow-y-auto pb-8 no-scrollbar">
+            <div className="space-y-6">
+              <Button variant="outline" asChild className="w-full justify-start gap-2 mb-4 bg-background">
+                <Link href="/home">
+                  <ArrowLeft className="h-4 w-4" />
+                  {t.quiz.backToHome}
+                </Link>
+              </Button>
 
-                {/* Navigator Card */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">{t.quiz.questionNavigator}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <QuestionNavigator
-                      totalQuestions={questions.length}
-                      currentQuestion={currentQuestionIndex}
-                      answeredQuestions={answeredQuestions}
-                      onQuestionClick={handleQuestionClick}
-                    />
-
-                    {/* Legend */}
-                    <div className="pt-3 border-t border-border space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-success"></div>
-                        <span className="text-muted-foreground">{t.quiz.correctAnswer}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-error"></div>
-                        <span className="text-muted-foreground">{t.quiz.incorrectAnswer}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-muted"></div>
-                        <span className="text-muted-foreground">{t.quiz.unanswered}</span>
-                      </div>
-                    </div>
-
-                    {/* Progress Stats */}
-                    <div className="pt-3 border-t border-border">
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.progress}</p>
-                          <p className="text-lg font-bold">{answeredQuestions.size}/{questions.length}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.score}</p>
-                          <p className="text-lg font-bold text-success">{score}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </aside>
-
-            <section className="lg:col-span-3 max-h-[calc(100vh-200px)] overflow-y-auto">
-              <Card className="shadow-lg border-0">
-                <CardHeader className="pb-6 border-b border-border">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary font-bold">
-                          {currentQuestionIndex + 1}
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl">
-                            {t.quiz.question} {currentQuestionIndex + 1} <span className="text-muted-foreground font-normal">/ {questions.length}</span>
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Feedback Badge */}
-                    {isAnswered && currentUserAnswer && (
-                      <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap",
-                        currentUserAnswer.isCorrect 
-                          ? "bg-success/15 text-success border border-success/30" 
-                          : "bg-error/15 text-error border border-error/30"
-                      )}>
-                        {currentUserAnswer.isCorrect ? (
-                          <>
-                            <CheckCircle2 className="h-4 w-4" />
-                            {t.quiz.correctAnswer}
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-lg">✕</span>
-                            {t.quiz.incorrectAnswer}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                    {t.quiz.timeRemaining}
+                  </CardTitle>
                 </CardHeader>
-
-                <CardContent className="pt-8 space-y-6">
-                  {/* Question Text */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.question}</p>
-                    <div className="text-center p-6 rounded-lg bg-muted/40 border border-muted/60">
-                      <h3 className="text-2xl font-semibold leading-relaxed text-balance">
-                        {(() => {
-                          const questionText = currentQuestion.questionText[selectedLanguage]
-                          return questionText || currentQuestion.questionText.uz
-                        })()}
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Image - if exists */}
-                  {currentQuestion.photo && currentImageSrc && (
-                    <div className="flex justify-center">
-                      <div className="relative group max-w-md w-full">
-                        <img
-                          src={currentImageSrc}
-                          alt={t.quiz.questionImage}
-                          className="w-full h-auto max-h-80 object-contain rounded-lg border border-border shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setCurrentImageUrl(currentImageSrc)
-                            setIsImageModalOpen(true)
-                          }}
-                        />
-                        <div 
-                          className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setCurrentImageUrl(currentImageSrc)
-                            setIsImageModalOpen(true)
-                          }}
-                        >
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
-                            <ZoomIn className="w-4 h-4 text-primary" />
-                            <span className="text-primary font-medium text-xs">{t.quiz.zoom}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Answer Options */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.selectAnswer}</p>
-                    <div className="space-y-2">
-                      {(() => {
-                        const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
-                        return answerOptions
-                      })().map((option, index) => {
-                        let isCorrect = false
-                        if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
-                          isCorrect = currentQuestion.answers.isCorrect[index] === true
-                        } else if (currentQuestion.answers.status) {
-                          isCorrect = index === currentQuestion.answers.status - 1
-                        }
-                        const isSelected = currentUserAnswer?.selectedAnswer === index
-                        const showCorrect = isAnswered && isCorrect
-                        const showIncorrect = isAnswered && isSelected && !isCorrect
-
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handleAnswerSelect(index)}
-                            disabled={isAnswered}
-                            className={cn(
-                              "w-full p-4 rounded-lg border-2 transition-all duration-200 text-left",
-                              "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20",
-                              "transform hover:scale-[1.01] active:scale-[0.99]",
-                              !isAnswered && "bg-card border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer",
-                              !isAnswered && isSelected && "bg-primary/10 border-primary shadow-md",
-                              showCorrect && "bg-success/10 border-success shadow-md",
-                              showIncorrect && "bg-error/10 border-error shadow-md",
-                              isAnswered && !showCorrect && !showIncorrect && "opacity-50 bg-muted/30 border-muted/50 cursor-not-allowed",
-                            )}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={cn(
-                                "flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm flex-shrink-0 mt-0.5",
-                                !isAnswered && "bg-muted text-foreground",
-                                !isAnswered && isSelected && "bg-primary text-primary-foreground",
-                                showCorrect && "bg-success text-white",
-                                showIncorrect && "bg-error text-white",
-                              )}>
-                                {String.fromCharCode(65 + index)}
-                              </div>
-                              <span className={cn(
-                                "flex-1 font-medium leading-relaxed",
-                                !isAnswered && "text-foreground",
-                                (isSelected || showCorrect || showIncorrect) && "font-semibold",
-                                showCorrect && "text-success",
-                                showIncorrect && "text-error",
-                                !isAnswered && isSelected && "text-primary",
-                              )}>
-                                {option}
-                              </span>
-                              {isAnswered && (showCorrect || showIncorrect) && (
-                                <div className="flex-shrink-0 mt-1">
-                                  {showCorrect ? (
-                                    <CheckCircle2 className="w-5 h-5 text-success" />
-                                  ) : (
-                                    <span className="text-error text-lg font-bold">✕</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                <CardContent>
+                  <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
                 </CardContent>
               </Card>
-            </section>
-          </div>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                    {t.quiz.progress}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-end justify-between">
+                    <span className="text-3xl font-bold">{answeredQuestions.size}</span>
+                    <span className="text-muted-foreground mb-1">/ {questions.length}</span>
+                  </div>
+                  <QuestionNavigator
+                    totalQuestions={questions.length}
+                    currentQuestion={currentQuestionIndex}
+                    answeredQuestions={answeredQuestions}
+                    onQuestionClick={handleQuestionClick}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </aside>
+
+          {/* Main Question Area - Scrollable */}
+          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-8 px-4 py-6">
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* Question Card */}
+              <div className="bg-card rounded-2xl shadow-sm border p-4 sm:p-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-6 flex justify-between items-start gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-sm font-medium text-primary uppercase tracking-wider">
+                      {t.quiz.question} {currentQuestionIndex + 1}
+                    </h2>
+                    <h3 className="text-xl sm:text-2xl font-bold leading-relaxed text-balance">
+                      {(() => {
+                        const questionText = currentQuestion.questionText[selectedLanguage]
+                        return questionText || currentQuestion.questionText.uz
+                      })()}
+                    </h3>
+                  </div>
+                  {/* Language Badge */}
+                  <span className="shrink-0 px-2 py-1 rounded-md bg-muted text-xs font-medium uppercase">
+                    {selectedLanguage}
+                  </span>
+                </div>
+
+                {currentQuestion.photo && currentImageSrc && (
+                  <div className="mb-8 rounded-xl overflow-hidden border bg-muted/20">
+                    <div
+                      className="relative group cursor-zoom-in"
+                      onClick={() => {
+                        setCurrentImageUrl(currentImageSrc)
+                        setIsImageModalOpen(true)
+                      }}
+                    >
+                      <img
+                        src={currentImageSrc}
+                        alt="Question"
+                        className="w-full h-auto max-h-[400px] object-contain mx-auto"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {(() => {
+                    const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
+                    return answerOptions
+                  })().map((option, index) => {
+                    let isCorrect = false
+                    if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
+                      isCorrect = currentQuestion.answers.isCorrect[index] === true
+                    } else if (currentQuestion.answers.status) {
+                      isCorrect = index === currentQuestion.answers.status - 1
+                    }
+
+                    const isSelected = currentUserAnswer?.selectedAnswer === index
+                    const showResult = isAnswered
+
+                    // Style variants
+                    let buttonStyle = "hover:border-primary/50 hover:bg-muted/30"
+                    let iconStyle = "bg-muted text-muted-foreground"
+
+                    if (showResult) {
+                      if (isCorrect) {
+                        buttonStyle = "border-success bg-success/10 text-success-foreground"
+                        iconStyle = "bg-success text-white"
+                      } else if (isSelected) {
+                        buttonStyle = "border-error bg-error/10 text-error-foreground"
+                        iconStyle = "bg-error text-white"
+                      } else {
+                        buttonStyle = "opacity-50"
+                      }
+                    } else if (isSelected) {
+                      buttonStyle = "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                      iconStyle = "bg-primary text-primary-foreground"
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        disabled={isAnswered}
+                        className={cn(
+                          "group w-full p-4 sm:p-5 rounded-xl border-2 text-left transition-all duration-200 flex gap-4 items-start select-none",
+                          "active:scale-[0.99]",
+                          buttonStyle
+                        )}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors mt-0.5",
+                          iconStyle
+                        )}>
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span className={cn(
+                          "text-base sm:text-lg font-medium leading-relaxed",
+                          showResult && isCorrect && "text-success font-bold",
+                          showResult && isSelected && !isCorrect && "text-error font-bold"
+                        )}>
+                          {option}
+                        </span>
+
+                        {showResult && isCorrect && <CheckCircle2 className="w-6 h-6 text-success shrink-0 ml-auto" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile only: Next/Prev hints or buttons could go here if auto-skip was removed, but it's fine */}
+            </div>
+          </section>
         </div>
       </main>
 
-      {/* Image Modal */}
       <ImageModal
         isOpen={isImageModalOpen}
         onClose={() => setIsImageModalOpen(false)}

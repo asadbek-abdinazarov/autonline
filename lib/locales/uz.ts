@@ -485,6 +485,7 @@ export const uz = {
     questions: "savol",
     progress: "Jarayon",
     score: "Ball",
+    timeRemaining: "Qolgan vaqt",
   },
 
   // Footer
@@ -526,6 +527,9 @@ export const uz = {
     subscriptionStudentBasic: "Asosiy Talaba",
     subscriptionStudentPro: "Professional Talaba",
     subscriptionStudentFull: "To‘liq Talaba",
+    subscriptionTeacherBasic: "Asosiy O'qituvchi",
+    subscriptionTeacherPro: "Professional O'qituvchi",
+    subscriptionTeacherFull: "To'liq O'qituvchi",
     showing: "Ko'rsatilmoqda: {from}-{to} / {total}",
     deleteConfirmTitle: "O'quvchini o'chirish",
     deleteConfirmMessage: "Siz rostdan ham {name} o'quvchisini o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.",
