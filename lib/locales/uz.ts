@@ -460,6 +460,7 @@ export const uz = {
     question: "Savol",
     selectAnswer: "Javobni tanlang:",
     questionImage: "Savol rasmi",
+    imageLoading: "Rasm yuklanmoqda...",
     of: "/",
     back: "Orqaga",
     backToHome: "Bosh sahifaga qaytish",

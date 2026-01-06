@@ -459,7 +459,7 @@ export function UserMenu() {
           </>
         )}
 
-{hasTeacherRole() && (
+{(hasTeacherRole() || hasPermission('VIEW_ALL_MY_STUDENTS')) && (
               <DropdownMenuItem 
                 onClick={handleStudentsClick}
                 className="cursor-pointer"

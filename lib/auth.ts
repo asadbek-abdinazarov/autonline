@@ -8,6 +8,7 @@ export type Permission =
   | 'VIEW_NEWS'
   | 'VIEW_TEST_HISTORY'
   | 'VIEW_TRAFFIC_SIGNS'
+  | 'VIEW_ALL_MY_STUDENTS'
 
 export interface User {
   id: number

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History, Menu } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History, Menu, Clock, ListChecks } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -72,6 +72,7 @@ export default function RandomQuizClient() {
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
+  const [isImageLoading, setIsImageLoading] = useState(false)
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
   const [showIntervalSelector, setShowIntervalSelector] = useState(true)
   const [interval, setInterval] = useState<number>(20)
@@ -299,10 +300,13 @@ export default function RandomQuizClient() {
     const loadCurrentImage = async () => {
       const currentQuestion = questions[currentQuestionIndex]
       if (currentQuestion?.photo) {
+        setIsImageLoading(true)
         const imageUrl = await loadImageUrl(currentQuestion.photo)
         setCurrentImageSrc(imageUrl)
+        setIsImageLoading(false)
       } else {
         setCurrentImageSrc("")
+        setIsImageLoading(false)
       }
     }
 
@@ -689,6 +693,8 @@ export default function RandomQuizClient() {
   // Calculate progress percentage
   const progressPercentage = questions.length > 0 ? Math.round((answeredQuestions.size / questions.length) * 100) : 0
 
+  const correctAnswersCount = Array.from(answeredQuestions.values()).filter(Boolean).length
+
   if (showResults) {
     const percentage = Math.round((score / questions.length) * 100)
     const passed = percentage >= 70
@@ -768,129 +774,196 @@ export default function RandomQuizClient() {
       <Header />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Top Bar */}
-        <div className="lg:hidden bg-background border-b px-4 py-3 shrink-0 z-30 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        <div className="lg:hidden bg-background border-b px-3 py-2.5 shrink-0 z-30 shadow-sm">
+          <div className="flex items-center gap-2">
+            {/* Menu & Back */}
+            <div className="flex items-center">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="-ml-2">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[85vw] sm:w-[350px] overflow-y-auto">
-                  <SheetHeader className="mb-6">
-                    <SheetTitle>{t.quiz.questionNavigator}</SheetTitle>
+                <SheetContent side="left" className="w-[85vw] sm:w-[350px] overflow-y-auto p-0">
+                  <SheetHeader className="p-4 border-b">
+                    <SheetTitle className="text-left">{t.quiz.questionNavigator}</SheetTitle>
                   </SheetHeader>
 
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{t.quiz.timeRemaining}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="flex items-end justify-between mb-4">
-                          <span className="text-3xl font-bold">{answeredQuestions.size}</span>
-                          <span className="text-muted-foreground mb-1">/ {questions.length}</span>
+                  <div className="p-4 space-y-4">
+                    <div className="bg-muted/50 rounded-xl p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-primary" />
                         </div>
-                        <QuestionNavigator
-                          totalQuestions={questions.length}
-                          currentQuestion={currentQuestionIndex}
-                          answeredQuestions={answeredQuestions}
-                          onQuestionClick={handleQuestionClick}
-                        />
-                      </CardContent>
-                    </Card>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            {t.quiz.timeRemaining}
+                          </p>
+                          <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-muted/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <ListChecks className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {answeredQuestions.size}
+                          <span className="text-base text-muted-foreground">/{questions.length}</span>
+                        </p>
+                      </div>
+                      <div className="bg-muted/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <Target className="h-4 w-4 text-success" />
+                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                        </div>
+                        <p className="text-2xl font-bold text-success">{correctAnswersCount}</p>
+                      </div>
+                    </div>
+
+                    {/* Question Navigator */}
+                    <div className="bg-background rounded-xl border p-4">
+                      <QuestionNavigator
+                        totalQuestions={questions.length}
+                        currentQuestion={currentQuestionIndex}
+                        answeredQuestions={answeredQuestions}
+                        onQuestionClick={handleQuestionClick}
+                      />
+                    </div>
+
+                    {/* Back to Home button */}
+                    <Button variant="outline" asChild className="w-full bg-transparent">
+                      <Link href="/home">
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        {t.quiz.backToHome}
+                      </Link>
+                    </Button>
                   </div>
                 </SheetContent>
               </Sheet>
 
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/home" className="text-muted-foreground">
-                  <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+                <Link href="/home">
+                  <ArrowLeft className="h-5 w-5 text-muted-foreground" />
                 </Link>
               </Button>
             </div>
 
-            <div className="flex-1 mx-4">
-              <div className="flex justify-between text-xs font-medium text-muted-foreground mb-1.5">
-                <span>{currentQuestionIndex + 1} / {questions.length}</span>
-                <span>{progressPercentage}%</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold">
+                  {currentQuestionIndex + 1}/{questions.length}
+                </span>
+                <span className="text-xs text-muted-foreground">{progressPercentage}%</span>
               </div>
-              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary transition-all duration-300 ease-out"
+                  className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
             </div>
-            <div className="flex items-center">
+
+            <div className="flex items-center gap-1 bg-muted/60 px-2.5 py-1.5 rounded-lg">
+              <Clock className="h-4 w-4 text-muted-foreground" />
               <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} minimal />
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex gap-6 lg:p-8 overflow-hidden">
-          {/* Desktop Sidebar - Scrollable */}
-          <aside className="hidden lg:block w-80 flex-shrink-0 h-full overflow-y-auto pb-8 no-scrollbar">
-            <div className="space-y-6">
-              <Button variant="outline" asChild className="w-full justify-start gap-2 mb-4 bg-background">
-                <Link href="/home">
-                  <ArrowLeft className="h-4 w-4" />
-                  {t.quiz.backToHome}
-                </Link>
-              </Button>
+        <div className="flex-1 flex gap-6 lg:p-6 overflow-hidden">
+          <aside className="hidden lg:flex lg:flex-col w-72 xl:w-80 flex-shrink-0 h-full gap-4 pb-4">
+            <Button variant="outline" asChild className="w-full justify-start gap-2 bg-background shrink-0">
+              <Link href="/home">
+                <ArrowLeft className="h-4 w-4" />
+                {t.quiz.backToHome}
+              </Link>
+            </Button>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                    {t.quiz.timeRemaining}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                    {t.quiz.progress}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold">{answeredQuestions.size}</span>
-                    <span className="text-muted-foreground mb-1">/ {questions.length}</span>
+            <Card className="shrink-0">
+              <CardContent className="p-4 space-y-4">
+                {/* Timer Section */}
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Clock className="h-6 w-6 text-primary" />
                   </div>
-                  <QuestionNavigator
-                    totalQuestions={questions.length}
-                    currentQuestion={currentQuestionIndex}
-                    answeredQuestions={answeredQuestions}
-                    onQuestionClick={handleQuestionClick}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
+                      {t.quiz.timeRemaining}
+                    </p>
+                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <ListChecks className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                    </div>
+                    <p className="text-xl font-bold">
+                      {answeredQuestions.size}
+                      <span className="text-sm text-muted-foreground font-normal">/{questions.length}</span>
+                    </p>
+                  </div>
+                  <div className="bg-success/10 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Target className="h-4 w-4 text-success" />
+                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                    </div>
+                    <p className="text-xl font-bold text-success">{correctAnswersCount}</p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-muted-foreground">{t.quiz.progress}</span>
+                    <span className="font-medium">{progressPercentage}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <CardHeader className="pb-2 pt-4 px-4 shrink-0">
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  {t.quiz.questionNavigator}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 flex-1 overflow-y-auto">
+                <QuestionNavigator
+                  totalQuestions={questions.length}
+                  currentQuestion={currentQuestionIndex}
+                  answeredQuestions={answeredQuestions}
+                  onQuestionClick={handleQuestionClick}
+                />
+              </CardContent>
+            </Card>
           </aside>
 
           {/* Main Question Area - Scrollable */}
-          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-8 px-4 py-6">
-            <div className="max-w-3xl mx-auto space-y-6">
+          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-4 px-4 py-4 lg:py-0">
+            <div className="max-w-3xl mx-auto space-y-4 lg:space-y-6">
               {/* Question Card */}
-              <div className="bg-card rounded-2xl shadow-sm border p-4 sm:p-8 animate-in slide-in-from-bottom-4 duration-500">
-                <div className="mb-6 flex justify-between items-start gap-4">
-                  <div className="space-y-1">
-                    <h2 className="text-sm font-medium text-primary uppercase tracking-wider">
+              <div className="bg-card rounded-2xl shadow-sm border p-4 sm:p-6 lg:p-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-4 sm:mb-6 flex justify-between items-start gap-3">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h2 className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider">
                       {t.quiz.question} {currentQuestionIndex + 1}
                     </h2>
-                    <h3 className="text-xl sm:text-2xl font-bold leading-relaxed text-balance">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold leading-relaxed text-balance">
                       {(() => {
                         const questionText = currentQuestion.questionText[selectedLanguage]
                         return questionText || currentQuestion.questionText.uz
@@ -903,30 +976,40 @@ export default function RandomQuizClient() {
                   </span>
                 </div>
 
-                {currentQuestion.photo && currentImageSrc && (
-                  <div className="mb-8 rounded-xl overflow-hidden border bg-muted/20">
-                    <div
-                      className="relative group cursor-zoom-in"
-                      onClick={() => {
-                        setCurrentImageUrl(currentImageSrc)
-                        setIsImageModalOpen(true)
-                      }}
-                    >
-                      <img
-                        src={currentImageSrc}
-                        alt="Question"
-                        className="w-full h-auto max-h-[400px] object-contain mx-auto"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                {currentQuestion.photo && (
+                  <div className="mb-4 sm:mb-6 lg:mb-8 rounded-xl overflow-hidden border bg-muted/20">
+                    {isImageLoading ? (
+                      <div className="w-full h-[250px] sm:h-[350px] lg:h-[400px] flex items-center justify-center bg-muted/30">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <p className="text-sm text-muted-foreground">{t.quiz.imageLoading}</p>
+                        </div>
                       </div>
-                    </div>
+                    ) : currentImageSrc ? (
+                      <div
+                        className="relative group cursor-zoom-in"
+                        onClick={() => {
+                          setCurrentImageUrl(currentImageSrc)
+                          setIsImageModalOpen(true)
+                        }}
+                      >
+                        <img
+                          src={currentImageSrc || "/placeholder.svg"}
+                          alt="Question"
+                          className="w-full h-auto max-h-[250px] sm:max-h-[350px] lg:max-h-[400px] object-contain mx-auto"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {(() => {
-                    const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
+                    const answerOptions =
+                      currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
                     return answerOptions
                   })().map((option, index) => {
                     let isCorrect = false
@@ -964,33 +1047,37 @@ export default function RandomQuizClient() {
                         onClick={() => handleAnswerSelect(index)}
                         disabled={isAnswered}
                         className={cn(
-                          "group w-full p-4 sm:p-5 rounded-xl border-2 text-left transition-all duration-200 flex gap-4 items-start select-none",
+                          "group w-full p-3 sm:p-4 lg:p-5 rounded-xl border-2 text-left transition-all duration-200 flex gap-3 sm:gap-4 items-start select-none",
                           "active:scale-[0.99]",
-                          buttonStyle
+                          buttonStyle,
                         )}
                       >
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors mt-0.5",
-                          iconStyle
-                        )}>
+                        <div
+                          className={cn(
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 transition-colors mt-0.5",
+                            iconStyle,
+                          )}
+                        >
                           {String.fromCharCode(65 + index)}
                         </div>
-                        <span className={cn(
-                          "text-base sm:text-lg font-medium leading-relaxed",
-                          showResult && isCorrect && "text-success font-bold",
-                          showResult && isSelected && !isCorrect && "text-error font-bold"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm sm:text-base lg:text-lg font-medium leading-relaxed",
+                            showResult && isCorrect && "text-success font-bold",
+                            showResult && isSelected && !isCorrect && "text-error font-bold",
+                          )}
+                        >
                           {option}
                         </span>
 
-                        {showResult && isCorrect && <CheckCircle2 className="w-6 h-6 text-success shrink-0 ml-auto" />}
+                        {showResult && isCorrect && (
+                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-success shrink-0 ml-auto" />
+                        )}
                       </button>
                     )
                   })}
                 </div>
               </div>
-
-              {/* Mobile only: Next/Prev hints or buttons could go here if auto-skip was removed, but it's fine */}
             </div>
           </section>
         </div>
