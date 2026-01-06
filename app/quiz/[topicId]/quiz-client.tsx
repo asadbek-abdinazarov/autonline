@@ -69,6 +69,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
+  const [isImageLoading, setIsImageLoading] = useState(false)
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
   const hasFetchedRef = useRef<string | null>(null)
   const hasSubmittedHistoryRef = useRef(false)
@@ -177,10 +178,13 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     const loadCurrentImage = async () => {
       const currentQuestion = questions[currentQuestionIndex]
       if (currentQuestion?.photo) {
+        setIsImageLoading(true)
         const imageUrl = await loadImageUrl(currentQuestion.photo)
         setCurrentImageSrc(imageUrl)
+        setIsImageLoading(false)
       } else {
         setCurrentImageSrc("")
+        setIsImageLoading(false)
       }
     }
 
@@ -675,24 +679,33 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   </span>
                 </div>
 
-                {currentQuestion.photo && currentImageSrc && (
+                {currentQuestion.photo && (
                   <div className="mb-4 sm:mb-6 lg:mb-8 rounded-xl overflow-hidden border bg-muted/20">
-                    <div
-                      className="relative group cursor-zoom-in"
-                      onClick={() => {
-                        setCurrentImageUrl(currentImageSrc)
-                        setIsImageModalOpen(true)
-                      }}
-                    >
-                      <img
-                        src={currentImageSrc || "/placeholder.svg"}
-                        alt="Question"
-                        className="w-full h-auto max-h-[250px] sm:max-h-[350px] lg:max-h-[400px] object-contain mx-auto"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                    {isImageLoading ? (
+                      <div className="w-full h-[250px] sm:h-[350px] lg:h-[400px] flex items-center justify-center bg-muted/30">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <p className="text-sm text-muted-foreground">{t.quiz.imageLoading}</p>
+                        </div>
                       </div>
-                    </div>
+                    ) : currentImageSrc ? (
+                      <div
+                        className="relative group cursor-zoom-in"
+                        onClick={() => {
+                          setCurrentImageUrl(currentImageSrc)
+                          setIsImageModalOpen(true)
+                        }}
+                      >
+                        <img
+                          src={currentImageSrc || "/placeholder.svg"}
+                          alt="Question"
+                          className="w-full h-auto max-h-[250px] sm:max-h-[350px] lg:max-h-[400px] object-contain mx-auto"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 )}
 

@@ -460,6 +460,7 @@ export const ru = {
     question: "Вопрос",
     selectAnswer: "Выберите ответ:",
     questionImage: "Изображение вопроса",
+    imageLoading: "Загрузка изображения...",
     of: "/",
     back: "Назад",
     backToHome: "Вернуться на главную",

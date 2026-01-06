@@ -460,6 +460,7 @@ export const cyr = {
     question: "Савол",
     selectAnswer: "Жавобни танланг:",
     questionImage: "Савол расми",
+    imageLoading: "Расм юкланмоқда...",
     of: "/",
     back: "Орқага",
     backToHome: "Бош саҳифага қайтиш",
