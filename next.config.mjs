@@ -22,7 +22,6 @@ const nextConfig = {
   async rewrites() {
     // Use the same default as api-config.ts for consistency
     // Bitta joydan boshqarish uchun - lib/api-config.ts dagi DEFAULT_API_BASE_URL ni o'zgartiring
-    const DEFAULT_API_BASE_URL = 'http://localhost:8080'
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || DEFAULT_API_BASE_URL
     return [
       {
