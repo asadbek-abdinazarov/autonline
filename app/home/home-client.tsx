@@ -43,13 +43,13 @@ export default function HomeClient() {
       try {
         setIsLoading(true)
         setError(null)
-
+        
         // Fetch both topics and news in parallel - properly handle both results
         const [topicsData] = await Promise.all([
           fetchTopicsFromApi(),
           fetchNews() // This is called but result is not used - it updates the hook state
         ])
-
+        
         // Use startTransition to batch state updates and make them non-blocking
         startTransition(() => {
           setTopics(topicsData)
@@ -88,8 +88,8 @@ export default function HomeClient() {
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
                   <Sparkles className="h-4 w-4 text-blue-500" />
                   <span className="transition-transform duration-200 transition-colors duration-300">{t.home.hero.welcome}</span>
-                </div>
-                <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+              </div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     {t.home.hero.title}
                   </span>
@@ -105,71 +105,71 @@ export default function HomeClient() {
 
           {/* News Section */}
           {canViewNews && (
-            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20 dark:shadow-orange-500/20">
-                    <Newspaper className="h-7 w-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.news.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-400">{t.home.news.description}</p>
-                  </div>
+          <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20 dark:shadow-orange-500/20">
+                  <Newspaper className="h-7 w-7 text-white" />
                 </div>
-                {news.length > 3 && (
-                  <Button variant="outline" size="lg" asChild className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:scale-105 transition-all duration-300">
-                    <Link href="/news" className="flex items-center gap-2">
-                      {t.common.viewAll}
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
+                <div>
+                  <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.news.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400">{t.home.news.description}</p>
+          </div>
               </div>
-              {newsLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <div className="text-center">
-                    <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-blue-500 dark:text-blue-400" />
-                    <p className="text-slate-600 dark:text-slate-400 font-medium">{t.home.news.loading}</p>
-                  </div>
-                </div>
-              ) : newsError ? (
-                <div className="text-center py-16">
-                  <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto mb-4">
-                    <Newspaper className="h-8 w-8 text-destructive" />
-                  </div>
-                  <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">{newsError}</p>
-                  <Button onClick={fetchNews} size="lg">
-                    {t.common.retry}
-                  </Button>
-                </div>
-              ) : news.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-4">
-                    <Newspaper className="h-12 w-12 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">{t.home.news.empty}</h3>
-                  <p className="text-slate-600 dark:text-slate-400">{t.home.news.emptyDescription}</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                  {news.slice(0, 3).map((newsItem, index) => (
-                    <div
-                      key={newsItem.newsId}
-                      className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <NewsCard news={newsItem} />
-                    </div>
-                  ))}
-                </div>
+              {news.length > 3 && (
+                <Button variant="outline" size="lg" asChild className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:scale-105 transition-all duration-300">
+                  <Link href="/news" className="flex items-center gap-2">
+                    {t.common.viewAll}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
               )}
-            </section>
+            </div>
+            {newsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-blue-500 dark:text-blue-400" />
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">{t.home.news.loading}</p>
+                </div>
+            </div>
+          ) : newsError ? (
+              <div className="text-center py-16">
+                <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto mb-4">
+                  <Newspaper className="h-8 w-8 text-destructive" />
+                </div>
+                <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">{newsError}</p>
+                <Button onClick={fetchNews} size="lg">
+                  {t.common.retry}
+              </Button>
+            </div>
+          ) : news.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-4">
+                  <Newspaper className="h-12 w-12 text-slate-400 dark:text-slate-500" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">{t.home.news.empty}</h3>
+                <p className="text-slate-600 dark:text-slate-400">{t.home.news.emptyDescription}</p>
+            </div>
+          ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {news.slice(0, 3).map((newsItem, index) => (
+                <div 
+                  key={newsItem.newsId} 
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <NewsCard news={newsItem} />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
           )}
 
-          {/* Special Features Section */}
-          {canViewRandom && (
-            <section className="container mx-auto px-4 py-6 sm:py-12 mb-6 sm:mb-12">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/10 dark:via-indigo-500/10 dark:to-purple-500/10 border border-blue-500/20 dark:border-blue-500/20 p-6 sm:p-12 backdrop-blur-xl">
+           {/* Special Features Section */}
+           {canViewRandom && (
+            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/10 dark:via-indigo-500/10 dark:to-purple-500/10 border border-blue-500/20 dark:border-blue-500/20 p-8 sm:p-12 backdrop-blur-xl">
                 {/* Background decoration */}
                 <div className="absolute inset-0 -z-10">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
@@ -182,34 +182,60 @@ export default function HomeClient() {
                       <Sparkles className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.specialFeatures.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{t.home.specialFeatures.description}</p>
+                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.randomQuiz.title}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{(t as any).home.randomQuiz?.description || "Barcha yo'l harakati belgilarini o'rganing"}</p>
                     </div>
                   </div>
-
-                  <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center justify-center">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 h-auto"
+                  
+                  <div className="pt-4">
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
                     >
                       <Link href="/quiz/random" className="flex items-center gap-3">
                         <Shuffle className="h-5 w-5" />
-                        {t.home.specialFeatures.randomQuizButton}
+                        {t.home.randomQuiz.randomQuizButton}
                       </Link>
                     </Button>
-                    {canViewTrafficSigns && (
-                      <Button
-                        asChild
-                        size="lg"
-                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 h-auto"
-                      >
-                        <Link href="/traffic-signs" className="flex items-center gap-3">
-                          <Signpost className="h-5 w-5" />
-                          {t.home.specialFeatures.trafficSignsButton}
-                        </Link>
-                      </Button>
-                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Traffic Signs Section */}
+          {canViewTrafficSigns && (
+            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 dark:from-green-500/10 dark:via-emerald-500/10 dark:to-teal-500/10 border border-green-500/20 dark:border-green-500/20 p-8 sm:p-12 backdrop-blur-xl">
+                {/* Background decoration */}
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/20 dark:bg-green-500/20 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/20 dark:bg-teal-500/20 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="max-w-4xl mx-auto text-center space-y-6">
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                      <Signpost className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.trafficSigns.title}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{t.home.trafficSigns.description}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
+                    >
+                      <Link href="/traffic-signs" className="flex items-center gap-3">
+                        <Signpost className="h-5 w-5" />
+                        {t.home.trafficSigns.button}
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -218,67 +244,67 @@ export default function HomeClient() {
 
           {/* Topics Section */}
           {(canViewAllTopics || canViewLimitedTopics) && (
-            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20">
-                    <BookOpen className="h-7 w-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.topics.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-400">{t.home.topics.description}</p>
-                  </div>
-                </div>
-                {canViewAllTopics && topics.length > 6 && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowAllTopics(!showAllTopics)}
-                    className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
-                  >
-                    {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
-                  </Button>
-                )}
+          <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20">
+                  <BookOpen className="h-7 w-7 text-white" />
               </div>
-
-              {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-500 dark:text-blue-400" />
-                    <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">{t.home.topics.loading}</p>
-                  </div>
+              <div>
+                  <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.topics.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-400">{t.home.topics.description}</p>
                 </div>
-              ) : error ? (
-                <div className="text-center py-20">
-                  <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto mb-6">
-                    <BookOpen className="h-10 w-10 text-destructive" />
-                  </div>
-                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">{error}</p>
-                  <Button onClick={() => window.location.reload()} size="lg" variant="outline">
-                    {t.common.retry}
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-                  {(canViewAllTopics
-                    ? (showAllTopics ? topics : topics.slice(0, 6))
-                    : topics.slice(0, 3)
-                  ).map((topic, index) => (
-                    <div
-                      key={topic.id}
-                      className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <TopicCard topic={topic} />
-                    </div>
-                  ))}
-                </div>
+              </div>
+              {canViewAllTopics && topics.length > 6 && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setShowAllTopics(!showAllTopics)}
+                  className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                >
+                  {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
+                </Button>
               )}
-            </section>
+          </div>
+          
+          {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                  <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-500 dark:text-blue-400" />
+                  <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">{t.home.topics.loading}</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto mb-6">
+                  <BookOpen className="h-10 w-10 text-destructive" />
+            </div>
+                <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">{error}</p>
+                <Button onClick={() => window.location.reload()} size="lg" variant="outline">
+                  {t.common.retry}
+              </Button>
+            </div>
+          ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
+                {(canViewAllTopics
+                  ? (showAllTopics ? topics : topics.slice(0, 6))
+                  : topics.slice(0, 3)
+                ).map((topic, index) => (
+                  <div 
+                    key={topic.id} 
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <TopicCard topic={topic} />
+                  </div>
+                ))}
+              </div>
+          )}
+        </section>
           )}
 
         </main>
-
+        
         <Footer />
       </div>
     </AuthGuard>

@@ -9,6 +9,7 @@ import { ErrorProvider } from '@/components/error-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { VercelAnalytics } from '@/components/vercel-analytics'
+import { UserDataRefresher } from '@/components/user-data-refresher'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -42,6 +43,7 @@ export default function RootLayout({
               {children}
               <Toaster position="top-right" richColors />
               <UserBlockListener />
+              <UserDataRefresher />
             </NotificationProvider>
             </ErrorProvider>
             </TranslationProvider>

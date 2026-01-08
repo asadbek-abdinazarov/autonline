@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users } from "lucide-react"
-import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users, Signpost } from "lucide-react"
+import { getCurrentUser, logout, setCurrentUser, fetchCurrentUser, type Permission } from "@/lib/auth"
 import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { useTheme } from "next-themes"
@@ -157,6 +157,13 @@ export function UserMenu() {
   }
 
   const handleDropdownOpen = () => {
+    // Fetch user data when menu opens
+    const currentUser = getCurrentUser()
+    if (currentUser) {
+      fetchCurrentUser().catch(() => {
+        // Silently handle errors - user data will remain from localStorage
+      })
+    }
     if (!hasLoadedPaymentHistory && hasPermission('VIEW_PAYMENTS')) {
       fetchPaymentHistory()
       setHasLoadedPaymentHistory(true)
@@ -170,6 +177,10 @@ export function UserMenu() {
 
   const handleStudentsClick = useCallback(() => {
     router.push("/students")
+  }, [router])
+
+  const handleTrafficSignsClick = useCallback(() => {
+    router.push("/traffic-signs")
   }, [router])
 
   const handleLanguageChange = useCallback((lang: Language) => {
@@ -479,6 +490,16 @@ export function UserMenu() {
                 <DropdownMenuSeparator />
               </DropdownMenuItem>
             )}
+
+            {/* {hasPermission('VIEW_TRAFFIC_SIGNS') && (
+              <DropdownMenuItem 
+                onClick={handleTrafficSignsClick}
+                className="cursor-pointer"
+              >
+                <Signpost className="mr-2 h-4 w-4" />
+                {(t as any).userMenu?.trafficSigns || (t as any).trafficSignsButton || "Yo'l harakati belgilari"}
+              </DropdownMenuItem>
+            )} */}
 
 
 
