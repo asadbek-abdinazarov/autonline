@@ -10,12 +10,12 @@ import { Header } from "@/components/header"
 import { getCurrentUser } from "@/lib/auth"
 import { useTranslation } from "@/hooks/use-translation"
 import { interpolate } from "@/hooks/use-translation"
-import { 
-  BookOpen, 
-  CheckCircle2, 
-  Clock, 
-  BarChart3, 
-  Newspaper, 
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  BarChart3,
+  Newspaper,
   Award,
   ArrowRight,
   Users,
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
         const { safeJsonParse } = await import('@/lib/api-utils')
         const data = await safeJsonParse<StatisticResponse>(response)
-        
+
         if (!data) {
           throw new Error(t.common.error)
         }
@@ -141,15 +141,15 @@ export default function LandingPage() {
       const duration = 2000 // 2 seconds
       const steps = 60
       const interval = duration / steps
-      
+
       const timers: NodeJS.Timeout[] = []
-      
+
       statsValues.forEach((statValue, index) => {
         // Extract number from string (e.g., "500+" -> 500)
         const numStr = statValue.replace(/[^0-9]/g, '')
         const targetNum = parseInt(numStr) || 0
         const suffix = statValue.replace(/[0-9]/g, '') // Get +, %, etc.
-        
+
         if (targetNum === 0) {
           // If no number found, skip animation
           setAnimatedStats(prev => {
@@ -159,10 +159,10 @@ export default function LandingPage() {
           })
           return
         }
-        
+
         let currentStep = 0
         const increment = targetNum / steps
-        
+
         const timer = setInterval(() => {
           currentStep++
           setAnimatedStats(prev => {
@@ -170,7 +170,7 @@ export default function LandingPage() {
             newStats[index] = Math.min(Math.floor(increment * currentStep), targetNum)
             return newStats
           })
-          
+
           if (currentStep >= steps) {
             clearInterval(timer)
             setAnimatedStats(prev => {
@@ -183,10 +183,10 @@ export default function LandingPage() {
             }
           }
         }, interval)
-        
+
         timers.push(timer)
       })
-      
+
       return () => {
         timers.forEach(timer => clearInterval(timer))
       }
@@ -243,8 +243,8 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section 
-          className="relative overflow-hidden pt-16 sm:pt-24 md:pt-18 pb-22 sm:pb-24 md:pb-22"
+        <section
+          className="relative overflow-hidden pt-12 sm:pt-24 md:pt-18 pb-16 sm:pb-24 md:pb-22"
           aria-label={t.landing.hero.title || "Asosiy bo'lim"}
         >
           {/* Background gradient blobs */}
@@ -261,7 +261,7 @@ export default function LandingPage() {
                 <span>{t.landing.hero.badge}</span>
               </div>
 
-              <h1 className="text-4xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   {t.landing.hero.title}
                 </span>
@@ -269,13 +269,13 @@ export default function LandingPage() {
                 <span className="text-slate-900 dark:text-white">{t.landing.hero.subtitle}</span>
               </h1>
 
-              <p className="text-xl sm:text-1xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '400ms', animationDuration: '800ms' }}>
+              <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '400ms', animationDuration: '800ms' }}>
                 {interpolate(t.landing.hero.description, { count: t.landing.hero.countText })}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '600ms', animationDuration: '600ms' }}>
                 {isLoggedIn ? (
-                  <Button size="lg" asChild className="text-lg px-10 py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
+                  <Button size="lg" asChild className="text-base sm:text-lg px-6 py-4 sm:px-10 sm:py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
                     <Link href="/home" className="flex items-center gap-2">
                       {t.common.goToDashboard}
                       <ArrowRight className="h-5 w-5" />
@@ -283,13 +283,13 @@ export default function LandingPage() {
                   </Button>
                 ) : (
                   <>
-                    <Button size="lg" asChild variant="outline" className="text-lg px-10 py-7 h-auto border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300">
+                    <Button size="lg" asChild variant="outline" className="text-base sm:text-lg px-6 py-4 sm:px-10 sm:py-7 h-auto border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300">
                       <Link href="/login" className="flex items-center gap-2">
                         <LogIn className="h-5 w-5" />
                         {t.common.login}
                       </Link>
                     </Button>
-                    <Button size="lg" asChild className="text-lg px-10 py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
+                    <Button size="lg" asChild className="text-base sm:text-lg px-6 py-4 sm:px-10 sm:py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
                       <Link href="/register" className="flex items-center gap-2">
                         {t.common.freeStart}
                         <ArrowRight className="h-5 w-5" />
@@ -303,8 +303,8 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section 
-          id="features" 
+        <section
+          id="features"
           className="py-20 sm:py-22 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.features.title || "Xususiyatlar"}
         >
@@ -313,10 +313,10 @@ export default function LandingPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-6 animate-in fade-in" style={{ animationDelay: '100ms', animationDuration: '600ms' }}>
                 <Star className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-6 text-slate-900 dark:text-white animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
                 {t.landing.features.title}
               </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '300ms', animationDuration: '800ms' }}>
+              <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '300ms', animationDuration: '800ms' }}>
                 {t.landing.features.subtitle}
               </p>
             </div>
@@ -347,8 +347,8 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section 
-          id="how-it-works" 
+        <section
+          id="how-it-works"
           className="py-20 sm:py-22 md:py-22 relative overflow-hidden"
           aria-label={t.landing.howItWorks.title || "Qanday ishlaydi"}
         >
@@ -393,8 +393,8 @@ export default function LandingPage() {
         </section>
 
         {/* Benefits Section */}
-        <section 
-          id="benefits" 
+        <section
+          id="benefits"
           className="py-20 sm:py-24 md:py-29 bg-gradient-to-br from-blue-500/95 via-indigo-600/95 to-purple-600/95 dark:from-blue-600/90 dark:via-indigo-700/90 dark:to-purple-600/90 relative overflow-hidden"
           aria-label={t.landing.benefits.title || "Afzalliklar"}
         >
@@ -435,7 +435,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section 
+        <section
           id="stats"
           className="py-20 sm:py-24 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.stats.title || "Statistika"}
@@ -488,8 +488,8 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section 
-          id="faq" 
+        <section
+          id="faq"
           className="py-20 sm:py-24 md:py-22 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl"
           aria-label={t.landing.faq.title || "Tez-tez so'raladigan savollar"}
         >
@@ -531,7 +531,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section 
+        <section
           className="relative py-20 sm:py-24 md:py-22 overflow-hidden"
           aria-label={t.landing.cta.title || "Boshlash"}
         >
@@ -550,8 +550,8 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '600ms', animationDuration: '600ms' }}>
                 {isLoggedIn ? (
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     asChild
                     className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
@@ -562,8 +562,8 @@ export default function LandingPage() {
                   </Button>
                 ) : (
                   <>
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       asChild
                       variant="outline"
                       className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -573,8 +573,8 @@ export default function LandingPage() {
                         {t.common.login}
                       </Link>
                     </Button>
-                    <Button 
-                      size="lg" 
+                    <Button
+                      size="lg"
                       asChild
                       className="text-lg px-10 py-7 h-auto bg-white/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 shadow-lg hover:shadow-xl transition-all duration-300"
                     >
@@ -586,7 +586,7 @@ export default function LandingPage() {
                   </>
                 )}
               </div>
-              
+
               {/* Contact Info */}
               <div className="pt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-white/80">
                 <a href="tel:+998770108060" className="flex items-center gap-2 hover:text-white transition-colors duration-300">

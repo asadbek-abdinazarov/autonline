@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { buildApiUrl } from "@/lib/api-utils"
+import { loadImageWithCache } from "@/lib/image-loader"
 
 interface NewsItem {
   newsId: number
@@ -30,28 +31,8 @@ export function NewsCard({ news }: NewsCardProps) {
       }
 
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-        const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(news.newsPhoto)}`)
-        
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        }
-        
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers,
-        })
-
-        if (!response.ok) {
-          throw new Error(`Failed to load image: ${response.status}`)
-        }
-
-        const blob = await response.blob()
-        const blobUrl = URL.createObjectURL(blob)
+        // Use centralized image loader with ETag and cache support
+        const blobUrl = await loadImageWithCache(news.newsPhoto)
         setImageUrl(blobUrl)
       } catch (error) {
         console.error('Error loading news image:', error)

@@ -1,4 +1,4 @@
-export type SubscriptionType = 'BASIC' | 'PRO' | 'FULL' | 'FREE' | 'STUDENT_BASIC' | 'STUDENT_PRO' | 'STUDENT_FULL'
+export type SubscriptionType = 'BASIC' | 'PRO' | 'FULL' | 'FREE' | 'STUDENT_BASIC' | 'STUDENT_PRO' | 'STUDENT_FULL' | 'BASIC_TEACHER' | 'PRO_TEACHER' | 'FULL_TEACHER'
 
 export type Permission =
   | 'VIEW_PAYMENTS'
@@ -8,6 +8,7 @@ export type Permission =
   | 'VIEW_NEWS'
   | 'VIEW_TEST_HISTORY'
   | 'VIEW_TRAFFIC_SIGNS'
+  | 'VIEW_ALL_MY_STUDENTS'
 
 export interface User {
   id: number
@@ -314,12 +315,114 @@ export function setCurrentUser(user: User | null): void {
   }
 }
 
+/**
+ * Fetches current user data from /api/v1/users/me endpoint
+ * Updates localStorage with the fetched data
+ * Prevents duplicate concurrent requests
+ * @returns User object or null if fetch fails
+ */
+export async function fetchCurrentUser(): Promise<User | null> {
+  // If a fetch is already in progress, return the existing promise
+  if (isFetchingUser && fetchUserPromise) {
+    return fetchUserPromise
+  }
+
+  // Check if we have an access token
+  const accessToken = getAccessToken()
+  if (!accessToken) {
+    return null
+  }
+
+  // Set flag and create promise
+  isFetchingUser = true
+  fetchUserPromise = (async () => {
+    try {
+      const { buildApiUrl, getDefaultHeaders, safeJsonParse, handleApiError } = await import('./api-utils')
+      
+      const headers: Record<string, string> = {
+        ...getDefaultHeaders(),
+        'Authorization': `Bearer ${accessToken}`,
+      }
+
+      const response = await fetch(buildApiUrl('/api/v1/users/me'), {
+        method: 'GET',
+        headers,
+      })
+
+      if (!response.ok) {
+        // Handle 401 errors (unauthorized)
+        if (response.status === 401) {
+          await handleApiError({ status: 401 })
+          return null
+        }
+
+        // Handle 429 errors (too many requests)
+        if (response.status === 429) {
+          await handleApiError({ status: 429 })
+          return null
+        }
+
+        // For other errors, just return null without throwing
+        return null
+      }
+
+      const data = await safeJsonParse<{
+        id: number
+        username: string
+        fullName: string
+        phoneNumber: string
+        subscription: string
+        isActive: boolean
+        nextPaymentDate: string | null
+        roles: string[]
+        permissions: string[]
+      }>(response)
+
+      if (!data) {
+        return null
+      }
+
+      // Map API response to User interface
+      const user: User = {
+        id: data.id,
+        username: data.username,
+        phoneNumber: data.phoneNumber,
+        isActive: data.isActive,
+        subscription: (data.subscription as SubscriptionType) ?? 'FREE',
+        roles: Array.isArray(data.roles) ? data.roles : [],
+        permissions: Array.isArray(data.permissions) ? (data.permissions as Permission[]) : [],
+        fullName: data.fullName,
+        nextPaymentDate: data.nextPaymentDate ?? undefined,
+      }
+
+      // Update localStorage
+      setCurrentUser(user)
+
+      return user
+    } catch (error) {
+      // Handle errors gracefully - don't throw, just return null
+      console.error('Error fetching current user:', error)
+      return null
+    } finally {
+      // Reset flags after fetch completes
+      isFetchingUser = false
+      fetchUserPromise = null
+    }
+  })()
+
+  return fetchUserPromise
+}
+
 export function getAccessToken(): string | null {
   if (typeof window !== "undefined") {
     return localStorage.getItem("accessToken")
   }
   return null
 }
+
+// Track if fetchCurrentUser is in progress to prevent duplicate requests
+let isFetchingUser = false
+let fetchUserPromise: Promise<User | null> | null = null
 
 export function setAccessToken(token: string): void {
   if (typeof window !== "undefined") {

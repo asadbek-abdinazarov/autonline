@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users } from "lucide-react"
-import { getCurrentUser, logout, setCurrentUser, type Permission } from "@/lib/auth"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users, Signpost } from "lucide-react"
+import { getCurrentUser, logout, setCurrentUser, fetchCurrentUser, type Permission } from "@/lib/auth"
 import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { useTheme } from "next-themes"
@@ -157,6 +157,13 @@ export function UserMenu() {
   }
 
   const handleDropdownOpen = () => {
+    // Fetch user data when menu opens
+    const currentUser = getCurrentUser()
+    if (currentUser) {
+      fetchCurrentUser().catch(() => {
+        // Silently handle errors - user data will remain from localStorage
+      })
+    }
     if (!hasLoadedPaymentHistory && hasPermission('VIEW_PAYMENTS')) {
       fetchPaymentHistory()
       setHasLoadedPaymentHistory(true)
@@ -170,6 +177,10 @@ export function UserMenu() {
 
   const handleStudentsClick = useCallback(() => {
     router.push("/students")
+  }, [router])
+
+  const handleTrafficSignsClick = useCallback(() => {
+    router.push("/traffic-signs")
   }, [router])
 
   const handleLanguageChange = useCallback((lang: Language) => {
@@ -303,6 +314,12 @@ export function UserMenu() {
                             return { label: 'Professional Talaba', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                           case 'STUDENT_FULL':
                             return { label: 'To‘liq Talaba', Icon: Star, classes: 'from-amber-500 to-orange-500 text-white' }
+                          case 'BASIC_TEACHER':
+                            return { label: 'Asosiy O\'qituvchi', Icon: Users, classes: 'from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50' }
+                          case 'PRO_TEACHER':
+                            return { label: 'Professional O\'qituvchi', Icon: Users, classes: 'from-purple-500 to-indigo-500 text-white border-2 border-purple-400/50' }
+                          case 'FULL_TEACHER':
+                            return { label: 'To\'liq O\'qituvchi', Icon: Users, classes: 'from-rose-500 to-pink-500 text-white border-2 border-rose-400/50' }
                         default:
                           return { label: 'Tekin obuna', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                       }
@@ -453,7 +470,7 @@ export function UserMenu() {
           </>
         )}
 
-{hasTeacherRole() && (
+{(hasTeacherRole() || hasPermission('VIEW_ALL_MY_STUDENTS')) && (
               <DropdownMenuItem 
                 onClick={handleStudentsClick}
                 className="cursor-pointer"
@@ -473,6 +490,16 @@ export function UserMenu() {
                 <DropdownMenuSeparator />
               </DropdownMenuItem>
             )}
+
+            {/* {hasPermission('VIEW_TRAFFIC_SIGNS') && (
+              <DropdownMenuItem 
+                onClick={handleTrafficSignsClick}
+                className="cursor-pointer"
+              >
+                <Signpost className="mr-2 h-4 w-4" />
+                {(t as any).userMenu?.trafficSigns || (t as any).trafficSignsButton || "Yo'l harakati belgilari"}
+              </DropdownMenuItem>
+            )} */}
 
 
 

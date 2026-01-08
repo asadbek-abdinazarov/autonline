@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { NotificationProvider } from '@/components/notification-provider'
 import { TranslationProvider } from '@/hooks/use-translation'
@@ -9,6 +8,8 @@ import { UserBlockListener } from '@/components/user-block-listener'
 import { ErrorProvider } from '@/components/error-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { VercelAnalytics } from '@/components/vercel-analytics'
+import { UserDataRefresher } from '@/components/user-data-refresher'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -42,11 +43,12 @@ export default function RootLayout({
               {children}
               <Toaster position="top-right" richColors />
               <UserBlockListener />
+              <UserDataRefresher />
             </NotificationProvider>
             </ErrorProvider>
             </TranslationProvider>
           </ThemeProvider>
-          <Analytics />
+          <VercelAnalytics />
         </ErrorBoundary>
       </body>
     </html>

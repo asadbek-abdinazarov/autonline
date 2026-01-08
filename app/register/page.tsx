@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react"
 import { register as registerApi, setCurrentUser } from "@/lib/auth"
 import { useTranslation } from "@/hooks/use-translation"
+import { formatPhoneNumber, getPhoneCursorPosition } from "@/lib/utils"
 
 export default function RegisterPage() {
   const { t } = useTranslation()
@@ -21,7 +22,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [phone, setPhone] = useState("")
+  const [phone, setPhone] = useState("+998 ")
   const [phoneError, setPhoneError] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -73,22 +74,62 @@ export default function RegisterPage() {
   }
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setPhone(value)
+    const input = e.target
+    const inputValue = input.value
+    const cursorPos = input.selectionStart || 0
+    const newValue = formatPhoneNumber(inputValue)
+    
+    // Calculate new cursor position before updating state
+    const newCursorPos = getPhoneCursorPosition(inputValue, newValue, cursorPos)
+    
+    // Update state with formatted value
+    setPhone(newValue)
     
     // Clear error when user starts typing
     if (phoneError) {
       setPhoneError("")
     }
     
-    // Real-time validation (optional - can be removed if too strict)
-    if (value.trim().length > 0) {
-      const validation = validateAndNormalizePhone(value)
+    // Preserve cursor position using requestAnimationFrame for better reliability
+    requestAnimationFrame(() => {
+      const inputElement = document.getElementById('phone') as HTMLInputElement
+      if (inputElement) {
+        inputElement.setSelectionRange(newCursorPos, newCursorPos)
+      }
+    })
+    
+    // Real-time validation
+    if (newValue.trim().length > 5) { // More than just "+998 "
+      const validation = validateAndNormalizePhone(newValue)
       if (!validation.isValid) {
         setPhoneError(validation.error)
       } else {
         setPhoneError("")
       }
+    }
+  }
+
+  const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // If input is empty, set to +998
+    if (!phone || phone.trim() === '') {
+      setPhone('+998 ')
+    }
+  }
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget
+    const cursorPos = input.selectionStart || 0
+    
+    // Prevent deleting +998 prefix
+    if (e.key === 'Backspace' && cursorPos <= 5) {
+      e.preventDefault()
+      return
+    }
+    
+    // Prevent cursor from being placed before +998
+    if (cursorPos < 5 && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
+      e.preventDefault()
+      input.setSelectionRange(5, 5)
     }
   }
 
@@ -231,9 +272,11 @@ export default function RegisterPage() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder={t.register.phonePlaceholder}
+                  placeholder="+998 90 123 45 67"
                   value={phone}
                   onChange={handlePhoneChange}
+                  onFocus={handlePhoneFocus}
+                  onKeyDown={handlePhoneKeyDown}
                   required
                   disabled={isLoading || isSuccess}
                   className={phoneError ? 'border-red-500 focus-visible:ring-red-500' : ''}

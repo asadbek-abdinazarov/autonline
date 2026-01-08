@@ -13,6 +13,7 @@ import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { getCurrentUser } from "@/lib/auth"
 import { useStudents } from "@/hooks/use-students"
 import { useNotification } from "@/components/notification-provider"
+import { formatPhoneNumber, getPhoneCursorPosition } from "@/lib/utils"
 import {
   Pagination,
   PaginationContent,
@@ -88,7 +89,7 @@ export function StudentsClient() {
     username: "",
     password: "",
     confirmPassword: "",
-    phoneNumber: "",
+    phoneNumber: "+998 ",
     nextPaymentDate: "",
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -266,6 +267,11 @@ export function StudentsClient() {
     
     const name = subscription.name || ''
 
+    // Teacher-specific subscription types
+    if (name === 'BASIC_TEACHER') return t.students.subscriptionTeacherBasic || "Asosiy O'qituvchi"
+    if (name === 'PRO_TEACHER') return t.students.subscriptionTeacherPro || "Professional O'qituvchi"
+    if (name === 'FULL_TEACHER') return t.students.subscriptionTeacherFull || "To'liq O'qituvchi"
+
     // Student-specific subscription types
     if (name === 'STUDENT_BASIC') return t.students.subscriptionStudentBasic || "Asosiy Talaba"
     if (name === 'STUDENT_PRO') return t.students.subscriptionStudentPro || "Professional Talaba"
@@ -286,6 +292,17 @@ export function StudentsClient() {
     }
 
     const name = subscription.name || ''
+
+    // O'qituvchi obunalari – alohida ranglar va border bilan
+    if (name === 'BASIC_TEACHER') {
+      return "bg-emerald-500 text-white border-2 border-emerald-400"
+    }
+    if (name === 'PRO_TEACHER') {
+      return "bg-purple-500 text-white border-2 border-purple-400"
+    }
+    if (name === 'FULL_TEACHER') {
+      return "bg-rose-500 text-white border-2 border-rose-400"
+    }
 
     // To'liq/yillik obunalar – yorqin yashil
     if (name === 'FULL' || name === 'STUDENT_FULL') {
@@ -484,6 +501,66 @@ export function StudentsClient() {
     }
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target
+    const inputValue = input.value
+    const cursorPos = input.selectionStart || 0
+    const newValue = formatPhoneNumber(inputValue)
+    
+    // Calculate new cursor position before updating state
+    const newCursorPos = getPhoneCursorPosition(inputValue, newValue, cursorPos)
+    
+    // Update state with formatted value
+    setFormData({ ...formData, phoneNumber: newValue })
+    
+    // Clear error when user starts typing
+    if (phoneError) {
+      setPhoneError("")
+    }
+    
+    // Preserve cursor position using requestAnimationFrame for better reliability
+    requestAnimationFrame(() => {
+      const inputElement = document.getElementById('phoneNumber') as HTMLInputElement
+      if (inputElement) {
+        inputElement.setSelectionRange(newCursorPos, newCursorPos)
+      }
+    })
+    
+    // Real-time validation
+    if (newValue.trim().length > 5) { // More than just "+998 "
+      const validation = validateAndNormalizePhone(newValue)
+      if (!validation.isValid) {
+        setPhoneError(validation.error)
+      } else {
+        setPhoneError("")
+      }
+    }
+  }
+
+  const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // If input is empty, set to +998
+    if (!formData.phoneNumber || formData.phoneNumber.trim() === '') {
+      setFormData({ ...formData, phoneNumber: '+998 ' })
+    }
+  }
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget
+    const cursorPos = input.selectionStart || 0
+    
+    // Prevent deleting +998 prefix
+    if (e.key === 'Backspace' && cursorPos <= 5) {
+      e.preventDefault()
+      return
+    }
+    
+    // Prevent cursor from being placed before +998
+    if (cursorPos < 5 && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
+      e.preventDefault()
+      input.setSelectionRange(5, 5)
+    }
+  }
+
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault()
     setAddError("")
@@ -587,7 +664,7 @@ export function StudentsClient() {
         username: "",
         password: "",
         confirmPassword: "",
-        phoneNumber: "",
+        phoneNumber: "+998 ",
         nextPaymentDate: "",
       })
       setAddError("")
@@ -968,7 +1045,7 @@ export function StudentsClient() {
                           username: "",
                           password: "",
                           confirmPassword: "",
-                          phoneNumber: "",
+                          phoneNumber: "+998 ",
                           nextPaymentDate: "",
                         })
                         setAddError("")
@@ -1031,12 +1108,11 @@ export function StudentsClient() {
                           <Input
                             id="phoneNumber"
                             type="tel"
-                            placeholder={t.register.phonePlaceholder}
+                            placeholder="+998 90 123 45 67"
                             value={formData.phoneNumber}
-                            onChange={(e) => {
-                              setFormData({ ...formData, phoneNumber: e.target.value })
-                              if (phoneError) setPhoneError("")
-                            }}
+                            onChange={handlePhoneChange}
+                            onFocus={handlePhoneFocus}
+                            onKeyDown={handlePhoneKeyDown}
                             required
                             disabled={isAdding}
                             className={phoneError ? 'border-red-500 focus-visible:ring-red-500' : ''}

@@ -24,16 +24,13 @@ export function setGlobalErrorHandler(showError: (message: string) => void) {
   globalShowError = showError
 }
 
-// Centralized API base URL helpers
+// Import centralized API configuration
+import { getApiBaseUrl as getApiBaseUrlFromConfig } from './api-config'
+
+// Re-export for backward compatibility
 export function getApiBaseUrl(): string {
-  // Prefer public env for client-side availability
-  const fromEnv =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.API_BASE_URL
-
-  return (fromEnv && fromEnv.trim().length > 0) ? fromEnv : 'http://localhost:8080'
+  return getApiBaseUrlFromConfig()
 }
-
 export function buildApiUrl(path: string): string {
   const base = getApiBaseUrl().replace(/\/+$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -95,6 +92,7 @@ export async function safeJsonParse<T>(response: Response | null): Promise<T | n
     }
     
     // Try to parse JSON
+
     try {
       return JSON.parse(text) as T
     } catch (parseError) {

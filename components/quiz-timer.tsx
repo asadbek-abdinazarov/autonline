@@ -1,100 +1,68 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { Clock } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
 
 interface QuizTimerProps {
   totalSeconds: number
   onTimeUp: () => void
   isPaused?: boolean
+  minimal?: boolean
 }
 
-export function QuizTimer({ totalSeconds, onTimeUp, isPaused = false }: QuizTimerProps) {
-  const [secondsLeft, setSecondsLeft] = useState(totalSeconds)
-  const hasCalledTimeUp = useRef(false)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const isPausedRef = useRef(isPaused)
+export function QuizTimer({ totalSeconds, onTimeUp, isPaused = false, minimal = false }: QuizTimerProps) {
+  const [remainingSeconds, setRemainingSeconds] = useState(totalSeconds)
 
-  // Keep ref in sync with prop
   useEffect(() => {
-    isPausedRef.current = isPaused
-  }, [isPaused])
-
-  // Reset timer when totalSeconds changes
-  useEffect(() => {
-    setSecondsLeft(totalSeconds)
-    hasCalledTimeUp.current = false
-    // Clear and restart interval when totalSeconds changes
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
+    setRemainingSeconds(totalSeconds)
   }, [totalSeconds])
 
   useEffect(() => {
-    if (secondsLeft === 0 && !hasCalledTimeUp.current) {
-      hasCalledTimeUp.current = true
-      onTimeUp()
-    }
-  }, [secondsLeft, onTimeUp])
+    if (isPaused || remainingSeconds <= 0) return
 
-  // Timer interval effect - only depends on isPaused
-  useEffect(() => {
-    // Clear any existing interval first
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-
-    // Don't start timer if paused
-    if (isPaused) {
-      return
-    }
-
-    // Start the interval
-    intervalRef.current = setInterval(() => {
-      // Check pause state from ref to avoid dependency issues
-      if (isPausedRef.current) {
-        return
-      }
-
-      setSecondsLeft((prev) => {
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
         if (prev <= 1) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-          }
+          clearInterval(interval)
+          onTimeUp()
           return 0
         }
         return prev - 1
       })
     }, 1000)
 
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [isPaused])
+    return () => clearInterval(interval)
+  }, [isPaused, remainingSeconds, onTimeUp])
 
-  const minutes = Math.floor(secondsLeft / 60)
-  const seconds = secondsLeft % 60
-  const progress = (secondsLeft / totalSeconds) * 100
+  const minutes = Math.floor(remainingSeconds / 60)
+  const seconds = remainingSeconds % 60
+
+  const isLowTime = remainingSeconds < 60
+  const isCriticalTime = remainingSeconds < 30
+
+  if (minimal) {
+    return (
+      <span
+        className={cn(
+          "font-mono text-sm font-semibold tabular-nums",
+          isCriticalTime && "text-error animate-pulse",
+          isLowTime && !isCriticalTime && "text-warning",
+        )}
+      >
+        {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+      </span>
+    )
+  }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
-          <span className="font-semibold">
-            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-          </span>
-        </div>
-        <span className="text-sm text-muted-foreground">{Math.ceil(secondsLeft / 60)} daqiqa qoldi</span>
-      </div>
-      <Progress value={progress} className="h-2" />
+    <div
+      className={cn(
+        "text-2xl font-bold font-mono tabular-nums",
+        isCriticalTime && "text-error animate-pulse",
+        isLowTime && !isCriticalTime && "text-warning",
+      )}
+    >
+      {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
     </div>
   )
 }

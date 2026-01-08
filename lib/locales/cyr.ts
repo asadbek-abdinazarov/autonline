@@ -224,14 +224,15 @@ export const cyr = {
       viewAll: "Барчасини кўриш",
       showLess: "Камрок кўрсатиш",
     },
-    specialFeatures: {
-      title: "Махсус Имкониятлар",
-      description: "Платформамизнинг эксклюзив функционаллари",
-      randomQuizButton: "Тасодифий тестни бошлаш",
-      trafficSignsButton: "Йўл ҳаракати белгилари",
+    randomQuiz: {
+      title: "Тасодифий тестлар",
+      description: "Тасодифий Тестлар ечиш",
+      randomQuizButton: "Тасодифий тестни бошлаш"
     },
     trafficSigns: {
       title: "Йўл ҳаракати белгилари",
+      description: "Барча йўл ҳаракати белгиларини ўрганинг ва имтиҳонга тайёрлангинг",
+      button: "Йўл ҳаракати белгилари",
       loading: "Юкланмоқда...",
       error: "Маълумотлар юкланмади",
       backToCategories: "Категорияларга қайтиш",
@@ -460,6 +461,7 @@ export const cyr = {
     question: "Савол",
     selectAnswer: "Жавобни танланг:",
     questionImage: "Савол расми",
+    imageLoading: "Расм юкланмоқда...",
     of: "/",
     back: "Орқага",
     backToHome: "Бош саҳифага қайтиш",
@@ -485,6 +487,7 @@ export const cyr = {
     questions: "савол",
     progress: "Жараён",
     score: "Балл",
+    timeRemaining: "Қолган вақт",
   },
 
   // Footer
@@ -526,6 +529,9 @@ export const cyr = {
     subscriptionStudentBasic: "Асосий Талаба",
     subscriptionStudentPro: "Professional Талаба",
     subscriptionStudentFull: "Тўлиқ Талаба",
+    subscriptionTeacherBasic: "Асосий Ўқитувчи",
+    subscriptionTeacherPro: "Professional Ўқитувчи",
+    subscriptionTeacherFull: "Тўлиқ Ўқитувчи",
     showing: "Кўрсатилмоқда: {from}-{to} / {total}",
     deleteConfirmTitle: "Ўқувчини ўчириш",
     deleteConfirmMessage: "Сиз ростдан ҳам {name} ўқувчисини ўчирмоқчимисиз? Бу амални қайтариб бўлмайди.",

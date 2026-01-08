@@ -182,12 +182,12 @@ export default function HomeClient() {
                       <Sparkles className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.specialFeatures.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{t.home.specialFeatures.description}</p>
+                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.randomQuiz.title}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{(t as any).home.randomQuiz?.description || "Barcha yo'l harakati belgilarini o'rganing"}</p>
                     </div>
                   </div>
                   
-                  <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center justify-center">
+                  <div className="pt-4">
                     <Button 
                       asChild 
                       size="lg" 
@@ -195,21 +195,47 @@ export default function HomeClient() {
                     >
                       <Link href="/quiz/random" className="flex items-center gap-3">
                         <Shuffle className="h-5 w-5" />
-                        {t.home.specialFeatures.randomQuizButton}
+                        {t.home.randomQuiz.randomQuizButton}
                       </Link>
                     </Button>
-                    {canViewTrafficSigns && (
-                      <Button 
-                        asChild
-                        size="lg" 
-                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
-                      >
-                        <Link href="/traffic-signs" className="flex items-center gap-3">
-                          <Signpost className="h-5 w-5" />
-                          {t.home.specialFeatures.trafficSignsButton}
-                        </Link>
-                      </Button>
-                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Traffic Signs Section */}
+          {canViewTrafficSigns && (
+            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 dark:from-green-500/10 dark:via-emerald-500/10 dark:to-teal-500/10 border border-green-500/20 dark:border-green-500/20 p-8 sm:p-12 backdrop-blur-xl">
+                {/* Background decoration */}
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/20 dark:bg-green-500/20 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/20 dark:bg-teal-500/20 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="max-w-4xl mx-auto text-center space-y-6">
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                      <Signpost className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.trafficSigns.title}</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{t.home.trafficSigns.description}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
+                    >
+                      <Link href="/traffic-signs" className="flex items-center gap-3">
+                        <Signpost className="h-5 w-5" />
+                        {t.home.trafficSigns.button}
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>

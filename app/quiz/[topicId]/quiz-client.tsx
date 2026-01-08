@@ -4,17 +4,24 @@ import { useEffect, useState, useRef, useMemo, startTransition } from "react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser, type Permission } from "@/lib/auth"
 import { Header } from "@/components/header"
-import { fetchQuestionsByLessonId, submitLessonHistory, type QuestionApiResponse, type QuestionData, getLocalizedLessonName, clearLessonCache } from "@/lib/data"
+import {
+  fetchQuestionsByLessonId,
+  submitLessonHistory,
+  type QuestionApiResponse,
+  type QuestionData,
+  clearLessonCache,
+} from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, History } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, History, Menu, Clock, ListChecks, Target } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useTranslation } from "@/hooks/use-translation"
-import { buildApiUrl } from "@/lib/api-utils"
+import { loadImageWithCache } from "@/lib/image-loader"
 
 interface UserAnswer {
   selectedAnswer: number
@@ -30,7 +37,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const router = useRouter()
   const user = getCurrentUser()
   const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
-  const canViewHistory = hasPermission('VIEW_TEST_HISTORY')
+  const canViewHistory = hasPermission("VIEW_TEST_HISTORY")
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -41,20 +48,20 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [isAnswered, setIsAnswered] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
-  
+
   // Keep refs in sync with state
   useEffect(() => {
     userAnswersRef.current = userAnswers
   }, [userAnswers])
-  
+
   useEffect(() => {
     answeredQuestionsRef.current = answeredQuestions
   }, [answeredQuestions])
-  
+
   useEffect(() => {
     currentQuestionIndexRef.current = currentQuestionIndex
   }, [currentQuestionIndex])
-  
+
   useEffect(() => {
     scoreRef.current = score
   }, [score])
@@ -62,6 +69,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
+  const [isImageLoading, setIsImageLoading] = useState(false)
   const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
   const hasFetchedRef = useRef<string | null>(null)
   const hasSubmittedHistoryRef = useRef(false)
@@ -72,23 +80,17 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const scoreRef = useRef<number>(0)
 
   // Map header language to question language
-  // Header: uz (lotincha) -> API: uz (lotincha)
-  // Header: cyr (kirilcha) -> API: oz (kirilcha)  
-  // Header: ru (ruscha) -> API: ru (ruscha)
   const selectedLanguage = useMemo(() => {
-    // Force check: ensure we're using the correct mapping
-    let result: 'oz' | 'uz' | 'ru'
-    if (language === 'uz') {
-      result = 'uz' // Lotincha o'zbekcha - API da uz key
-    } else if (language === 'cyr') {
-      result = 'oz' // Kirilcha o'zbekcha - API da oz key
-    } else if (language === 'ru') {
-      result = 'ru' // Ruscha - API da ru key
+    let result: "oz" | "uz" | "ru"
+    if (language === "uz") {
+      result = "uz"
+    } else if (language === "cyr") {
+      result = "oz"
+    } else if (language === "ru") {
+      result = "ru"
     } else {
-      // Default to lotincha o'zbekcha
-      result = 'uz'
+      result = "uz"
     }
-    
     return result
   }, [language])
 
@@ -104,16 +106,13 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       return
     }
 
-    // Check if language has changed
     const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
-    
-    // If language changed, clear cache and reset fetch ref to force new fetch
+
     if (languageChanged) {
       clearLessonCache(topicId)
       hasFetchedRef.current = null
       previousLanguageRef.current = language
     } else {
-      // Prevent duplicate requests for the same topicId and language
       if (hasFetchedRef.current === topicId && !languageChanged) {
         return
       }
@@ -122,50 +121,43 @@ export default function QuizClient({ topicId }: QuizClientProps) {
 
     hasFetchedRef.current = topicId
 
-    // Fetch lesson data (force refresh if language changed)
     const fetchData = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        
-        // Save current userAnswers before refetching (to preserve user's answers when language changes)
-        // Use refs to get the latest values without causing dependency issues
+
         const savedUserAnswers = languageChanged ? new Map(userAnswersRef.current) : new Map()
         const savedAnsweredQuestions = languageChanged ? new Map(answeredQuestionsRef.current) : new Map()
         const savedCurrentIndex = languageChanged ? currentQuestionIndexRef.current : 0
         const savedScore = languageChanged ? scoreRef.current : 0
-        
-        // Force refresh if language changed, otherwise use cache
-        const data = await fetchQuestionsByLessonId(topicId, { 
+
+        const data = await fetchQuestionsByLessonId(topicId, {
           useCache: !languageChanged,
-          forceRefresh: languageChanged 
+          forceRefresh: languageChanged,
         })
-        
-        // Use startTransition to batch state updates
+
         startTransition(() => {
           setLessonData(data)
           setQuestions(data.questions)
-          
-          // Restore userAnswers if language changed (preserve user's progress)
+
           if (languageChanged) {
             setUserAnswers(savedUserAnswers)
             setAnsweredQuestions(savedAnsweredQuestions)
             setCurrentQuestionIndex(savedCurrentIndex)
             setScore(savedScore)
-            // Update isAnswered state based on current question
             const currentAnswer = savedUserAnswers.get(savedCurrentIndex)
             setIsAnswered(!!currentAnswer)
           }
-          
+
           setIsLoading(false)
         })
       } catch (err) {
-        console.error('Error fetching lesson data:', err)
+        console.error("Error fetching lesson data:", err)
         startTransition(() => {
           setError(err instanceof Error ? err.message : t.quiz.notFound)
           setIsLoading(false)
         })
-        hasFetchedRef.current = null // Reset on error to allow retry
+        hasFetchedRef.current = null
       }
     }
 
@@ -182,28 +174,26 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }, [currentQuestionIndex, userAnswers])
 
-  // Load image when question changes
   useEffect(() => {
     const loadCurrentImage = async () => {
       const currentQuestion = questions[currentQuestionIndex]
       if (currentQuestion?.photo) {
+        setIsImageLoading(true)
         const imageUrl = await loadImageUrl(currentQuestion.photo)
         setCurrentImageSrc(imageUrl)
+        setIsImageLoading(false)
       } else {
         setCurrentImageSrc("")
+        setIsImageLoading(false)
       }
     }
 
     if (questions.length > 0) {
       loadCurrentImage()
     }
-
-    // Don't revoke blob URLs in cleanup - they're cached and should persist
-    // Only revoke when component unmounts (handled in separate effect)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, questions])
 
-  // Clear auto-skip timeout when component unmounts or question changes
   useEffect(() => {
     return () => {
       if (autoSkipTimeout) {
@@ -212,11 +202,10 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }, [autoSkipTimeout])
 
-  // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
       imageUrlCache.forEach((url) => {
-        if (url.startsWith('blob:')) {
+        if (url.startsWith("blob:")) {
           URL.revokeObjectURL(url)
         }
       })
@@ -224,13 +213,12 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Submit lesson history when results are shown
   useEffect(() => {
     if (showResults && lessonData && lessonData.lessonId && questions.length > 0 && !hasSubmittedHistoryRef.current) {
       const percentage = Math.round((score / questions.length) * 100)
       const correctAnswersCount = score
       const notCorrectAnswersCount = questions.length - score
-      
+
       submitLessonHistory({
         lessonId: Number(lessonData.lessonId),
         percentage,
@@ -238,7 +226,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         correctAnswersCount,
         notCorrectAnswersCount,
       })
-      
+
       hasSubmittedHistoryRef.current = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,9 +259,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
             <CardContent className="py-8 text-center">
               <p className="text-lg text-muted-foreground mb-4">{error}</p>
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => window.location.reload()}>
-                  {t.common.retry}
-                </Button>
+                <Button onClick={() => window.location.reload()}>{t.common.retry}</Button>
                 <Button variant="outline" asChild>
                   <Link href="/home">{t.quiz.backToHome}</Link>
                 </Button>
@@ -303,96 +289,22 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     )
   }
 
-  // Function to validate if a blob URL is still valid
-  const isValidBlobUrl = (url: string): Promise<boolean> => {
-    if (!url.startsWith('blob:')) return Promise.resolve(true) // Non-blob URLs are considered valid
-    
-    return new Promise((resolve) => {
-      const img = new Image()
-      let resolved = false
-      
-      img.onload = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(true)
-        }
-      }
-      
-      img.onerror = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }
-      
-      img.src = url
-      // Timeout after 2 seconds if image doesn't load
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }, 2000)
-    })
-  }
-
-  // Function to load image with authentication
   const loadImageUrl = async (photoKey: string): Promise<string> => {
-    // Check cache first and validate the URL
     if (imageUrlCache.has(photoKey)) {
-      const cachedUrl = imageUrlCache.get(photoKey)!
-      
-      // For blob URLs, verify they're still valid
-      if (cachedUrl.startsWith('blob:')) {
-        const isValid = await isValidBlobUrl(cachedUrl)
-        if (isValid) {
-          return cachedUrl
-        } else {
-          // Blob URL is invalid (revoked), remove from cache and reload
-          setImageUrlCache(prev => {
-            const newCache = new Map(prev)
-            newCache.delete(photoKey)
-            return newCache
-          })
-        }
-      } else {
-        // Non-blob URLs are always valid
-        return cachedUrl
-      }
+      return imageUrlCache.get(photoKey)!
     }
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-      const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(photoKey)}`)
-      
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+      const blobUrl = await loadImageWithCache(photoKey)
+
+      if (blobUrl) {
+        setImageUrlCache((prev) => new Map(prev).set(photoKey, blobUrl))
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      
-      // Cache the blob URL
-      setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
-      
       return blobUrl
     } catch (error) {
-      console.error('Error loading image:', error)
-      // Return empty string or a placeholder
-      return ''
+      console.error("Error loading image:", error)
+      return ""
     }
   }
 
@@ -420,20 +332,17 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const handleAnswerSelect = (answerIndex: number) => {
     if (isAnswered) return
 
-    // Clear any existing auto-skip timeout
     if (autoSkipTimeout) {
       clearTimeout(autoSkipTimeout)
     }
 
-    // API da to'g'ri javob isCorrect array'da saqlanadi
-    // isCorrect[index] === true bo'lsa, u javob to'g'ri
     let isCorrect = false
     if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
       isCorrect = currentQuestion.answers.isCorrect[answerIndex] === true
     } else if (currentQuestion.answers.status) {
       isCorrect = answerIndex === currentQuestion.answers.status - 1
     } else {
-      console.warn('[Quiz] No isCorrect array or status field found for question:', currentQuestion.questionId)
+      console.warn("[Quiz] No isCorrect array or status field found for question:", currentQuestion.questionId)
     }
 
     const newUserAnswers = new Map(userAnswers)
@@ -450,7 +359,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       setScore((prev) => prev + 1)
     }
 
-    // Set auto-skip timeout only for the current question
     const timeout = setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex((prev) => prev + 1)
@@ -458,12 +366,11 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         setShowResults(true)
       }
     }, 1500)
-    
+
     setAutoSkipTimeout(timeout)
   }
 
   const handleQuestionClick = (index: number) => {
-    // Clear auto-skip timeout when user manually navigates
     if (autoSkipTimeout) {
       clearTimeout(autoSkipTimeout)
       setAutoSkipTimeout(null)
@@ -482,70 +389,80 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     setIsAnswered(false)
     setShowResults(false)
     setScore(0)
-    hasSubmittedHistoryRef.current = false // Reset so history can be submitted again on retry
+    hasSubmittedHistoryRef.current = false
   }
+
+  const progressPercentage = Math.round((answeredQuestions.size / questions.length) * 100)
+
+  const correctAnswersCount = Array.from(answeredQuestions.values()).filter(Boolean).length
 
   if (showResults) {
     const percentage = Math.round((score / questions.length) * 100)
     const passed = percentage >= 70
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="container mx-auto px-4 py-4 sm:py-8">
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-center text-2xl sm:text-3xl">{t.quiz.results}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="text-center">
-                  <div
-                    className={cn(
-                      "inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full mb-4",
-                      passed ? "bg-success/20" : "bg-error/20",
-                    )}
-                  >
-                    <span className={cn("text-4xl sm:text-5xl font-bold", passed ? "text-success" : "text-error")}>
-                      {percentage}%
-                    </span>
+        <main className="flex-1 container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="max-w-md w-full animate-in fade-in zoom-in-95 duration-500">
+            <Card className="border-none shadow-xl bg-card">
+              <CardContent className="pt-8 pb-8 px-6 space-y-8">
+                <div className="text-center space-y-4">
+                  <div className="relative mx-auto w-32 h-32">
+                    <div
+                      className={cn(
+                        "absolute inset-0 rounded-full opacity-20 animate-pulse",
+                        passed ? "bg-success" : "bg-error",
+                      )}
+                    />
+                    <div
+                      className={cn(
+                        "relative w-full h-full rounded-full border-4 flex items-center justify-center bg-background",
+                        passed ? "border-success text-success" : "border-error text-error",
+                      )}
+                    >
+                      <span className="text-4xl font-bold">{percentage}%</span>
+                    </div>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2">{passed ? t.quiz.congratulations : t.quiz.unfortunately}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {passed ? t.quiz.passedMessage : t.quiz.failedMessage}
-                  </p>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-                  <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.totalQuestions}</p>
-                    <p className="text-xl sm:text-2xl font-bold">{questions.length}</p>
-                  </div>
-                  <div className="p-3 sm:p-4 bg-success/20 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.correctAnswers}</p>
-                    <p className="text-xl sm:text-2xl font-bold text-success">{score}</p>
-                  </div>
-                  <div className="p-3 sm:p-4 bg-error/20 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t.quiz.incorrectAnswers}</p>
-                    <p className="text-xl sm:text-2xl font-bold text-error">{questions.length - score}</p>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold">{passed ? t.quiz.congratulations : t.quiz.unfortunately}</h3>
+                    <p className="text-muted-foreground">{passed ? t.quiz.passedMessage : t.quiz.failedMessage}</p>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <Button variant="outline" className="flex-1 bg-transparent" asChild>
-                    <Link href="/home">{t.quiz.homePage}</Link>
-                  </Button>
-                  {canViewHistory && (
-                    <Button variant="outline" className="flex-1 bg-transparent" asChild>
-                      <Link href="/history" className="flex items-center gap-2 justify-center">
-                        <History className="h-4 w-4" />
-                        {t.history.title || t.userMenu.testHistory}
-                      </Link>
-                    </Button>
-                  )}
-                  <Button className="flex-1" onClick={handleRetry}>
+                <div className="grid grid-cols-3 gap-4 text-center divide-x divide-border">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.totalQuestions}</p>
+                    <p className="text-xl font-bold">{questions.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.correctAnswers}</p>
+                    <p className="text-xl font-bold text-success">{score}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.incorrectAnswers}</p>
+                    <p className="text-xl font-bold text-error">{questions.length - score}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-4">
+                  <Button className="w-full text-lg h-12" onClick={handleRetry}>
                     {t.common.retry}
                   </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="h-11 bg-transparent" asChild>
+                      <Link href="/home">{t.quiz.homePage}</Link>
+                    </Button>
+                    {canViewHistory && (
+                      <Button variant="outline" className="h-11 bg-transparent" asChild>
+                        <Link href="/history">
+                          <History className="h-4 w-4 mr-2" />
+                          {t.history?.title || "Tarix"}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -556,258 +473,319 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-muted/20 flex flex-col overflow-hidden">
       <Header />
 
-      <main className="flex-1">
-        {/* Header Section - Minimal and Clean */}
-        <div className="border-b border-border bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/home" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline text-sm">{t.quiz.back}</span>
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="lg:hidden bg-background border-b px-3 py-2.5 shrink-0 z-30 shadow-sm">
+          <div className="flex items-center gap-2">
+            {/* Menu & Back */}
+            <div className="flex items-center">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[85vw] sm:w-[350px] overflow-y-auto p-0">
+                  <SheetHeader className="p-4 border-b">
+                    <SheetTitle className="text-left">{t.quiz.questionNavigator}</SheetTitle>
+                  </SheetHeader>
+
+                  <div className="p-4 space-y-4">
+                    <div className="bg-muted/50 rounded-xl p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Clock className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            {t.quiz.timeRemaining}
+                          </p>
+                          <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-muted/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <ListChecks className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                        </div>
+                        <p className="text-2xl font-bold">
+                          {answeredQuestions.size}
+                          <span className="text-base text-muted-foreground">/{questions.length}</span>
+                        </p>
+                      </div>
+                      <div className="bg-muted/50 rounded-xl p-3 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <Target className="h-4 w-4 text-success" />
+                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                        </div>
+                        <p className="text-2xl font-bold text-success">{correctAnswersCount}</p>
+                      </div>
+                    </div>
+
+                    {/* Question Navigator */}
+                    <div className="bg-background rounded-xl border p-4">
+                      <QuestionNavigator
+                        totalQuestions={questions.length}
+                        currentQuestion={currentQuestionIndex}
+                        answeredQuestions={answeredQuestions}
+                        onQuestionClick={handleQuestionClick}
+                      />
+                    </div>
+
+                    {/* Back to Home button */}
+                    <Button variant="outline" asChild className="w-full bg-transparent">
+                      <Link href="/home">
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        {t.quiz.backToHome}
+                      </Link>
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+                <Link href="/home">
+                  <ArrowLeft className="h-5 w-5 text-muted-foreground" />
                 </Link>
               </Button>
-              <div className="h-5 w-px bg-border hidden sm:block"></div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{lessonData?.lessonIcon}</span>
-                <span className="text-sm font-medium text-foreground hidden sm:inline">{lessonData ? getLocalizedLessonName(lessonData, language) : ''}</span>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold">
+                  {currentQuestionIndex + 1}/{questions.length}
+                </span>
+                <span className="text-xs text-muted-foreground">{progressPercentage}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-primary/10 text-primary">
-                {selectedLanguage === 'uz' ? "O'Z" : selectedLanguage === 'oz' ? 'УЗ' : 'РУ'}
-              </span>
+
+            <div className="flex items-center gap-1 bg-muted/60 px-2.5 py-1.5 rounded-lg">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} minimal />
             </div>
           </div>
         </div>
 
-        {/* Main Content Grid - Sidebar + Quiz */}
-        <div className="container mx-auto px-4 py-6 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <aside className="lg:col-span-1">
-              <div className="sticky top-24 space-y-4">
-                {/* Timer Card */}
-                <Card className="bg-gradient-to-br from-primary/5 via-primary/0 to-transparent border-primary/20">
-                  <CardContent className="pt-6">
-                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={isAnswered} />
-                  </CardContent>
-                </Card>
+        <div className="flex-1 flex gap-6 lg:p-6 overflow-hidden">
+          <aside className="hidden lg:flex lg:flex-col w-72 xl:w-80 flex-shrink-0 h-full gap-4 pb-4">
+            <Button variant="outline" asChild className="w-full justify-start gap-2 bg-background shrink-0">
+              <Link href="/home">
+                <ArrowLeft className="h-4 w-4" />
+                {t.quiz.backToHome}
+              </Link>
+            </Button>
 
-                {/* Navigator Card */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">{t.quiz.questionNavigator}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <QuestionNavigator
-                      totalQuestions={questions.length}
-                      currentQuestion={currentQuestionIndex}
-                      answeredQuestions={answeredQuestions}
-                      onQuestionClick={handleQuestionClick}
+            <Card className="shrink-0">
+              <CardContent className="p-4 space-y-4">
+                {/* Timer Section */}
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Clock className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
+                      {t.quiz.timeRemaining}
+                    </p>
+                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
+                  </div>
+                </div>
+
+                <div className="h-px bg-border" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <ListChecks className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                    </div>
+                    <p className="text-xl font-bold">
+                      {answeredQuestions.size}
+                      <span className="text-sm text-muted-foreground font-normal">/{questions.length}</span>
+                    </p>
+                  </div>
+                  <div className="bg-success/10 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Target className="h-4 w-4 text-success" />
+                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                    </div>
+                    <p className="text-xl font-bold text-success">{correctAnswersCount}</p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-muted-foreground">{t.quiz.progress}</span>
+                    <span className="font-medium">{progressPercentage}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                      style={{ width: `${progressPercentage}%` }}
                     />
-
-                    {/* Legend */}
-                    <div className="pt-3 border-t border-border space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-success"></div>
-                        <span className="text-muted-foreground">{t.quiz.correctAnswer}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-error"></div>
-                        <span className="text-muted-foreground">{t.quiz.incorrectAnswer}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <div className="w-3 h-3 rounded bg-muted"></div>
-                        <span className="text-muted-foreground">{t.quiz.unanswered}</span>
-                      </div>
-                    </div>
-
-                    {/* Progress Stats */}
-                    <div className="pt-3 border-t border-border">
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.progress}</p>
-                          <p className="text-lg font-bold">{answeredQuestions.size}/{questions.length}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1 font-medium">{t.quiz.score}</p>
-                          <p className="text-lg font-bold text-success">{score}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </aside>
-
-            <section className="lg:col-span-3 max-h-[calc(100vh-200px)] overflow-y-auto">
-              <Card className="shadow-lg border-0">
-                <CardHeader className="pb-6 border-b border-border">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary font-bold">
-                          {currentQuestionIndex + 1}
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl">
-                            {t.quiz.question} {currentQuestionIndex + 1} <span className="text-muted-foreground font-normal">/ {questions.length}</span>
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Feedback Badge */}
-                    {isAnswered && currentUserAnswer && (
-                      <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap",
-                        currentUserAnswer.isCorrect 
-                          ? "bg-success/15 text-success border border-success/30" 
-                          : "bg-error/15 text-error border border-error/30"
-                      )}>
-                        {currentUserAnswer.isCorrect ? (
-                          <>
-                            <CheckCircle2 className="h-4 w-4" />
-                            {t.quiz.correctAnswer}
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-lg">✕</span>
-                            {t.quiz.incorrectAnswer}
-                          </>
-                        )}
-                      </div>
-                    )}
                   </div>
-                </CardHeader>
+                </div>
+              </CardContent>
+            </Card>
 
-                <CardContent className="pt-8 space-y-6">
-                  {/* Question Text */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.question}</p>
-                    <div className="text-center p-6 rounded-lg bg-muted/40 border border-muted/60">
-                      <h3 className="text-2xl font-semibold leading-relaxed text-balance">
-                        {(() => {
-                          const questionText = currentQuestion.questionText[selectedLanguage]
-                          return questionText || currentQuestion.questionText.uz
-                        })()}
-                      </h3>
-                    </div>
-                  </div>
+            <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <CardHeader className="pb-2 pt-4 px-4 shrink-0">
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  {t.quiz.questionNavigator}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 flex-1 overflow-y-auto">
+                <QuestionNavigator
+                  totalQuestions={questions.length}
+                  currentQuestion={currentQuestionIndex}
+                  answeredQuestions={answeredQuestions}
+                  onQuestionClick={handleQuestionClick}
+                />
+              </CardContent>
+            </Card>
+          </aside>
 
-                  {/* Image - if exists */}
-                  {currentQuestion.photo && currentImageSrc && (
-                    <div className="flex justify-center">
-                      <div className="relative group max-w-md w-full">
-                        <img
-                          src={currentImageSrc}
-                          alt={t.quiz.questionImage}
-                          className="w-full h-auto max-h-80 object-contain rounded-lg border border-border shadow-sm cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setCurrentImageUrl(currentImageSrc)
-                            setIsImageModalOpen(true)
-                          }}
-                        />
-                        <div 
-                          className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-lg transition-all duration-300 flex items-center justify-center cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setCurrentImageUrl(currentImageSrc)
-                            setIsImageModalOpen(true)
-                          }}
-                        >
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2">
-                            <ZoomIn className="w-4 h-4 text-primary" />
-                            <span className="text-primary font-medium text-xs">{t.quiz.zoom}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Answer Options */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.quiz.selectAnswer}</p>
-                    <div className="space-y-2">
+          {/* Main Question Area - Scrollable */}
+          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-4 px-4 py-4 lg:py-0">
+            <div className="max-w-3xl mx-auto space-y-4 lg:space-y-6">
+              {/* Question Card */}
+              <div className="bg-card rounded-2xl shadow-sm border p-4 sm:p-6 lg:p-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-4 sm:mb-6 flex justify-between items-start gap-3">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h2 className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider">
+                      {t.quiz.question} {currentQuestionIndex + 1}
+                    </h2>
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold leading-relaxed text-balance">
                       {(() => {
-                        const answerOptions = currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
-                        return answerOptions
-                      })().map((option, index) => {
-                        let isCorrect = false
-                        if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
-                          isCorrect = currentQuestion.answers.isCorrect[index] === true
-                        } else if (currentQuestion.answers.status) {
-                          isCorrect = index === currentQuestion.answers.status - 1
-                        }
-                        const isSelected = currentUserAnswer?.selectedAnswer === index
-                        const showCorrect = isAnswered && isCorrect
-                        const showIncorrect = isAnswered && isSelected && !isCorrect
-
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handleAnswerSelect(index)}
-                            disabled={isAnswered}
-                            className={cn(
-                              "w-full p-4 rounded-lg border-2 transition-all duration-200 text-left",
-                              "hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20",
-                              "transform hover:scale-[1.01] active:scale-[0.99]",
-                              !isAnswered && "bg-card border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer",
-                              !isAnswered && isSelected && "bg-primary/10 border-primary shadow-md",
-                              showCorrect && "bg-success/10 border-success shadow-md",
-                              showIncorrect && "bg-error/10 border-error shadow-md",
-                              isAnswered && !showCorrect && !showIncorrect && "opacity-50 bg-muted/30 border-muted/50 cursor-not-allowed",
-                            )}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={cn(
-                                "flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm flex-shrink-0 mt-0.5",
-                                !isAnswered && "bg-muted text-foreground",
-                                !isAnswered && isSelected && "bg-primary text-primary-foreground",
-                                showCorrect && "bg-success text-white",
-                                showIncorrect && "bg-error text-white",
-                              )}>
-                                {String.fromCharCode(65 + index)}
-                              </div>
-                              <span className={cn(
-                                "flex-1 font-medium leading-relaxed",
-                                !isAnswered && "text-foreground",
-                                (isSelected || showCorrect || showIncorrect) && "font-semibold",
-                                showCorrect && "text-success",
-                                showIncorrect && "text-error",
-                                !isAnswered && isSelected && "text-primary",
-                              )}>
-                                {option}
-                              </span>
-                              {isAnswered && (showCorrect || showIncorrect) && (
-                                <div className="flex-shrink-0 mt-1">
-                                  {showCorrect ? (
-                                    <CheckCircle2 className="w-5 h-5 text-success" />
-                                  ) : (
-                                    <span className="text-error text-lg font-bold">✕</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
+                        const questionText = currentQuestion.questionText[selectedLanguage]
+                        return questionText || currentQuestion.questionText.uz
+                      })()}
+                    </h3>
                   </div>
-                </CardContent>
-              </Card>
-            </section>
-          </div>
+                  {/* Language Badge */}
+                  <span className="shrink-0 px-2 py-1 rounded-md bg-muted text-xs font-medium uppercase">
+                    {selectedLanguage}
+                  </span>
+                </div>
+
+                {currentQuestion.photo && (
+                  <div className="mb-4 sm:mb-6 lg:mb-8 rounded-xl overflow-hidden border bg-muted/20">
+                    {isImageLoading ? (
+                      <div className="w-full h-[250px] sm:h-[350px] lg:h-[400px] flex items-center justify-center bg-muted/30">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <p className="text-sm text-muted-foreground">{t.quiz.imageLoading}</p>
+                        </div>
+                      </div>
+                    ) : currentImageSrc ? (
+                      <div
+                        className="relative group cursor-zoom-in"
+                        onClick={() => {
+                          setCurrentImageUrl(currentImageSrc)
+                          setIsImageModalOpen(true)
+                        }}
+                      >
+                        <img
+                          src={currentImageSrc || "/placeholder.svg"}
+                          alt="Question"
+                          className="w-full h-auto max-h-[250px] sm:max-h-[350px] lg:max-h-[400px] object-contain mx-auto"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                <div className="space-y-2 sm:space-y-3">
+                  {(() => {
+                    const answerOptions =
+                      currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
+                    return answerOptions
+                  })().map((option, index) => {
+                    let isCorrect = false
+                    if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
+                      isCorrect = currentQuestion.answers.isCorrect[index] === true
+                    } else if (currentQuestion.answers.status) {
+                      isCorrect = index === currentQuestion.answers.status - 1
+                    }
+
+                    const isSelected = currentUserAnswer?.selectedAnswer === index
+                    const showResult = isAnswered
+
+                    // Style variants
+                    let buttonStyle = "hover:border-primary/50 hover:bg-muted/30"
+                    let iconStyle = "bg-muted text-muted-foreground"
+
+                    if (showResult) {
+                      if (isCorrect) {
+                        buttonStyle = "border-success bg-success/10 text-success-foreground"
+                        iconStyle = "bg-success text-white"
+                      } else if (isSelected) {
+                        buttonStyle = "border-error bg-error/10 text-error-foreground"
+                        iconStyle = "bg-error text-white"
+                      } else {
+                        buttonStyle = "opacity-50"
+                      }
+                    } else if (isSelected) {
+                      buttonStyle = "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                      iconStyle = "bg-primary text-primary-foreground"
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(index)}
+                        disabled={isAnswered}
+                        className={cn(
+                          "group w-full p-3 sm:p-4 lg:p-5 rounded-xl border-2 text-left transition-all duration-200 flex gap-3 sm:gap-4 items-start select-none",
+                          "active:scale-[0.99]",
+                          buttonStyle,
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 transition-colors mt-0.5",
+                            iconStyle,
+                          )}
+                        >
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span
+                          className={cn(
+                            "text-sm sm:text-base lg:text-lg font-medium leading-relaxed",
+                            showResult && isCorrect && "text-success font-bold",
+                            showResult && isSelected && !isCorrect && "text-error font-bold",
+                          )}
+                        >
+                          {option}
+                        </span>
+
+                        {showResult && isCorrect && (
+                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-success shrink-0 ml-auto" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
 
-      {/* Image Modal */}
       <ImageModal
         isOpen={isImageModalOpen}
         onClose={() => setIsImageModalOpen(false)}

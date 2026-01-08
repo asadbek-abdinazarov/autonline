@@ -224,14 +224,15 @@ export const ru = {
       viewAll: "Посмотреть все",
       showLess: "Показать меньше",
     },
-    specialFeatures: {
-      title: "Специальные возможности",
-      description: "Эксклюзивные функции нашей платформы",
-      randomQuizButton: "Начать случайный тест",
-      trafficSignsButton: "Дорожные знаки",
+    randomQuiz: {
+      title: "Рандомизированные тесты",
+      description: "Случайные тесты решения",
+      randomQuizButton: "Начать случайный тест"
     },
     trafficSigns: {
       title: "Дорожные знаки",
+      description: "Изучите все дорожные знаки и подготовьтесь к экзамену",
+      button: "Дорожные знаки",
       loading: "Загрузка...",
       error: "Данные не загружены",
       backToCategories: "Вернуться к категориям",
@@ -460,6 +461,7 @@ export const ru = {
     question: "Вопрос",
     selectAnswer: "Выберите ответ:",
     questionImage: "Изображение вопроса",
+    imageLoading: "Загрузка изображения...",
     of: "/",
     back: "Назад",
     backToHome: "Вернуться на главную",
@@ -485,6 +487,7 @@ export const ru = {
     questions: "вопрос",
     progress: "Прогресс",
     score: "Балл",
+    timeRemaining: "Оставшееся время",
   },
 
   // Footer
@@ -526,6 +529,9 @@ export const ru = {
     subscriptionStudentBasic: "Главная Студент",
     subscriptionStudentPro: "Профессиональный студент",
     subscriptionStudentFull: "Полный студент",
+    subscriptionTeacherBasic: "Основной Учитель",
+    subscriptionTeacherPro: "Профессиональный Учитель",
+    subscriptionTeacherFull: "Полный Учитель",
     showing: "Показано: {from}-{to} / {total}",
     deleteConfirmTitle: "Удалить ученика",
     deleteConfirmMessage: "Вы действительно хотите удалить ученика {name}? Это действие нельзя отменить.",

@@ -1,42 +1,36 @@
-# Build stage
-FROM node:22-alpine AS builder
+# Use the official Node.js runtime as base image
+FROM node:20-slim
 
+# Install system dependencies including libatomic1
+# Use retry mechanism for network issues on Railway
+RUN set -eux; \
+    for i in 1 2 3; do \
+        apt-get update --fix-missing && \
+        apt-get install -y --no-install-recommends \
+            libatomic1 \
+            ca-certificates && \
+        rm -rf /var/lib/apt/lists/* && \
+        break || sleep 5; \
+    done
+
+# Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* .npmrc* ./
 
-# Install dependencies
+# Install dependencies (including devDependencies for build)
 RUN npm ci
 
-# Copy source code
+# Copy application files
 COPY . .
 
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# Copy necessary files from builder
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
+# Expose port
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+# Start the application
+CMD ["npm", "start"]
 

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { TrafficSignCategoryCard } from "@/components/traffic-sign-category-card"
 import { fetchTrafficSignCategories, fetchTrafficSignsByCategory, type TrafficSignCategory, type TrafficSign } from "@/lib/data"
 import { buildApiUrl } from "@/lib/api-utils"
+import { loadImageWithCache } from "@/lib/image-loader"
 import { Loader2, ArrowLeft, Image as ImageIcon } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 
@@ -24,85 +25,23 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
   const [error, setError] = useState<string | null>(null)
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [imageLoadingStates, setImageLoadingStates] = useState<Map<number, boolean>>(new Map())
+  const hasFetchedCategoriesRef = useRef(false)
 
-  // Validate blob URL
-  const isValidBlobUrl = (url: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      let resolved = false
-      img.onload = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(true)
-        }
-      }
-      img.onerror = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }
-      img.src = url
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }, 2000)
-    })
-  }
-
-  // Load image with authentication
+  // Load image with authentication and cache support
   const loadImageUrl = useCallback(async (photoKey: string): Promise<string> => {
-    // Check cache first and validate the URL
+    // Check cache first
     if (imageUrlCache.has(photoKey)) {
-      const cachedUrl = imageUrlCache.get(photoKey)!
-      
-      // For blob URLs, verify they're still valid
-      if (cachedUrl.startsWith('blob:')) {
-        const isValid = await isValidBlobUrl(cachedUrl)
-        if (isValid) {
-          return cachedUrl
-        } else {
-          // Blob URL is invalid (revoked), remove from cache and reload
-          setImageUrlCache(prev => {
-            const newCache = new Map(prev)
-            newCache.delete(photoKey)
-            return newCache
-          })
-        }
-      } else {
-        // Non-blob URLs are always valid
-        return cachedUrl
-      }
+      return imageUrlCache.get(photoKey)!
     }
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-      const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(photoKey)}`)
+      // Use centralized image loader with ETag and cache support
+      const blobUrl = await loadImageWithCache(photoKey)
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+      if (blobUrl) {
+        // Cache the blob URL in component state
+        setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
       }
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      
-      // Cache the blob URL
-      setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
       
       return blobUrl
     } catch (error) {
@@ -118,8 +57,17 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
       setSelectedCategory(null)
       setSigns([])
       setError(null)
+      hasFetchedCategoriesRef.current = false
       return
     }
+
+    // Prevent duplicate fetches
+    if (hasFetchedCategoriesRef.current) {
+      return
+    }
+
+    // Set ref immediately to prevent concurrent fetches
+    hasFetchedCategoriesRef.current = true
 
     const fetchCategories = async () => {
       try {
@@ -129,13 +77,16 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
         setCategories(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : t.trafficSigns?.error || 'Ma\'lumotlar yuklanmadi')
+        // Reset ref on error so it can retry when dialog reopens
+        hasFetchedCategoriesRef.current = false
       } finally {
         setIsLoadingCategories(false)
       }
     }
 
     fetchCategories()
-  }, [open, t.trafficSigns?.error])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]) // Only depend on 'open' - fetch when dialog opens
 
   // Fetch signs when category is selected
   useEffect(() => {
@@ -321,6 +272,9 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
     </Dialog>
   )
 }
+
+
+
 
 
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { TrafficSignCategoryCard } from "@/components/traffic-sign-category-card"
 import { fetchTrafficSignCategories, fetchTrafficSignsByCategory, type TrafficSignCategory, type TrafficSign } from "@/lib/data"
 import { buildApiUrl } from "@/lib/api-utils"
+import { loadImageWithCache } from "@/lib/image-loader"
 import { Loader2, ArrowLeft, Image as ImageIcon, Signpost } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { Header } from "@/components/header"
@@ -130,33 +131,8 @@ export function TrafficSignsClient() {
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [imageLoadingStates, setImageLoadingStates] = useState<Map<number, boolean>>(new Map())
   const batchUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hasFetchedCategoriesRef = useRef(false)
 
-  // Validate blob URL
-  const isValidBlobUrl = (url: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      let resolved = false
-      img.onload = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(true)
-        }
-      }
-      img.onerror = () => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }
-      img.src = url
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true
-          resolve(false)
-        }
-      }, 2000)
-    })
-  }
 
   // Batch update function to reduce re-renders
   const batchUpdateState = useCallback(() => {
@@ -171,25 +147,11 @@ export function TrafficSignsClient() {
     }, 100) // Batch updates every 100ms
   }, [])
 
-  // Load image with authentication
+  // Load image with authentication and cache support
   const loadImageUrl = useCallback(async (photoKey: string, signId: number): Promise<string> => {
-    // Check cache first and validate the URL
+    // Check cache first
     if (imageUrlCacheRef.current.has(photoKey)) {
-      const cachedUrl = imageUrlCacheRef.current.get(photoKey)!
-      
-      // For blob URLs, verify they're still valid
-      if (cachedUrl.startsWith('blob:')) {
-        const isValid = await isValidBlobUrl(cachedUrl)
-        if (isValid) {
-          return cachedUrl
-        } else {
-          // Blob URL is invalid (revoked), remove from cache and reload
-          imageUrlCacheRef.current.delete(photoKey)
-        }
-      } else {
-        // Non-blob URLs are always valid
-        return cachedUrl
-      }
+      return imageUrlCacheRef.current.get(photoKey)!
     }
 
     // Set loading state
@@ -197,31 +159,14 @@ export function TrafficSignsClient() {
     batchUpdateState()
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-      const url = buildApiUrl(`/api/v1/storage/file?key=${encodeURIComponent(photoKey)}`)
+      // Use centralized image loader with ETag and cache support
+      const blobUrl = await loadImageWithCache(photoKey)
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+      if (blobUrl) {
+        // Update cache in ref (immediate)
+        imageUrlCacheRef.current.set(photoKey, blobUrl)
       }
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      
-      // Update cache in ref (immediate)
-      imageUrlCacheRef.current.set(photoKey, blobUrl)
       imageLoadingStatesRef.current.set(signId, false)
       
       // Batch update state (delayed)
@@ -251,8 +196,16 @@ export function TrafficSignsClient() {
     }
   }, [])
 
-  // Fetch categories on mount
+  // Fetch categories on mount (only once)
   useEffect(() => {
+    // Prevent duplicate fetches
+    if (hasFetchedCategoriesRef.current) {
+      return
+    }
+
+    // Set ref immediately to prevent concurrent fetches
+    hasFetchedCategoriesRef.current = true
+
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true)
@@ -261,13 +214,16 @@ export function TrafficSignsClient() {
         setCategories(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : (t as any).trafficSigns?.error || 'Ma\'lumotlar yuklanmadi')
+        // Reset ref on error so it can retry on remount
+        hasFetchedCategoriesRef.current = false
       } finally {
         setIsLoadingCategories(false)
       }
     }
 
     fetchCategories()
-  }, [t])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array - only fetch on mount
 
   // Fetch signs when category is selected
   useEffect(() => {
