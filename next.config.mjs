@@ -18,6 +18,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone',
   async rewrites() {
     // Use the same default as api-config.ts for consistency
     // Bitta joydan boshqarish uchun - lib/api-config.ts dagi DEFAULT_API_BASE_URL ni o'zgartiring
