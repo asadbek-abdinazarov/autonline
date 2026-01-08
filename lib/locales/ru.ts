@@ -224,14 +224,15 @@ export const ru = {
       viewAll: "Посмотреть все",
       showLess: "Показать меньше",
     },
-    specialFeatures: {
-      title: "Специальные возможности",
-      description: "Эксклюзивные функции нашей платформы",
-      randomQuizButton: "Начать случайный тест",
-      trafficSignsButton: "Дорожные знаки",
+    randomQuiz: {
+      title: "Рандомизированные тесты",
+      description: "Случайные тесты решения",
+      randomQuizButton: "Начать случайный тест"
     },
     trafficSigns: {
       title: "Дорожные знаки",
+      description: "Изучите все дорожные знаки и подготовьтесь к экзамену",
+      button: "Дорожные знаки",
       loading: "Загрузка...",
       error: "Данные не загружены",
       backToCategories: "Вернуться к категориям",

@@ -218,14 +218,14 @@ export function SubscriptionClient() {
               </div>
             </div>
             
-            {isPopular && (
+            {/* {isPopular && (
               <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">
                 <span className="text-xs sm:text-sm">🎁</span>
                 <span className="text-[10px] sm:text-xs font-semibold text-green-700 dark:text-green-400">
-                  Bonus
+                 Super
                 </span>
               </div>
-            )}
+            )} */}
           </CardHeader>
       
           <CardContent className="space-y-3 pb-4 flex-1 flex flex-col px-4 sm:px-6">

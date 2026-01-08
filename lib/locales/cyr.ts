@@ -224,14 +224,15 @@ export const cyr = {
       viewAll: "Барчасини кўриш",
       showLess: "Камрок кўрсатиш",
     },
-    specialFeatures: {
-      title: "Махсус Имкониятлар",
-      description: "Платформамизнинг эксклюзив функционаллари",
-      randomQuizButton: "Тасодифий тестни бошлаш",
-      trafficSignsButton: "Йўл ҳаракати белгилари",
+    randomQuiz: {
+      title: "Тасодифий тестлар",
+      description: "Тасодифий Тестлар ечиш",
+      randomQuizButton: "Тасодифий тестни бошлаш"
     },
     trafficSigns: {
       title: "Йўл ҳаракати белгилари",
+      description: "Барча йўл ҳаракати белгиларини ўрганинг ва имтиҳонга тайёрлангинг",
+      button: "Йўл ҳаракати белгилари",
       loading: "Юкланмоқда...",
       error: "Маълумотлар юкланмади",
       backToCategories: "Категорияларга қайтиш",

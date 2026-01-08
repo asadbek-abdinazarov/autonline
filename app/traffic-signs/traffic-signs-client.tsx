@@ -131,6 +131,7 @@ export function TrafficSignsClient() {
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [imageLoadingStates, setImageLoadingStates] = useState<Map<number, boolean>>(new Map())
   const batchUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hasFetchedCategoriesRef = useRef(false)
 
 
   // Batch update function to reduce re-renders
@@ -195,8 +196,16 @@ export function TrafficSignsClient() {
     }
   }, [])
 
-  // Fetch categories on mount
+  // Fetch categories on mount (only once)
   useEffect(() => {
+    // Prevent duplicate fetches
+    if (hasFetchedCategoriesRef.current) {
+      return
+    }
+
+    // Set ref immediately to prevent concurrent fetches
+    hasFetchedCategoriesRef.current = true
+
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true)
@@ -205,13 +214,16 @@ export function TrafficSignsClient() {
         setCategories(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : (t as any).trafficSigns?.error || 'Ma\'lumotlar yuklanmadi')
+        // Reset ref on error so it can retry on remount
+        hasFetchedCategoriesRef.current = false
       } finally {
         setIsLoadingCategories(false)
       }
     }
 
     fetchCategories()
-  }, [t])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array - only fetch on mount
 
   // Fetch signs when category is selected
   useEffect(() => {

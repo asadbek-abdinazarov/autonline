@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { TrafficSignCategoryCard } from "@/components/traffic-sign-category-card"
@@ -25,6 +25,7 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
   const [error, setError] = useState<string | null>(null)
   const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
   const [imageLoadingStates, setImageLoadingStates] = useState<Map<number, boolean>>(new Map())
+  const hasFetchedCategoriesRef = useRef(false)
 
   // Load image with authentication and cache support
   const loadImageUrl = useCallback(async (photoKey: string): Promise<string> => {
@@ -56,8 +57,17 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
       setSelectedCategory(null)
       setSigns([])
       setError(null)
+      hasFetchedCategoriesRef.current = false
       return
     }
+
+    // Prevent duplicate fetches
+    if (hasFetchedCategoriesRef.current) {
+      return
+    }
+
+    // Set ref immediately to prevent concurrent fetches
+    hasFetchedCategoriesRef.current = true
 
     const fetchCategories = async () => {
       try {
@@ -67,13 +77,16 @@ export function TrafficSignsDialog({ open, onOpenChange }: TrafficSignsDialogPro
         setCategories(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : t.trafficSigns?.error || 'Ma\'lumotlar yuklanmadi')
+        // Reset ref on error so it can retry when dialog reopens
+        hasFetchedCategoriesRef.current = false
       } finally {
         setIsLoadingCategories(false)
       }
     }
 
     fetchCategories()
-  }, [open, t.trafficSigns?.error])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]) // Only depend on 'open' - fetch when dialog opens
 
   // Fetch signs when category is selected
   useEffect(() => {

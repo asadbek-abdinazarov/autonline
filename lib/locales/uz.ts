@@ -224,14 +224,16 @@ export const uz = {
       viewAll: "Barchasini ko'rish",
       showLess: "Kamroq ko'rsatish",
     },
-    specialFeatures: {
-      title: "Mahsus Imkoniyatlar",
-      description: "Platformamizning eksklyuziv funksiyalari",
+    randomQuiz: {
+      title: "Tasodifiy testlar",
+      description: "Tasodifiy Testlar yechish",
       randomQuizButton: "Tasodify testni boshlash",
       trafficSignsButton: "Yo'l harakati belgilari",
     },
     trafficSigns: {
       title: "Yo'l harakati belgilari",
+      description: "Barcha yo'l harakati belgilarini o'rganing va imtihonga tayyorlaning",
+      button: "Yo'l harakati belgilari",
       loading: "Yuklanmoqda...",
       error: "Ma'lumotlar yuklanmadi",
       backToCategories: "Kategoriyalarga qaytish",
