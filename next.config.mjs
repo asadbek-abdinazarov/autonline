@@ -6,6 +6,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const require = createRequire(import.meta.url)
 
+// Use the same default as api-config.ts for consistency
+// Bitta joydan boshqarish uchun - lib/api-config.ts dagi DEFAULT_API_BASE_URL ni o'zgartiring
+const DEFAULT_API_BASE_URL = 'https://autonline-backend-production.up.railway.app'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: __dirname,
@@ -20,8 +24,6 @@ const nextConfig = {
   },
   output: 'standalone',
   async rewrites() {
-    // Use the same default as api-config.ts for consistency
-    // Bitta joydan boshqarish uchun - lib/api-config.ts dagi DEFAULT_API_BASE_URL ni o'zgartiring
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || DEFAULT_API_BASE_URL
     return [
       {
