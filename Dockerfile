@@ -31,6 +31,12 @@ RUN npm run build
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Set environment variables
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
+
+# Start the application using standalone server
+# Standalone build creates .next/standalone/server.js
+CMD ["node", ".next/standalone/server.js"]
 
