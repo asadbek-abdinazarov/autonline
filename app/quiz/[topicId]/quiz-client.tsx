@@ -16,11 +16,18 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, History, Menu, Clock, ListChecks, Target } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, History, Menu, Clock, ListChecks, Target, Check } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useTranslation } from "@/hooks/use-translation"
+import { Language, availableLanguages } from "@/lib/locales"
 import { loadImageWithCache } from "@/lib/image-loader"
 
 interface UserAnswer {
@@ -33,11 +40,18 @@ interface QuizClientProps {
 }
 
 export default function QuizClient({ topicId }: QuizClientProps) {
-  const { t, language } = useTranslation()
+  const { t, language, setLanguage } = useTranslation()
   const router = useRouter()
   const user = getCurrentUser()
   const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
   const canViewHistory = hasPermission("VIEW_TEST_HISTORY")
+  
+  const handleLanguageChange = (lang: Language) => {
+    if (lang !== language) {
+      setLanguage(lang)
+    }
+  }
+  
   const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
   const [questions, setQuestions] = useState<QuestionData[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -673,10 +687,34 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                       })()}
                     </h3>
                   </div>
-                  {/* Language Badge */}
-                  <span className="shrink-0 px-2 py-1 rounded-md bg-muted text-xs font-medium uppercase">
-                    {selectedLanguage}
-                  </span>
+                  {/* Language Badge - Clickable to change language */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="shrink-0 px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-xs font-medium uppercase cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        {selectedLanguage}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {availableLanguages.map((lang) => {
+                        // Map frontend language to question language
+                        const questionLang = lang.code === 'uz' ? 'uz' : lang.code === 'cyr' ? 'oz' : 'ru'
+                        const isSelected = selectedLanguage === questionLang
+                        return (
+                          <DropdownMenuItem
+                            key={lang.code}
+                            onClick={() => handleLanguageChange(lang.code)}
+                            className="flex items-center justify-between gap-2 cursor-pointer"
+                          >
+                            <span>{lang.nativeName}</span>
+                            {isSelected && <Check className="h-4 w-4" />}
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {currentQuestion.photo && (

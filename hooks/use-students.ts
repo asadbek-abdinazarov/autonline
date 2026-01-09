@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { buildApiUrl, getDefaultHeaders } from "@/lib/api-utils"
 import { useTranslation } from "@/hooks/use-translation"
 
@@ -99,9 +99,17 @@ export function useStudents() {
     last: true,
   })
   const { language } = useTranslation()
+  const fetchingRef = useRef<string | null>(null)
 
   const fetchStudents = useCallback(async (page: number = 0, size: number = 10) => {
+    // Prevent duplicate requests for the same page and size
+    const requestKey = `${page}-${size}`
+    if (fetchingRef.current === requestKey) {
+      return // Already fetching this page
+    }
+    
     try {
+      fetchingRef.current = requestKey
       setIsLoading(true)
       setError(null)
       
@@ -192,6 +200,7 @@ export function useStudents() {
       setError(err instanceof Error ? err.message : 'O\'quvchilar yuklanmadi')
     } finally {
       setIsLoading(false)
+      fetchingRef.current = null
     }
   }, [language])
 

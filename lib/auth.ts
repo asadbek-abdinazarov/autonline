@@ -16,6 +16,7 @@ export interface User {
   phoneNumber: string
   isActive: boolean
   subscription?: SubscriptionType
+  subscriptionDefName?: string
   roles?: string[]
   permissions?: Permission[]
   fullName?: string
@@ -31,6 +32,7 @@ export interface LoginResponse {
   phoneNumber: string
   roles?: string[]
   subscription?: SubscriptionType
+  subscriptionDefName?: string
   subscriptionPermissions?: Permission[]
   rolePermissions?: Permission[]
   isActive: boolean
@@ -127,6 +129,7 @@ export async function login(username: string, password: string): Promise<User> {
       phoneNumber: data.phoneNumber,
       isActive: data.isActive,
       subscription: data.subscription ?? 'FREE',
+      subscriptionDefName: data.subscriptionDefName,
       roles: Array.isArray(data.roles) ? data.roles : [],
       permissions: uniquePermissions,
       fullName: data.fullName,
@@ -234,6 +237,7 @@ export async function register(fullName: string, username: string, password: str
       phoneNumber: data.phoneNumber,
       isActive: data.isActive,
       subscription: data.subscription ?? 'FREE',
+      subscriptionDefName: data.subscriptionDefName,
       roles: Array.isArray(data.roles) ? data.roles : [],
       permissions: uniquePermissions,
       fullName: data.fullName,
@@ -372,6 +376,7 @@ export async function fetchCurrentUser(): Promise<User | null> {
         fullName: string
         phoneNumber: string
         subscription: string
+        subscriptionDefName?: string
         isActive: boolean
         nextPaymentDate: string | null
         roles: string[]
@@ -389,6 +394,7 @@ export async function fetchCurrentUser(): Promise<User | null> {
         phoneNumber: data.phoneNumber,
         isActive: data.isActive,
         subscription: (data.subscription as SubscriptionType) ?? 'FREE',
+        subscriptionDefName: data.subscriptionDefName,
         roles: Array.isArray(data.roles) ? data.roles : [],
         permissions: Array.isArray(data.permissions) ? (data.permissions as Permission[]) : [],
         fullName: data.fullName,
@@ -564,6 +570,7 @@ export async function refreshAccessToken(): Promise<string | null> {
           phoneNumber: data.phoneNumber,
           isActive: data.isActive,
           subscription: data.subscription ?? 'FREE',
+          subscriptionDefName: data.subscriptionDefName,
           roles: Array.isArray(data.roles) ? data.roles : [],
           permissions: uniquePermissions,
           fullName: data.fullName,

@@ -10,7 +10,6 @@ import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
 import { useTheme } from "next-themes"
 import { Language, availableLanguages } from "@/lib/locales"
-import { ThemeToggleButton } from "@/components/ui/shadcn-io/theme-toggle-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -190,55 +189,8 @@ export function UserMenu() {
   }, [setLanguage, language])
 
   const handleThemeToggle = useCallback(() => {
-    // Inject circle-blur animation styles
-    const styleId = `theme-transition-${Date.now()}`
-    const style = document.createElement('style')
-    style.id = styleId
-
-    const css = `
-      @supports (view-transition-name: root) {
-        ::view-transition-old(root) {
-          animation: none;
-        }
-        ::view-transition-new(root) {
-          animation: circle-blur-expand 0.5s ease-out;
-          transform-origin: center;
-          filter: blur(0);
-        }
-        @keyframes circle-blur-expand {
-          from {
-            clip-path: circle(0% at 50% 50%);
-            filter: blur(4px);
-          }
-          to {
-            clip-path: circle(150% at 50% 50%);
-            filter: blur(0);
-          }
-        }
-      }
-    `
-
-    style.textContent = css
-    document.head.appendChild(style)
-
-    // Start view transition if supported
-    if ('startViewTransition' in document) {
-      ;(document as any).startViewTransition(() => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark'
-        setTheme(newTheme)
-      })
-    } else {
-      const newTheme = theme === 'dark' ? 'light' : 'dark'
-      setTheme(newTheme)
-    }
-
-    // Clean up styles after transition
-    setTimeout(() => {
-      const styleEl = document.getElementById(styleId)
-      if (styleEl) {
-        styleEl.remove()
-      }
-    }, 3000)
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
   }, [theme, setTheme])
 
   const paidCount = useMemo(() => {
@@ -301,34 +253,62 @@ export function UserMenu() {
                 <div className="flex items-center gap-2">
                   {user?.subscription && (() => {
                     const getSubMeta = () => {
+                      // Use defName from API if available, otherwise fallback to hardcoded labels
+                      const label = user.subscriptionDefName || (() => {
+                        switch (user.subscription) {
+                          case 'FULL':
+                            return 'Yillik obuna'
+                          case 'PRO':
+                            return 'Oylik obuna'
+                          case 'BASIC':
+                            return 'Haftalik obuna'
+                          case 'STUDENT_BASIC':
+                            return 'Asosiy Talaba'
+                          case 'STUDENT_PRO':
+                            return 'Professional Talaba'
+                          case 'STUDENT_FULL':
+                            return 'To\'liq Talaba'
+                          case 'BASIC_TEACHER':
+                            return 'Asosiy O\'qituvchi'
+                          case 'PRO_TEACHER':
+                            return 'Professional O\'qituvchi'
+                          case 'FULL_TEACHER':
+                            return 'To\'liq O\'qituvchi'
+                          default:
+                            return 'Tekin obuna'
+                        }
+                      })()
+                      
+                      // Get icon and classes based on subscription type
                       switch (user.subscription) {
                           case 'FULL':
-                            return { label: 'Yillik obuna', Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
+                            return { label, Icon: Crown, classes: 'from-amber-500 to-orange-500 text-white' }
                           case 'PRO':
-                            return { label: 'Oylik obuna', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                            return { label, Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                           case 'BASIC':
-                            return { label: 'Haftalik obuna', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                            return { label, Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                           case 'STUDENT_BASIC':
-                            return { label: 'Asosiy Talaba', Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
+                            return { label, Icon: Star, classes: 'from-blue-500 to-cyan-500 text-white' }
                           case 'STUDENT_PRO':
-                            return { label: 'Professional Talaba', Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
+                            return { label, Icon: Star, classes: 'from-violet-500 to-fuchsia-500 text-white' }
                           case 'STUDENT_FULL':
-                            return { label: 'To‘liq Talaba', Icon: Star, classes: 'from-amber-500 to-orange-500 text-white' }
+                            return { label, Icon: Star, classes: 'from-amber-500 to-orange-500 text-white' }
                           case 'BASIC_TEACHER':
-                            return { label: 'Asosiy O\'qituvchi', Icon: Users, classes: 'from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50' }
+                            return { label, Icon: Users, classes: 'from-emerald-500 to-teal-500 text-white border-2 border-emerald-400/50' }
                           case 'PRO_TEACHER':
-                            return { label: 'Professional O\'qituvchi', Icon: Users, classes: 'from-purple-500 to-indigo-500 text-white border-2 border-purple-400/50' }
+                            return { label, Icon: Users, classes: 'from-purple-500 to-indigo-500 text-white border-2 border-purple-400/50' }
                           case 'FULL_TEACHER':
-                            return { label: 'To\'liq O\'qituvchi', Icon: Users, classes: 'from-rose-500 to-pink-500 text-white border-2 border-rose-400/50' }
+                            return { label, Icon: Users, classes: 'from-rose-500 to-pink-500 text-white border-2 border-rose-400/50' }
                         default:
-                          return { label: 'Tekin obuna', Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
+                          return { label, Icon: Ban, classes: 'from-slate-200/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-700/50 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-600/50' }
                       }
                     }
                     const { label, Icon, classes } = getSubMeta()
+                    const isFree = label === 'Tekin obuna'
                     return (
-                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes} ${label === 'FREE' ? '' : ''}`}>
-                        <Icon className={`h-3 w-3 ${label === 'Tekin obuna' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`} />
-                        <span className={`text-xs font-semibold ${label === 'Tekin obuna' ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`}>{label}</span>
+                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${classes}`}>
+                        <Icon className={`h-3 w-3 ${isFree ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`} />
+                        <span className={`text-xs font-semibold ${isFree ? 'text-slate-600 dark:text-slate-400' : 'text-white'}`}>{label}</span>
                       </div>
                     )
                   })()}

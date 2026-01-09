@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { AuthGuard } from "@/components/auth-guard"
@@ -111,6 +111,7 @@ export function StudentsClient() {
   const pageSize = 9
 
   const { students, isLoading, error, pagination, fetchStudents } = useStudents()
+  const lastFetchedPageRef = useRef<number | null>(null)
 
   // Check if user has TEACHER role
   const hasTeacherRole = () => {
@@ -118,11 +119,12 @@ export function StudentsClient() {
   }
 
   useEffect(() => {
-    if (hasTeacherRole()) {
+    // Only fetch if user has TEACHER role and we haven't fetched this page yet
+    if (hasTeacherRole() && lastFetchedPageRef.current !== currentPage) {
+      lastFetchedPageRef.current = currentPage
       fetchStudents(currentPage, pageSize)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage])
+  }, [currentPage, fetchStudents, pageSize])
 
   // Search function
   const handleSearch = async (query: string, page: number = 0) => {

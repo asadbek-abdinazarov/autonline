@@ -13,18 +13,8 @@ import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/use-translation"
 import { getCurrentUser } from "@/lib/auth"
 
-interface SubscriptionPermission {
-  permissionId: number
-  name: string
-  description: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string | null
-  deletedAt: string | null
-}
-
 interface SubscriptionPlan {
-  subscriptionId: number
+  id: number
   name: string
   defName: string
   description: string
@@ -34,10 +24,6 @@ interface SubscriptionPlan {
   isActive: boolean
   orderIndex?: number
   isPopular?: boolean
-  permissions: SubscriptionPermission[]
-  createdAt: string
-  updatedAt: string | null
-  deletedAt: string | null
 }
 
 export function SubscriptionClient() {
@@ -127,7 +113,7 @@ export function SubscriptionClient() {
     
     return (
       <div
-        key={plan.subscriptionId}
+        key={plan.id}
         className={cn(
           "relative",
           isPopular && plansList.length <= 3 && "md:scale-[1.03]",
