@@ -35,6 +35,7 @@ export interface LoginResponse {
   subscriptionDefName?: string
   subscriptionPermissions?: Permission[]
   rolePermissions?: Permission[]
+  permissions?: Permission[]
   isActive: boolean
   fullName?: string
   nextPaymentDate?: string
@@ -112,18 +113,25 @@ export async function login(username: string, password: string): Promise<User> {
       }
     }
 
-    // Combine subscriptionPermissions and rolePermissions into permissions
-    const allPermissions: Permission[] = []
-    if (Array.isArray(data.subscriptionPermissions)) {
-      allPermissions.push(...data.subscriptionPermissions)
+    // Get permissions: use direct permissions if available, otherwise combine subscriptionPermissions and rolePermissions
+    let uniquePermissions: Permission[] = []
+    if (Array.isArray(data.permissions) && data.permissions.length > 0) {
+      // Use direct permissions from API response
+      uniquePermissions = Array.from(new Set(data.permissions)) as Permission[]
+    } else {
+      // Combine subscriptionPermissions and rolePermissions into permissions
+      const allPermissions: Permission[] = []
+      if (Array.isArray(data.subscriptionPermissions)) {
+        allPermissions.push(...data.subscriptionPermissions)
+      }
+      if (Array.isArray(data.rolePermissions)) {
+        allPermissions.push(...data.rolePermissions)
+      }
+      // Remove duplicates
+      uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
     }
-    if (Array.isArray(data.rolePermissions)) {
-      allPermissions.push(...data.rolePermissions)
-    }
-    // Remove duplicates
-    const uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
 
-    return {
+    const user: User = {
       id: data.id,
       username: data.username,
       phoneNumber: data.phoneNumber,
@@ -135,6 +143,11 @@ export async function login(username: string, password: string): Promise<User> {
       fullName: data.fullName,
       nextPaymentDate: data.nextPaymentDate,
     }
+
+    // Save user to localStorage
+    setCurrentUser(user)
+
+    return user
   } catch (error) {
     // If it's already an Error with a message, re-throw it
     if (error instanceof Error) {
@@ -220,18 +233,25 @@ export async function register(fullName: string, username: string, password: str
       }
     }
 
-    // Combine subscriptionPermissions and rolePermissions into permissions
-    const allPermissions: Permission[] = []
-    if (Array.isArray(data.subscriptionPermissions)) {
-      allPermissions.push(...data.subscriptionPermissions)
+    // Get permissions: use direct permissions if available, otherwise combine subscriptionPermissions and rolePermissions
+    let uniquePermissions: Permission[] = []
+    if (Array.isArray(data.permissions) && data.permissions.length > 0) {
+      // Use direct permissions from API response
+      uniquePermissions = Array.from(new Set(data.permissions)) as Permission[]
+    } else {
+      // Combine subscriptionPermissions and rolePermissions into permissions
+      const allPermissions: Permission[] = []
+      if (Array.isArray(data.subscriptionPermissions)) {
+        allPermissions.push(...data.subscriptionPermissions)
+      }
+      if (Array.isArray(data.rolePermissions)) {
+        allPermissions.push(...data.rolePermissions)
+      }
+      // Remove duplicates
+      uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
     }
-    if (Array.isArray(data.rolePermissions)) {
-      allPermissions.push(...data.rolePermissions)
-    }
-    // Remove duplicates
-    const uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
 
-    return {
+    const user: User = {
       id: data.id,
       username: data.username,
       phoneNumber: data.phoneNumber,
@@ -243,6 +263,11 @@ export async function register(fullName: string, username: string, password: str
       fullName: data.fullName,
       nextPaymentDate: data.nextPaymentDate,
     }
+
+    // Save user to localStorage
+    setCurrentUser(user)
+
+    return user
   } catch (error) {
     if (error instanceof Error) {
       throw error
@@ -316,6 +341,8 @@ export function setCurrentUser(user: User | null): void {
     } else {
       localStorage.removeItem("user")
     }
+    // Dispatch custom event to notify components about user data change
+    window.dispatchEvent(new CustomEvent('userUpdated'))
   }
 }
 
@@ -387,6 +414,18 @@ export async function fetchCurrentUser(): Promise<User | null> {
         return null
       }
 
+      // Get existing user data to preserve permissions if API doesn't return them
+      const existingUser = getCurrentUser()
+      const apiPermissions = Array.isArray(data.permissions) ? (data.permissions as Permission[]) : []
+      
+      // Preserve permissions from existing user if API response doesn't have them
+      // This prevents overwriting permissions that were set during login
+      const finalPermissions = apiPermissions.length > 0 
+        ? apiPermissions 
+        : (existingUser?.permissions && existingUser.permissions.length > 0 
+          ? existingUser.permissions 
+          : [])
+
       // Map API response to User interface
       const user: User = {
         id: data.id,
@@ -396,7 +435,7 @@ export async function fetchCurrentUser(): Promise<User | null> {
         subscription: (data.subscription as SubscriptionType) ?? 'FREE',
         subscriptionDefName: data.subscriptionDefName,
         roles: Array.isArray(data.roles) ? data.roles : [],
-        permissions: Array.isArray(data.permissions) ? (data.permissions as Permission[]) : [],
+        permissions: finalPermissions,
         fullName: data.fullName,
         nextPaymentDate: data.nextPaymentDate ?? undefined,
       }
@@ -553,16 +592,23 @@ export async function refreshAccessToken(): Promise<string | null> {
       
       // Also update user data if available
       if (data.id && data.username) {
-        // Combine subscriptionPermissions and rolePermissions into permissions
-        const allPermissions: Permission[] = []
-        if (Array.isArray(data.subscriptionPermissions)) {
-          allPermissions.push(...data.subscriptionPermissions)
+        // Get permissions: use direct permissions if available, otherwise combine subscriptionPermissions and rolePermissions
+        let uniquePermissions: Permission[] = []
+        if (Array.isArray(data.permissions) && data.permissions.length > 0) {
+          // Use direct permissions from API response
+          uniquePermissions = Array.from(new Set(data.permissions)) as Permission[]
+        } else {
+          // Combine subscriptionPermissions and rolePermissions into permissions
+          const allPermissions: Permission[] = []
+          if (Array.isArray(data.subscriptionPermissions)) {
+            allPermissions.push(...data.subscriptionPermissions)
+          }
+          if (Array.isArray(data.rolePermissions)) {
+            allPermissions.push(...data.rolePermissions)
+          }
+          // Remove duplicates
+          uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
         }
-        if (Array.isArray(data.rolePermissions)) {
-          allPermissions.push(...data.rolePermissions)
-        }
-        // Remove duplicates
-        const uniquePermissions = Array.from(new Set(allPermissions)) as Permission[]
         
         const user: User = {
           id: data.id,
@@ -576,7 +622,7 @@ export async function refreshAccessToken(): Promise<string | null> {
           fullName: data.fullName,
           nextPaymentDate: data.nextPaymentDate,
         }
-        localStorage.setItem("user", JSON.stringify(user))
+        setCurrentUser(user)
       }
     }
 

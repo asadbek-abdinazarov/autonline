@@ -10,17 +10,3 @@ export default function TrafficSignsPage() {
     </AuthGuard>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
