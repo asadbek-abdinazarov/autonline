@@ -109,194 +109,9 @@ export interface VariantNew {
   text: string
 }
 
-export const newsData: NewsItem[] = [
-  {
-    id: "1",
-    title: "Yangi yo'l harakati qoidalari 2024",
-    description: "2024 yilda yangi yo'l harakati qoidalari kiritildi. Barcha haydovchilar uchun muhim o'zgarishlar.",
-    date: "2024-01-15",
-    image: "/traffic-rules.png",
-  },
-  {
-    id: "2",
-    title: "Elektromobillar uchun maxsus yo'llar",
-    description: "Toshkent shahrida elektromobillar uchun maxsus yo'llar ochildi.",
-    date: "2024-01-10",
-    image: "/electric-car-road.jpg",
-  },
-  {
-    id: "3",
-    title: "Haydovchilik imtihonlari yangilandi",
-    description: "Haydovchilik guvohnomasini olish uchun yangi imtihon tizimi joriy etildi.",
-    date: "2024-01-05",
-    image: "/driving-test.jpg",
-  },
-]
+// Removed unused default data - API is always used
 
-export const topicsData: Topic[] = [
-  {
-    id: "1",
-    title: "Yo'l belgilari",
-    description: "Barcha yo'l belgilari va ularning ma'nolari",
-    questionCount: 50,
-    icon: "🚦",
-  },
-  {
-    id: "2",
-    title: "Yo'l harakati qoidalari",
-    description: "Asosiy yo'l harakati qoidalari va tartib-intizom",
-    questionCount: 75,
-    icon: "📋",
-  },
-  {
-    id: "3",
-    title: "Birinchi tibbiy yordam",
-    description: "Yo'l-transport hodisalarida birinchi yordam ko'rsatish",
-    questionCount: 30,
-    icon: "🏥",
-  },
-  {
-    id: "4",
-    title: "Avtomobil texnikasi",
-    description: "Avtomobil qurilmasi va texnik xizmat ko'rsatish",
-    questionCount: 40,
-    icon: "🔧",
-  },
-  {
-    id: "5",
-    title: "Xavfsizlik choralari",
-    description: "Yo'lda xavfsizlik va ehtiyot choralari",
-    questionCount: 35,
-    icon: "🛡️",
-  },
-  {
-    id: "6",
-    title: "Amaliy haydash",
-    description: "Amaliy haydash ko'nikmalari va texnikasi",
-    questionCount: 45,
-    icon: "🚗",
-  },
-]
-
-export interface Question {
-  id: string
-  topicId: string
-  question: string
-  options: string[]
-  correctAnswer: number
-  image?: string
-}
-
-export const questionsData: Question[] = [
-  // Yo'l belgilari
-  {
-    id: "q1",
-    topicId: "1",
-    question: "Qizil rang svetofor nima bildiradi?",
-    options: ["Harakatni davom ettirish mumkin", "To'xtash kerak", "Ehtiyot bo'lish kerak", "Tezlikni oshirish"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q2",
-    topicId: "1",
-    question: "Sariq rang svetofor nima bildiradi?",
-    options: ["Tezroq harakatlanish", "Ehtiyot bo'lish, signal o'zgaradi", "To'xtash", "Yo'l yopiq"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q3",
-    topicId: "1",
-    question: "Yashil rang svetofor nima bildiradi?",
-    options: ["To'xtash", "Harakatni davom ettirish mumkin", "Ehtiyot bo'lish", "Orqaga qaytish"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q4",
-    topicId: "1",
-    question: "'STOP' belgisi nima bildiradi?",
-    options: ["Sekinlashtirish", "To'liq to'xtash kerak", "Ehtiyot bo'lish", "Yo'l yopiq"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q5",
-    topicId: "1",
-    question: "Uchburchak shaklidagi yo'l belgisi odatda nima bildiradi?",
-    options: ["Buyruq", "Ogohlantirish", "Ma'lumot", "Taqiq"],
-    correctAnswer: 1,
-  },
-  // Yo'l harakati qoidalari
-  {
-    id: "q6",
-    topicId: "2",
-    question: "Shahar ichida maksimal tezlik qancha?",
-    options: ["40 km/soat", "60 km/soat", "80 km/soat", "100 km/soat"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q7",
-    topicId: "2",
-    question: "Xavfsizlik kamari taqish majburiyatimi?",
-    options: ["Yo'q", "Ha, faqat haydovchi uchun", "Ha, barcha yo'lovchilar uchun", "Faqat tashqi yo'llarda"],
-    correctAnswer: 2,
-  },
-  {
-    id: "q8",
-    topicId: "2",
-    question: "Piyodalar o'tish joyida kim ustunlikka ega?",
-    options: ["Avtomobil", "Piyoda", "Kim birinchi kelsa", "Tezroq harakatlanayotgan"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q9",
-    topicId: "2",
-    question: "Mobil telefon bilan gaplashish mumkinmi?",
-    options: ["Ha", "Yo'q", "Faqat handsfree bilan", "Faqat to'xtab turganda"],
-    correctAnswer: 2,
-  },
-  {
-    id: "q10",
-    topicId: "2",
-    question: "Qizil svetoforda o'ng tomonga burilish mumkinmi?",
-    options: ["Ha, har doim", "Yo'q, hech qachon", "Faqat maxsus belgi bo'lsa", "Faqat piyodalar bo'lmasa"],
-    correctAnswer: 2,
-  },
-  // Birinchi tibbiy yordam
-  {
-    id: "q11",
-    topicId: "3",
-    question: "Qon ketishini to'xtatish uchun birinchi navbatda nima qilish kerak?",
-    options: ["Suv quyish", "Bosim o'rnatish", "Dori berish", "Kutish"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q12",
-    topicId: "3",
-    question: "Tez yordam raqami qancha?",
-    options: ["101", "102", "103", "104"],
-    correctAnswer: 2,
-  },
-  {
-    id: "q13",
-    topicId: "3",
-    question: "Kuygan joyga birinchi yordam qanday ko'rsatiladi?",
-    options: ["Sovuq suv quyish", "Moy surtish", "Bint o'rash", "Hech narsa qilmaslik"],
-    correctAnswer: 0,
-  },
-  {
-    id: "q14",
-    topicId: "3",
-    question: "Bosh jarohati bo'lsa nima qilish kerak?",
-    options: ["Boshni silkitish", "Sovuq kompres qo'yish", "Darhol harakatlanish", "Issiq kompres"],
-    correctAnswer: 1,
-  },
-  {
-    id: "q15",
-    topicId: "3",
-    question: "Yurak massaji qanday bajariladi?",
-    options: ["Ko'krak qafasini bosish", "Orqani urish", "Qo'llarni ko'tarish", "Suv berish"],
-    correctAnswer: 0,
-  },
-]
+// Removed unused questionsData - API is always used
 
 // Helper functions to get localized name and description
 export function getLocalizedName(topic: Topic, language: Language): string {
@@ -370,56 +185,7 @@ export function getLocalizedLessonDescription(
   }
 }
 
-export interface PaymentHistory {
-  id: string
-  month: string
-  amount: number
-  date: string
-  status: "paid" | "pending" | "expired"
-}
-
-export interface UserProfile {
-  name: string
-  email: string
-  status: "active" | "inactive" | "premium"
-  paymentHistory: PaymentHistory[]
-}
-
-export const userProfileData: UserProfile = {
-  name: "Foydalanuvchi",
-  email: "user@example.com",
-  status: "premium",
-  paymentHistory: [
-    {
-      id: "1",
-      month: "Yanvar 2024",
-      amount: 50000,
-      date: "2024-01-01",
-      status: "paid",
-    },
-    {
-      id: "2",
-      month: "Fevral 2024",
-      amount: 50000,
-      date: "2024-02-01",
-      status: "paid",
-    },
-    {
-      id: "3",
-      month: "Mart 2024",
-      amount: 50000,
-      date: "2024-03-01",
-      status: "paid",
-    },
-    {
-      id: "4",
-      month: "Aprel 2024",
-      amount: 50000,
-      date: "2024-04-01",
-      status: "pending",
-    },
-  ],
-}
+// Removed unused userProfileData - API is always used
 
 // API Functions
 export async function fetchTopicsFromApi(): Promise<Topic[]> {
@@ -460,21 +226,21 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       if (response.status >= 500 && response.status < 600) {
         const { handleApiError } = await import('./api-utils')
         await handleApiError({ status: response.status })
-        return topicsData // Return fallback data
+        return [] // Return empty array instead of fallback data
       }
       
       // Handle 401 errors globally
       if (response.status === 401) {
         const { handleApiError } = await import('./api-utils')
         await handleApiError({ status: 401 })
-        return topicsData // Return fallback data
+        return [] // Return empty array instead of fallback data
       }
       
       // Handle 429 errors globally
       if (response.status === 429) {
         const { handleApiError } = await import('./api-utils')
         await handleApiError({ status: 429 })
-        return topicsData // Return fallback data
+        return [] // Return empty array instead of fallback data
       }
       
       if (process.env.NODE_ENV === 'development') {
@@ -495,14 +261,14 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to parse JSON response:', parseError)
       }
-      return topicsData
+      return []
     }
     
     if (!parsedData || !Array.isArray(parsedData) || parsedData.length === 0) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('Invalid response format, returning fallback data')
+        console.warn('Invalid response format, returning empty array')
       }
-      return topicsData
+      return []
     }
     
     // Check if it's new format (has 'id' and 'name' fields)
@@ -553,8 +319,8 @@ export async function fetchTopicsFromApi(): Promise<Topic[]> {
       // Check if it's a network error
       const { handleApiError } = await import('./api-utils')
       const isHandled = await handleApiError(error)
-      // Fallback to static data if API fails
-      return topicsData
+      // Return empty array if API fails
+      return []
     } finally {
       // Remove from pending requests when done
       pendingRequests.delete(requestKey)

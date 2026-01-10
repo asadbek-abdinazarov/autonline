@@ -366,26 +366,31 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       console.warn("[Quiz] No isCorrect array or status field found for question:", currentQuestion.questionId)
     }
 
-    const newUserAnswers = new Map(userAnswers)
-    newUserAnswers.set(currentQuestionIndex, { selectedAnswer: answerIndex, isCorrect })
-    setUserAnswers(newUserAnswers)
+    // Batch state updates with startTransition for better performance
+    startTransition(() => {
+      const newUserAnswers = new Map(userAnswers)
+      newUserAnswers.set(currentQuestionIndex, { selectedAnswer: answerIndex, isCorrect })
+      setUserAnswers(newUserAnswers)
 
-    const newAnsweredQuestions = new Map(answeredQuestions)
-    newAnsweredQuestions.set(currentQuestionIndex, isCorrect)
-    setAnsweredQuestions(newAnsweredQuestions)
+      const newAnsweredQuestions = new Map(answeredQuestions)
+      newAnsweredQuestions.set(currentQuestionIndex, isCorrect)
+      setAnsweredQuestions(newAnsweredQuestions)
 
-    setIsAnswered(true)
+      setIsAnswered(true)
 
-    if (isCorrect) {
-      setScore((prev) => prev + 1)
-    }
+      if (isCorrect) {
+        setScore((prev) => prev + 1)
+      }
+    })
 
     const timeout = setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex((prev) => prev + 1)
-      } else {
-        setShowResults(true)
-      }
+      startTransition(() => {
+        if (currentQuestionIndex < questions.length - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1)
+        } else {
+          setShowResults(true)
+        }
+      })
     }, 1500)
 
     setAutoSkipTimeout(timeout)

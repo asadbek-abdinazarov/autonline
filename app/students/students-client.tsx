@@ -337,7 +337,7 @@ export function StudentsClient() {
   const handlePageChange = (page: number, e?: React.MouseEvent) => {
     e?.preventDefault()
     setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const handleOpenResults = async (student: any, page: number = 0) => {
@@ -919,7 +919,7 @@ export function StudentsClient() {
                   onClick={(e) => {
                     e.preventDefault()
                     setSearchCurrentPage(pageNum)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                    window.scrollTo({ top: 0, behavior: 'auto' })
                   }}
                   isActive={pageNum === current}
                   className="cursor-pointer"
@@ -992,7 +992,7 @@ export function StudentsClient() {
                     onClick={(e) => {
                       e.preventDefault()
                       setSearchCurrentPage(pageNum)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
+                      window.scrollTo({ top: 0, behavior: 'auto' })
                     }}
                     isActive={pageNum === current}
                     className="cursor-pointer"

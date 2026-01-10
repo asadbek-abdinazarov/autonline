@@ -59,7 +59,7 @@ export function Header() {
             
             window.scrollTo({
               top: targetPosition,
-              behavior: 'smooth'
+              behavior: 'auto'
             })
           }
         }, 100) // Small delay to ensure DOM is ready
@@ -103,7 +103,7 @@ export function Header() {
       
       window.scrollTo({
         top: targetPosition,
-        behavior: 'smooth'
+        behavior: 'auto'
       })
     }
   }, [pathname])

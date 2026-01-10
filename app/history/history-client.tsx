@@ -51,7 +51,7 @@ export function HistoryClient() {
   const handlePageChange = (page: number, e?: React.MouseEvent) => {
     e?.preventDefault()
     setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: 'auto' })
   }
 
   const formatDate = (dateString: string) => {

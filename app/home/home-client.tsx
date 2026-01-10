@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, startTransition } from "react"
+import { useEffect, useState, useRef, startTransition, useMemo, useCallback } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { NewsCard } from "@/components/news-card"
@@ -17,18 +17,31 @@ import { getCurrentUser, type Permission, type User } from "@/lib/auth"
 export default function HomeClient() {
   const { t } = useTranslation()
   const [user, setUser] = useState<User | null>(getCurrentUser())
-  const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
-  const canViewNews = hasPermission('VIEW_NEWS')
-  const canViewAllTopics = hasPermission('VIEW_ALL_TOPICS')
-  const canViewLimitedTopics = hasPermission('LIMITED_TOPICS')
-  const canViewRandom = hasPermission('VIEW_RANDOM')
-  const canViewTrafficSigns = hasPermission('VIEW_TRAFFIC_SIGNS')
+  const hasPermission = useCallback((perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm), [user?.permissions])
+  const canViewNews = useMemo(() => hasPermission('VIEW_NEWS'), [hasPermission])
+  const canViewAllTopics = useMemo(() => hasPermission('VIEW_ALL_TOPICS'), [hasPermission])
+  const canViewLimitedTopics = useMemo(() => hasPermission('LIMITED_TOPICS'), [hasPermission])
+  const canViewRandom = useMemo(() => hasPermission('VIEW_RANDOM'), [hasPermission])
+  const canViewTrafficSigns = useMemo(() => hasPermission('VIEW_TRAFFIC_SIGNS'), [hasPermission])
   const [topics, setTopics] = useState<Topic[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAllTopics, setShowAllTopics] = useState(true)
   const { news, isLoading: newsLoading, error: newsError, fetchNews } = useNews()
   const hasFetchedRef = useRef(false)
+
+  // Memoize displayed topics list
+  const displayedTopics = useMemo(() => {
+    if (canViewAllTopics) {
+      return showAllTopics ? topics : topics.slice(0, 6)
+    } else if (canViewLimitedTopics) {
+      return topics.slice(0, 3)
+    }
+    return []
+  }, [topics, showAllTopics, canViewAllTopics, canViewLimitedTopics])
+
+  // Memoize displayed news
+  const displayedNews = useMemo(() => news.slice(0, 3), [news])
 
   // Listen for user data updates
   useEffect(() => {
@@ -112,18 +125,18 @@ export default function HomeClient() {
 
             <div className="container mx-auto px-4 text-center">
               <div className="max-w-4xl mx-auto space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-colors duration-200">
                   <Sparkles className="h-4 w-4 text-blue-500" />
-                  <span className="transition-transform duration-200 transition-colors duration-300">{t.home.hero.welcome}</span>
+                  <span>{t.home.hero.welcome}</span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight">
                   <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     {t.home.hero.title}
                   </span>
                   <br />
-                  <span className="text-slate-900 dark:text-white transition-transform duration-200 transition-colors duration-300">{t.home.hero.subtitle}</span>
+                  <span className="text-slate-900 dark:text-white">{t.home.hero.subtitle}</span>
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance">
                   {t.home.hero.description}
                 </p>
               </div>
@@ -144,7 +157,7 @@ export default function HomeClient() {
                   </div>
                 </div>
                 {news.length > 3 && (
-                  <Button variant="outline" size="lg" asChild className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:scale-105 transition-all duration-300">
+                  <Button variant="outline" size="lg" asChild className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:scale-105 transition-transform duration-200">
                     <Link href="/news" className="flex items-center gap-2">
                       {t.common.viewAll}
                       <ArrowRight className="h-4 w-4" />
@@ -179,11 +192,10 @@ export default function HomeClient() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                  {news.slice(0, 3).map((newsItem, index) => (
+                  {displayedNews.map((newsItem, index) => (
                     <div
                       key={newsItem.newsId}
-                      className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
-                      style={{ animationDelay: `${index * 100}ms` }}
+                      className="hover:scale-105 transition-transform duration-200"
                     >
                       <NewsCard news={newsItem} />
                     </div>
@@ -283,14 +295,14 @@ export default function HomeClient() {
                   </div>
                 </div>
                 {canViewAllTopics && topics.length > 6 && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowAllTopics(!showAllTopics)}
-                    className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
-                  >
-                    {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setShowAllTopics(!showAllTopics)}
+                      className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
+                    </Button>
                 )}
               </div>
 
@@ -313,14 +325,10 @@ export default function HomeClient() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
-                  {(canViewAllTopics
-                    ? (showAllTopics ? topics : topics.slice(0, 6))
-                    : topics.slice(0, 3)
-                  ).map((topic, index) => (
+                  {displayedTopics.map((topic) => (
                     <div
                       key={topic.id}
-                      className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
-                      style={{ animationDelay: `${index * 100}ms` }}
+                      className="hover:scale-105 transition-transform duration-200"
                     >
                       <TopicCard topic={topic} />
                     </div>

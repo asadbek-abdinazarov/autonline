@@ -90,13 +90,26 @@ export function UserMenu() {
 
       updatePosition()
       
+      // Throttle scroll handler for better performance
+      let scrollTimeout: NodeJS.Timeout | null = null
+      const throttledUpdatePosition = () => {
+        if (scrollTimeout) return
+        scrollTimeout = setTimeout(() => {
+          updatePosition()
+          scrollTimeout = null
+        }, 16) // ~60fps
+      }
+      
       // Update position on scroll and resize
-      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('scroll', throttledUpdatePosition, true)
       window.addEventListener('resize', updatePosition)
       
       return () => {
-        window.removeEventListener('scroll', updatePosition, true)
+        window.removeEventListener('scroll', throttledUpdatePosition, true)
         window.removeEventListener('resize', updatePosition)
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout)
+        }
       }
     } else {
       setSubmenuPosition(null)

@@ -60,16 +60,16 @@ export default function NewsPage() {
 
             <div className="text-center">
               <div className="max-w-4xl mx-auto space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-colors duration-200">
                   <Sparkles className="h-4 w-4 text-orange-500" />
                   <span>{t.news.title}</span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight">
                   <span className="bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 bg-clip-text text-transparent">
                     {t.news.title}
                   </span>
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-balance">
                   {t.news.description}
                 </p>
               </div>
@@ -111,11 +111,10 @@ export default function NewsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {news.map((newsItem, index) => (
+            {news.map((newsItem) => (
               <div 
                 key={newsItem.newsId}
-                className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-105 transition-transform"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="hover:scale-105 transition-transform duration-200 will-change-transform"
               >
                 <NewsCard news={newsItem} />
               </div>

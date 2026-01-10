@@ -6,19 +6,19 @@ import type { Topic } from "@/lib/data"
 import { getLocalizedName, getLocalizedDescription } from "@/lib/data"
 import { ArrowRight, BookOpen, Eye } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, memo, useMemo } from "react"
 import { useTranslation } from "@/hooks/use-translation"
 
 interface TopicCardProps {
   topic: Topic
 }
 
-export function TopicCard({ topic }: TopicCardProps) {
+function TopicCardComponent({ topic }: TopicCardProps) {
   const { language } = useTranslation()
   const [showTitleModal, setShowTitleModal] = useState(false)
-  const localizedTitle = getLocalizedName(topic, language)
-  const localizedDescription = getLocalizedDescription(topic, language)
-  const isLongTitle = localizedTitle.length > 44
+  const localizedTitle = useMemo(() => getLocalizedName(topic, language), [topic, language])
+  const localizedDescription = useMemo(() => getLocalizedDescription(topic, language), [topic, language])
+  const isLongTitle = useMemo(() => localizedTitle.length > 44, [localizedTitle])
 
   return (
     <Card className="group hover:shadow-xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl w-full h-[280px] flex flex-col">
@@ -93,3 +93,5 @@ export function TopicCard({ topic }: TopicCardProps) {
     </Card>
   )
 }
+
+export const TopicCard = memo(TopicCardComponent)
