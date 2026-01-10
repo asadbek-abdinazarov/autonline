@@ -121,6 +121,12 @@ export default function RandomQuizClient() {
     return result
   }, [language])
 
+    // Get localized topic name
+    const topicName = useMemo(() => {
+      if (!lessonData) return ""
+      return getLocalizedLessonName(lessonData, language)
+    }, [lessonData, language])
+
   const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
 
   // Fetch random questions from API
@@ -950,12 +956,22 @@ export default function RandomQuizClient() {
             </Card>
 
             <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
-              <CardHeader className="pb-2 pt-4 px-4 shrink-0">
-                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                  {t.quiz.questionNavigator}
-                </CardTitle>
+              <CardHeader className="pb-2 pt-2 px-4 shrink-0">
+                {topicName && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-foreground line-clamp-2">
+                      {topicName}
+                    </h3>
+                    
+                    {lessonData?.lessonIcon && (
+                      <span className="text-xl flex-shrink-0" role="img" aria-label="lesson icon">
+                        {lessonData.lessonIcon}
+                      </span>
+                    )}
+                  </div>
+                )}
               </CardHeader>
-              <CardContent className="px-4 pb-4 flex-1 overflow-y-auto">
+              <CardContent className="px-4 pt-2 pb-4 flex-1 overflow-y-auto">
                 <QuestionNavigator
                   totalQuestions={questions.length}
                   currentQuestion={currentQuestionIndex}

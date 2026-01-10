@@ -26,7 +26,7 @@ export default function HomeClient() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showAllTopics, setShowAllTopics] = useState(false)
+  const [showAllTopics, setShowAllTopics] = useState(true)
   const { news, isLoading: newsLoading, error: newsError, fetchNews } = useNews()
   const hasFetchedRef = useRef(false)
 
