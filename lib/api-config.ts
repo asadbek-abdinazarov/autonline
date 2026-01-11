@@ -9,8 +9,9 @@
  */
 
 // Bitta joydan boshqarish uchun - faqat shu yerda o'zgartiring
-export const DEFAULT_API_BASE_URL = 'https://autonline-backend-production.up.railway.app'
+export const DEFAULT_API_BASE_URL = 'https://api.backend.autonline.uz'
 //http://localhost:8080
+//https://autonline-backend-production.up.railway.app
 /**
  * Get API base URL from environment variable or use default
  * Environment variable ustunlik qiladi
