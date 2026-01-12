@@ -205,80 +205,96 @@ export default function HomeClient() {
             </section>
           )}
 
-          {/* Special Features Section */}
-          {canViewRandom && (
-            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 dark:from-blue-500/10 dark:via-indigo-500/10 dark:to-purple-500/10 border border-blue-500/20 dark:border-blue-500/20 p-8 sm:p-12 backdrop-blur-xl">
-                {/* Background decoration */}
-                <div className="absolute inset-0 -z-10">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 dark:bg-purple-500/20 rounded-full blur-3xl"></div>
-                </div>
+      {/* Learning Hub Section - Minimalist & Premium */}
+{(canViewRandom || canViewTrafficSigns) && (
+  <section className="container mx-auto px-4 py-16 mb-8">
+    
+    {/* Section Header - Clean & Centered */}
+    <div className="text-center max-w-2xl mx-auto mb-10">
+      <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white animate-gradient-x mb-4">
+        Maxsus bo'limlar
+      </h2>
+      <p className="text-slate-600 dark:text-slate-400 text-lg">
+        Yo'l harakati qoidalarini o'rganishning interaktiv usullari
+      </p>
+    </div>
 
-                <div className="max-w-4xl mx-auto text-center space-y-6">
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                      <Sparkles className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.randomQuiz.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{(t as any).home.randomQuiz?.description || "Barcha yo'l harakati belgilarini o'rganing"}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
-                    >
-                      <Link href="/quiz/random" className="flex items-center gap-3">
-                        <Shuffle className="h-5 w-5" />
-                        {t.home.randomQuiz.randomQuizButton}
-                      </Link>
-                    </Button>
-                  </div>
+    {/* Cards Grid */}
+    <div className={`grid gap-6 ${canViewRandom && canViewTrafficSigns ? 'md:grid-cols-2' : 'max-w-3xl mx-auto'}`}>
+      
+      {/* 1. Random Quiz Card (Blue Theme) */}
+      {canViewRandom && (
+        <Link href="/quiz/random" className="group block h-full outline-none">
+          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10">
+            
+            <div className="flex flex-col h-full">
+              {/* Icon & Badge */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 dark:group-hover:bg-blue-600 dark:group-hover:border-blue-600 transition-colors duration-300">
+                  <Sparkles className="h-7 w-7 text-blue-600 dark:text-blue-400 dark:group-hover:text-white transition-colors duration-300" />
                 </div>
+                <span className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100 dark:border-blue-800">
+                  Test
+                </span>
               </div>
-            </section>
-          )}
 
-          {/* Traffic Signs Section */}
-          {canViewTrafficSigns && (
-            <section className="container mx-auto px-4 py-8 sm:py-12 mb-8 sm:mb-12">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10 dark:from-green-500/10 dark:via-emerald-500/10 dark:to-teal-500/10 border border-green-500/20 dark:border-green-500/20 p-8 sm:p-12 backdrop-blur-xl">
-                {/* Background decoration */}
-                <div className="absolute inset-0 -z-10">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/20 dark:bg-green-500/20 rounded-full blur-3xl"></div>
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/20 dark:bg-teal-500/20 rounded-full blur-3xl"></div>
-                </div>
-
-                <div className="max-w-4xl mx-auto text-center space-y-6">
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                      <Signpost className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.home.trafficSigns.title}</h3>
-                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">{t.home.trafficSigns.description}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-base sm:text-lg px-8 py-6"
-                    >
-                      <Link href="/traffic-signs" className="flex items-center gap-3">
-                        <Signpost className="h-5 w-5" />
-                        {t.home.trafficSigns.button}
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
+              {/* Text Content */}
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  {t.home.randomQuiz.title}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {(t as any).home.randomQuiz?.description || "Tasodifiy savollar orqali bilimingizni sinang va imtihonga tayyorlaning."}
+                </p>
               </div>
-            </section>
+
+              {/* Bottom Action Area */}
+              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {t.home.randomQuiz.randomQuizButton}
+                <Shuffle className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* 2. Traffic Signs Card (Emerald Theme) */}
+      {canViewTrafficSigns && (
+        <Link href="/traffic-signs" className="group block h-full outline-none">
+          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10">
+            
+            <div className="flex flex-col h-full">
+              {/* Icon & Badge */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-14 h-14 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 dark:group-hover:bg-emerald-600 dark:group-hover:border-emerald-600 transition-colors duration-300">
+                  <Signpost className="h-7 w-7 text-emerald-600 dark:text-emerald-400 dark:group-hover:text-white transition-colors duration-300" />
+                </div>
+                <span className="px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-full border border-emerald-100 dark:border-emerald-800">
+                  Katalog
+                </span>
+              </div>
+
+              {/* Text Content */}
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
+                  {t.home.trafficSigns.title}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {t.home.trafficSigns.description}
+                </p>
+              </div>
+
+              {/* Bottom Action Area */}
+              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                {t.home.trafficSigns.button}
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
+    </div>
+  </section>
           )}
 
           {/* Topics Section */}

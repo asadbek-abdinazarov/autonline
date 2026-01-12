@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History, Menu, Clock, ListChecks, Check } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, ZoomIn, Sparkles, Target, Zap, Play, History, Menu, Clock, ListChecks, Check, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -385,174 +385,164 @@ export default function RandomQuizClient() {
   // Interval selector state
   if (showIntervalSelector) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
         <Header />
-        <main className="container mx-auto px-4 py-8 sm:py-12">
-          <div className="max-w-3xl mx-auto">
-            {/* Hero Section */}
-            <div className="text-center mb-8 sm:mb-12 space-y-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg mb-4">
-                <Target className="h-10 w-10 text-white" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
+          <div className="w-full max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            
+            {/* Header Content */}
+            <div className="text-center mb-10 space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {t.quiz.selectQuestionCount}
               </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto leading-relaxed">
                 {t.quiz.selectQuestionCountDescription}
               </p>
             </div>
 
-            <Card className="border-2 shadow-xl bg-gradient-to-br from-card via-card to-muted/20">
-              <CardContent className="p-6 sm:p-8">
-                {error && (
-                  <div className="mb-6 p-4 rounded-xl bg-destructive/10 border-2 border-destructive/20 text-destructive text-sm text-center animate-in fade-in slide-in-from-top-2">
-                    {error}
-                  </div>
-                )}
-
-                {/* Quick Select Buttons */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Zap className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{t.quiz.quickSelect}</h3>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                    {[20, 50, 100].map((count) => {
-                      const isSelected = !isCustomMode && interval === count
-                      return (
-                        <button
-                          key={count}
-                          onClick={() => {
-                            setInterval(count)
-                            setIsCustomMode(false)
-                            setCustomInterval("")
-                            setError(null)
-                          }}
-                          className={cn(
-                            "relative group h-24 sm:h-28 rounded-xl border-2 transition-all duration-300",
-                            "hover:scale-105 hover:shadow-lg",
-                            isSelected
-                              ? "bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500 text-white shadow-lg"
-                              : "bg-card border-border hover:border-primary/50"
-                          )}
-                        >
-                          <div className="flex flex-col items-center justify-center h-full space-y-1">
-                            <span className="text-2xl sm:text-3xl font-bold">{count}</span>
-                            <span className="text-xs sm:text-sm opacity-80">{t.quiz.questions}</span>
-                          </div>
-                          {isSelected && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                            </div>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
+            {/* Main Control Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800">
+              
+              {/* Presets Grid */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between text-sm font-medium text-slate-900 dark:text-white">
+                  <span className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    {t.quiz.quickSelect}
+                  </span>
+                  <span className="text-slate-400 font-normal hidden sm:inline">Tavsiya etilgan</span>
                 </div>
 
-                {/* Custom Option */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{t.quiz.personalized}</h3>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIsCustomMode(!isCustomMode)
-                      if (!isCustomMode) {
-                        setCustomInterval("")
-                      } else {
-                        setInterval(20)
-                      }
-                      setError(null)
-                    }}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 transition-all duration-300",
-                      "hover:scale-[1.02] hover:shadow-md",
-                      isCustomMode
-                        ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary shadow-md"
-                        : "bg-card border-border hover:border-primary/50"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-base">{t.quiz.custom}</span>
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 transition-all",
-                        isCustomMode ? "bg-primary border-primary" : "border-muted-foreground"
-                      )}>
-                        {isCustomMode && (
-                          <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-white" />
-                          </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[20, 50, 100].map((count) => {
+                    const isSelected = !isCustomMode && interval === count
+                    return (
+                      <button
+                        key={count}
+                        onClick={() => {
+                          setInterval(count)
+                          setIsCustomMode(false)
+                          setCustomInterval("")
+                          setError(null)
+                        }}
+                        className={cn(
+                          "relative h-20 sm:h-24 rounded-2xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20",
+                          isSelected
+                            ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/25 transform scale-[1.02]"
+                            : "bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-200 dark:hover:border-blue-800 hover:bg-white dark:hover:bg-slate-700"
                         )}
-                      </div>
-                    </div>
-                  </button>
+                      >
+                        <span className="text-2xl sm:text-3xl font-bold block">{count}</span>
+                        <span className={cn(
+                          "text-xs font-medium uppercase tracking-wider",
+                          isSelected ? "text-blue-100" : "text-slate-400"
+                        )}>
+                          {t.quiz.questions}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-                  {isCustomMode && (
-                    <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder={t.quiz.customIntervalPlaceholder}
-                          value={customInterval}
-                          onChange={(e) => {
-                            const value = e.target.value
-                            // Faqat raqamlarni qabul qilish
-                            if (value === '' || /^\d+$/.test(value)) {
-                              setCustomInterval(value)
-                              setError(null)
-                            }
-                          }}
-                          className="text-center text-xl font-semibold h-14 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                          <span className="text-muted-foreground font-medium">{t.quiz.questions}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-success" />
-                          <span>Min: 5</span>
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span>Max: 100</span>
-                        </div>
-                      </div>
-                    </div>
+              {/* Divider with Text */}
+              <div className="relative py-8">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-slate-100 dark:border-slate-800"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white dark:bg-slate-900 px-4 text-sm text-slate-400 uppercase tracking-widest font-medium">
+                    {t.quiz.custom || "Yoki"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Custom Input Section */}
+              <div className="space-y-4">
+                <div 
+                  className={cn(
+                    "group relative flex items-center rounded-2xl border-2 transition-all duration-300 overflow-hidden bg-slate-50 dark:bg-slate-800/50",
+                    isCustomMode 
+                      ? "border-blue-500 bg-white dark:bg-slate-800 ring-4 ring-blue-500/10" 
+                      : "border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700",
+                    error ? "border-red-500 ring-4 ring-red-500/10" : ""
+                  )}
+                  onClick={() => setIsCustomMode(true)}
+                >
+                   <div className="pl-6 text-slate-400">
+                      <Sparkles className={cn("h-5 w-5 transition-colors", isCustomMode ? "text-blue-500" : "")} />
+                   </div>
+                   
+                   <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={t.quiz.customIntervalPlaceholder || "O'zingiz kiriting (5-100)"}
+                      value={customInterval}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setCustomInterval(value)
+                          setIsCustomMode(true)
+                          setError(null)
+                        }
+                      }}
+                      className="border-none bg-transparent h-16 text-lg sm:text-xl font-semibold shadow-none focus-visible:ring-0 placeholder:text-slate-400"
+                   />
+                   
+                   {isCustomMode && customInterval && (
+                     <div className="pr-6 animate-in fade-in zoom-in duration-200">
+                        <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                     </div>
+                   )}
+                </div>
+
+                {/* Error & Info Message */}
+                <div className="flex items-center justify-between text-xs px-2 h-6">
+                  {error ? (
+                    <span className="text-red-500 font-medium animate-in slide-in-from-left-2 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {error}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 flex gap-4">
+                       <span>Min: 5</span>
+                       <span>Max: 100</span>
+                    </span>
                   )}
                 </div>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Button
-                    size="lg"
-                    onClick={handleStartQuiz}
-                    disabled={isCustomMode && (!customInterval || parseInt(customInterval, 10) < 5 || parseInt(customInterval, 10) > 100)}
-                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                  >
-                    <Play className="mr-2 h-5 w-5" />
+              {/* Action Buttons */}
+              <div className="mt-8 space-y-4">
+                <Button
+                  size="lg"
+                  onClick={handleStartQuiz}
+                  disabled={isCustomMode && (!customInterval || parseInt(customInterval, 10) < 5 || parseInt(customInterval, 10) > 100)}
+                  className="w-full h-14 rounded-xl text-lg font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  <span className="flex items-center gap-2">
                     {t.quiz.startQuiz}
-                  </Button>
+                    <ArrowRight className="h-5 w-5" />
+                  </span>
+                </Button>
 
-                  <Button variant="ghost" asChild className="w-full">
-                    <Link href="/home" className="flex items-center justify-center">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      {t.quiz.backToHome}
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className="w-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-transparent"
+                >
+                  <Link href="/home">
+                    {t.quiz.backToHome}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
           </div>
         </main>
       </div>
     )
-  }
+}
 
   // Loading state
   if (isLoading) {

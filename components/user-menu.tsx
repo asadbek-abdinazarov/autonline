@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
-import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, Users, Signpost } from "lucide-react"
+import { LogOut, User, CreditCard, Calendar, CheckCircle, XCircle, Loader2, History, Crown, Star, Ban, TrendingUp, MoreVertical, Globe, HelpCircle, Check, Sun, Moon, ChevronRight, ChevronDown, Users, Signpost } from "lucide-react"
 import { getCurrentUser, logout, setCurrentUser, fetchCurrentUser, type Permission } from "@/lib/auth"
 import { usePaymentHistory } from "@/hooks/use-payment-history"
 import { useTranslation, interpolate } from "@/hooks/use-translation"
@@ -180,7 +180,6 @@ export function UserMenu() {
       fetchPaymentHistory()
       setHasLoadedPaymentHistory(true)
     }
-    setShowPaymentHistory(true)
   }
   
   const handleHistoryClick = useCallback(() => {
@@ -343,24 +342,33 @@ export function UserMenu() {
               </DropdownMenuLabel>
             )}
 
-
-            {showPaymentHistory && hasPermission('VIEW_PAYMENTS') && paymentHistory.length > 0 && (
+            {hasPermission('VIEW_PAYMENTS') && paymentHistory.length > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <div className="px-3 py-3">
-                  <div className="flex items-center gap-2.5 mb-3">
+                  <button
+                    onClick={() => setShowPaymentHistory(!showPaymentHistory)}
+                    className="w-full flex items-center gap-2.5 mb-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  >
                     <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
                       <CreditCard className="h-4 w-4 text-white" />
                     </div>
-                    <div>
+                    <div className="flex-1 text-left">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t.userMenu.paymentHistory}</h3>
                       <p className="text-[10px] text-slate-600 dark:text-slate-400">{t.userMenu.paymentHistoryDescription}</p>
                     </div>
-                  </div>
+                    <ChevronDown 
+                      className={`h-4 w-4 text-slate-600 dark:text-slate-400 transition-transform duration-200 ${
+                        showPaymentHistory ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
                   
-                  <div className="h-px bg-gradient-to-r from-transparent via-slate-300/50 dark:via-slate-700/50 to-transparent mb-3 transition-colors duration-300" />
-                  
-                  <div className="bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
+                  {showPaymentHistory && (
+                    <div className="overflow-hidden transition-all duration-300 ease-in-out animate-in fade-in-0 slide-in-from-top-2">
+                      <div className="h-px bg-gradient-to-r from-transparent via-slate-300/50 dark:via-slate-700/50 to-transparent mb-3 transition-colors duration-300" />
+                      
+                      <div className="bg-slate-50/90 dark:bg-slate-900/50 backdrop-blur-xl rounded-xl border border-slate-300/50 dark:border-slate-700/50 overflow-hidden shadow-lg transition-colors duration-300">
                     <div className={`p-2 ${paymentHistory.length > 2 ? 'max-h-48 overflow-y-auto' : ''}`}>
                       {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -442,19 +450,21 @@ export function UserMenu() {
                           ))}
                         </div>
                       )}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 flex items-center justify-between px-1 text-[10px] text-slate-600 dark:text-slate-400">
+                        <div>
+                          {t.userMenu.total} <span className="font-semibold text-slate-900 dark:text-white">{paymentHistory.length}</span> {t.common.items || 'ta'}
+                        </div>
+                        <div>
+                          {t.userMenu.paidCount} <span className="font-semibold text-green-400">
+                            {paymentHistory.filter(p => p.isPaid).length}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="mt-3 flex items-center justify-between px-1 text-[10px] text-slate-600 dark:text-slate-400">
-                    <div>
-                      {t.userMenu.total} <span className="font-semibold text-slate-900 dark:text-white">{paymentHistory.length}</span> {t.common.items || 'ta'}
-                    </div>
-                    <div>
-                      {t.userMenu.paidCount} <span className="font-semibold text-green-400">
-                        {paymentHistory.filter(p => p.isPaid).length}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </>
             )}
