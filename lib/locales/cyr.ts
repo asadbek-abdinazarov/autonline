@@ -567,6 +567,32 @@ export const cyr = {
     fullName: "Тўлиқ исм",
     actions: "Амаллар",
   },
+
+  // Templates
+  templates: {
+    loading: "Юкланмоқда...",
+    error: "Хатолик",
+    dataNotFound: "Тест маълумотлари топилмади. Илтимос, қайта бошланг.",
+    dataNotFoundShort: "Тест маълумотлари топилмади",
+    loadError: "Тест маълумотларини юклашда хатолик юз берди",
+    submitError: "Тест натижаларини юборишда хатолик юз берди",
+    questionNavigator: "Саволлар навигатори",
+    timeRemaining: "Қолган вақт",
+    answered: "Жавоб берилди",
+    correctAnswers: "Тўғри жавоблар",
+    imageLoading: "Расм юкланмоқда...",
+    question: "Савол",
+    previous: "Олдинги",
+    next: "Кейинги",
+    backToTemplates: "Орқага қайтиш",
+    results: "Тест натижалари",
+    congratulations: "Табриклаймиз!",
+    unfortunately: "Афсуски",
+    passedMessage: "Сиз тестдан ўтдингиз!",
+    failedMessage: "Сиз тестдан ўта олмадингиз. Қайта уриниб кўринг.",
+    totalQuestions: "Жами саволлар",
+    incorrectAnswers: "Нотўғри жавоблар",
+  },
 }
 
 

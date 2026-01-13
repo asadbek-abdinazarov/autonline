@@ -156,6 +156,13 @@ export function useApi() {
           return null
         }
         
+        // Handle server errors (500-599)
+        if (response.status >= 500 && response.status < 600) {
+          const { handleApiError } = await import('@/lib/api-utils')
+          await handleApiError({ status: response.status })
+          return null
+        }
+        
         const errorText = await response.text()
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }

@@ -567,6 +567,32 @@ export const ru = {
     fullName: "Полное имя",
     actions: "Действия",
   },
+
+  // Templates
+  templates: {
+    loading: "Загрузка...",
+    error: "Ошибка",
+    dataNotFound: "Данные теста не найдены. Пожалуйста, начните заново.",
+    dataNotFoundShort: "Данные теста не найдены",
+    loadError: "Ошибка при загрузке данных теста",
+    submitError: "Ошибка при отправке результатов теста",
+    questionNavigator: "Навигатор вопросов",
+    timeRemaining: "Оставшееся время",
+    answered: "Отвечено",
+    correctAnswers: "Правильные ответы",
+    imageLoading: "Загрузка изображения...",
+    question: "Вопрос",
+    previous: "Предыдущий",
+    next: "Далее",
+    backToTemplates: "Вернуться назад",
+    results: "Результаты теста",
+    congratulations: "Поздравляем!",
+    unfortunately: "К сожалению",
+    passedMessage: "Вы прошли тест!",
+    failedMessage: "Вы не прошли тест. Попробуйте снова.",
+    totalQuestions: "Всего вопросов",
+    incorrectAnswers: "Неправильные ответы",
+  },
 }
 
 

@@ -568,6 +568,32 @@ export const uz = {
     fullName: "To'liq ism",
     actions: "Amallar",
   },
+
+  // Templates
+  templates: {
+    loading: "Yuklanmoqda...",
+    error: "Xatolik",
+    dataNotFound: "Test ma'lumotlari topilmadi. Iltimos, qayta boshlang.",
+    dataNotFoundShort: "Test ma'lumotlari topilmadi",
+    loadError: "Test ma'lumotlarini yuklashda xatolik yuz berdi",
+    submitError: "Test natijalarini yuborishda xatolik yuz berdi",
+    questionNavigator: "Savollar navigatori",
+    timeRemaining: "Qolgan vaqt",
+    answered: "Javob berildi",
+    correctAnswers: "To'g'ri javoblar",
+    imageLoading: "Rasm yuklanmoqda...",
+    question: "Savol",
+    previous: "Oldingi",
+    next: "Keyingi",
+    backToTemplates: "Orqaga qaytish",
+    results: "Test natijalari",
+    congratulations: "Tabriklaymiz!",
+    unfortunately: "Afsuski",
+    passedMessage: "Siz testdan o'tdingiz!",
+    failedMessage: "Siz testdan o'ta olmadingiz. Qayta urinib ko'ring.",
+    totalQuestions: "Jami savollar",
+    incorrectAnswers: "Noto'g'ri javoblar",
+  },
 }
 
 

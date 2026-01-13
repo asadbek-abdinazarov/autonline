@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, startTransition, useMemo, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { NewsCard } from "@/components/news-card"
@@ -10,12 +11,35 @@ import { useNews } from "@/hooks/use-news"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
 import Link from "next/link"
-import { BookOpen, Newspaper, Loader2, Shuffle, Sparkles, TrendingUp, ArrowRight, Award, Signpost } from "lucide-react"
+import { BookOpen, Newspaper, Loader2, Shuffle, Sparkles, TrendingUp, ArrowRight, Award, Signpost, FileText } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import { getCurrentUser, type Permission, type User } from "@/lib/auth"
+import { useApi } from "@/hooks/use-api"
+import { buildApiUrl } from "@/lib/api-utils"
+
+interface TestResultResponse {
+  id: number
+  score: number
+  status: string
+  attemptNumber: number
+  duration: string
+  startedAt: string
+  finishedAt: string
+}
+
+interface Template {
+  id: number
+  title: string
+  duration: number
+  maxScore: number
+  passScore: number
+  createdAt: string
+  testResultResponse?: TestResultResponse
+}
 
 export default function HomeClient() {
   const { t } = useTranslation()
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(getCurrentUser())
   const hasPermission = useCallback((perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm), [user?.permissions])
   const canViewNews = useMemo(() => hasPermission('VIEW_NEWS'), [hasPermission])
@@ -23,12 +47,47 @@ export default function HomeClient() {
   const canViewLimitedTopics = useMemo(() => hasPermission('LIMITED_TOPICS'), [hasPermission])
   const canViewRandom = useMemo(() => hasPermission('VIEW_RANDOM'), [hasPermission])
   const canViewTrafficSigns = useMemo(() => hasPermission('VIEW_TRAFFIC_SIGNS'), [hasPermission])
+  const canViewTemplates = useMemo(() => hasPermission('LIMITED_TEMPLATES') || hasPermission('VIEW_ALL_TEMPLATES'), [hasPermission])
   const [topics, setTopics] = useState<Topic[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAllTopics, setShowAllTopics] = useState(true)
   const { news, isLoading: newsLoading, error: newsError, fetchNews } = useNews()
   const hasFetchedRef = useRef(false)
+  const { makeAuthenticatedRequest } = useApi()
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
+  const [templatesError, setTemplatesError] = useState<string | null>(null)
+
+  const fetchTemplates = useCallback(async () => {
+    try {
+      setIsLoadingTemplates(true)
+      setTemplatesError(null)
+      
+      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates'), {
+        method: 'GET',
+      })
+      
+      if (response) {
+        const { safeJsonParse } = await import('@/lib/api-utils')
+        const data = await safeJsonParse<Template[]>(response)
+        if (data) {
+          setTemplates(data)
+          // Navigate to templates page after successful fetch
+          router.push('/templates')
+        } else {
+          setTemplatesError('Ma\'lumotlar yuklanmadi yoki noto\'g\'ri format')
+        }
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching templates:', err)
+      }
+      setTemplatesError(err instanceof Error ? err.message : 'Shablon testlar yuklanmadi')
+    } finally {
+      setIsLoadingTemplates(false)
+    }
+  }, [makeAuthenticatedRequest, router])
 
   // Memoize displayed topics list
   const displayedTopics = useMemo(() => {
@@ -206,7 +265,7 @@ export default function HomeClient() {
           )}
 
       {/* Learning Hub Section - Minimalist & Premium */}
-{(canViewRandom || canViewTrafficSigns) && (
+{(canViewRandom || canViewTrafficSigns || canViewTemplates) && (
   <section className="container mx-auto px-4 py-16 mb-8">
     
     {/* Section Header - Clean & Centered */}
@@ -220,7 +279,13 @@ export default function HomeClient() {
     </div>
 
     {/* Cards Grid */}
-    <div className={`grid gap-6 ${canViewRandom && canViewTrafficSigns ? 'md:grid-cols-2' : 'max-w-3xl mx-auto'}`}>
+    <div className={`grid gap-6 ${
+      (canViewRandom && canViewTrafficSigns && canViewTemplates) 
+        ? 'md:grid-cols-2 lg:grid-cols-3' 
+        : (canViewRandom && canViewTrafficSigns) || (canViewRandom && canViewTemplates) || (canViewTrafficSigns && canViewTemplates)
+        ? 'md:grid-cols-2'
+        : 'max-w-3xl mx-auto'
+    }`}>
       
       {/* 1. Random Quiz Card (Blue Theme) */}
       {canViewRandom && (
@@ -292,6 +357,56 @@ export default function HomeClient() {
             </div>
           </div>
         </Link>
+      )}
+
+      {/* 3. Templates Card (Purple/Indigo Theme) */}
+      {canViewTemplates && (
+        <button
+          onClick={fetchTemplates}
+          disabled={isLoadingTemplates}
+          className="group block h-full outline-none text-left disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10">
+            
+            <div className="flex flex-col h-full">
+              {/* Icon & Badge */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center border border-purple-100 dark:border-purple-500/20 dark:group-hover:bg-purple-600 dark:group-hover:border-purple-600 transition-colors duration-300">
+                  {isLoadingTemplates ? (
+                    <Loader2 className="h-7 w-7 text-purple-600 dark:text-purple-400 animate-spin" />
+                  ) : (
+                    <FileText className="h-7 w-7 text-purple-600 dark:text-purple-400 dark:group-hover:text-white transition-colors duration-300" />
+                  )}
+                </div>
+                <span className="px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 rounded-full border border-purple-100 dark:border-purple-800">
+                  Shablon
+                </span>
+              </div>
+
+              {/* Text Content */}
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
+                  Shablon testlar
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {isLoadingTemplates 
+                    ? 'Yuklanmoqda...' 
+                    : templatesError 
+                    ? templatesError 
+                    : 'Tayyorlangan shablon testlar orqali bilimingizni sinang va imtihonga tayyorlaning.'}
+                </p>
+              </div>
+
+              {/* Bottom Action Area */}
+              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                {isLoadingTemplates ? 'Yuklanmoqda...' : 'Shablon testlarni ko\'rish'}
+                {!isLoadingTemplates && (
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                )}
+              </div>
+            </div>
+          </div>
+        </button>
       )}
     </div>
   </section>

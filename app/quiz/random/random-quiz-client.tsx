@@ -682,6 +682,28 @@ export default function RandomQuizClient() {
     setCurrentQuestionIndex(index)
   }
 
+  const handleNext = () => {
+    if (autoSkipTimeout) {
+      clearTimeout(autoSkipTimeout)
+      setAutoSkipTimeout(null)
+    }
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+    } else {
+      setShowResults(true)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (autoSkipTimeout) {
+      clearTimeout(autoSkipTimeout)
+      setAutoSkipTimeout(null)
+    }
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1)
+    }
+  }
+
   const handleTimeUp = () => {
     setShowResults(true)
   }
@@ -1119,6 +1141,23 @@ export default function RandomQuizClient() {
                       </button>
                     )
                   })}
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-between pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentQuestionIndex === 0}
+                  >
+                    Oldingi
+                  </Button>
+                  <Button
+                    onClick={handleNext}
+                    disabled={currentQuestionIndex === questions.length - 1}
+                  >
+                    Keyingi
+                  </Button>
                 </div>
               </div>
             </div>

@@ -2,22 +2,14 @@
 
 import { useEffect, useState, useRef, useMemo, startTransition } from "react"
 import { useRouter } from "next/navigation"
-import { getCurrentUser, type Permission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { Header } from "@/components/header"
-import {
-  fetchQuestionsByLessonId,
-  submitLessonHistory,
-  type QuestionApiResponse,
-  type QuestionData,
-  clearLessonCache,
-  getLocalizedLessonName,
-} from "@/lib/data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuestionNavigator } from "@/components/question-navigator"
 import { QuizTimer } from "@/components/quiz-timer"
 import { ImageModal } from "@/components/ui/image-modal"
-import { ArrowLeft, CheckCircle2, ZoomIn, History, Menu, Clock, ListChecks, Target, Check } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ZoomIn, History, Menu, Clock, ListChecks, Target, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -30,22 +22,45 @@ import {
 import { useTranslation } from "@/hooks/use-translation"
 import { Language, availableLanguages } from "@/lib/locales"
 import { loadImageWithCache } from "@/lib/image-loader"
+import { useApi } from "@/hooks/use-api"
+import { buildApiUrl } from "@/lib/api-utils"
+
+interface Variant {
+  variantId: number
+  isCorrect: boolean
+  text: string
+}
+
+interface TemplateQuestion {
+  questionId: number
+  photo: string
+  questionText: string
+  variants: Variant[]
+}
+
+interface TemplateTestResponse {
+  testResultId: number
+  testTemplateId: number
+  lessonId: number
+  icon: string
+  name: string
+  description: string
+  questions: TemplateQuestion[]
+}
 
 interface UserAnswer {
   selectedAnswer: number
   isCorrect: boolean
 }
 
-interface QuizClientProps {
-  topicId: string
+interface TemplateQuizClientProps {
+  templateId: string
 }
 
-export default function QuizClient({ topicId }: QuizClientProps) {
+export default function TemplateQuizClient({ templateId }: TemplateQuizClientProps) {
   const { t, language, setLanguage } = useTranslation()
   const router = useRouter()
-  const user = getCurrentUser()
-  const hasPermission = (perm: Permission) => Array.isArray(user?.permissions) && user!.permissions!.includes(perm)
-  const canViewHistory = hasPermission("VIEW_TEST_HISTORY")
+  const { makeAuthenticatedRequest } = useApi()
   
   const handleLanguageChange = (lang: Language) => {
     if (lang !== language) {
@@ -53,8 +68,22 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }
   
-  const [lessonData, setLessonData] = useState<QuestionApiResponse | null>(null)
-  const [questions, setQuestions] = useState<QuestionData[]>([])
+  // Map header language to question language
+  const selectedLanguage = useMemo(() => {
+    let result: "oz" | "uz" | "ru"
+    if (language === "uz") {
+      result = "uz"
+    } else if (language === "cyr") {
+      result = "oz"
+    } else if (language === "ru") {
+      result = "ru"
+    } else {
+      result = "uz"
+    }
+    return result
+  }, [language])
+  const [testData, setTestData] = useState<TemplateTestResponse | null>(null)
+  const [questions, setQuestions] = useState<TemplateQuestion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -63,6 +92,20 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   const [isAnswered, setIsAnswered] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [currentImageUrl, setCurrentImageUrl] = useState("")
+  const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
+  const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
+  const [isImageLoading, setIsImageLoading] = useState(false)
+  const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const hasFetchedRef = useRef<string | null>(null)
+  const hasSubmittedRef = useRef(false)
+  const previousLanguageRef = useRef<string | null>(null)
+  const userAnswersRef = useRef<Map<number, UserAnswer>>(new Map())
+  const answeredQuestionsRef = useRef<Map<number, boolean>>(new Map())
+  const currentQuestionIndexRef = useRef<number>(0)
+  const scoreRef = useRef<number>(0)
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -80,88 +123,57 @@ export default function QuizClient({ topicId }: QuizClientProps) {
   useEffect(() => {
     scoreRef.current = score
   }, [score])
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
-  const [currentImageUrl, setCurrentImageUrl] = useState("")
-  const [imageUrlCache, setImageUrlCache] = useState<Map<string, string>>(new Map())
-  const [currentImageSrc, setCurrentImageSrc] = useState<string>("")
-  const [isImageLoading, setIsImageLoading] = useState(false)
-  const [autoSkipTimeout, setAutoSkipTimeout] = useState<NodeJS.Timeout | null>(null)
-  const hasFetchedRef = useRef<string | null>(null)
-  const hasSubmittedHistoryRef = useRef(false)
-  const previousLanguageRef = useRef<string | null>(null)
-  const userAnswersRef = useRef<Map<number, UserAnswer>>(new Map())
-  const answeredQuestionsRef = useRef<Map<number, boolean>>(new Map())
-  const currentQuestionIndexRef = useRef<number>(0)
-  const scoreRef = useRef<number>(0)
 
-  // Map header language to question language
-  const selectedLanguage = useMemo(() => {
-    let result: "oz" | "uz" | "ru"
-    if (language === "uz") {
-      result = "uz"
-    } else if (language === "cyr") {
-      result = "oz"
-    } else if (language === "ru") {
-      result = "ru"
-    } else {
-      result = "uz"
-    }
-    return result
-  }, [language])
+  // Fetch template test data from API or localStorage
+  const fetchTemplateTest = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-  // Get localized topic name
-  const topicName = useMemo(() => {
-    if (!lessonData) return ""
-    return getLocalizedLessonName(lessonData, language)
-  }, [lessonData, language])
+      const savedUserAnswers = previousLanguageRef.current !== null && previousLanguageRef.current !== language 
+        ? new Map(userAnswersRef.current) 
+        : new Map()
+      const savedAnsweredQuestions = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+        ? new Map(answeredQuestionsRef.current)
+        : new Map()
+      const savedCurrentIndex = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+        ? currentQuestionIndexRef.current
+        : 0
+      const savedScore = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+        ? scoreRef.current
+        : 0
 
-  const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
+      // Try localStorage first (only on initial load)
+      const savedData = localStorage.getItem(`templateTest_${templateId}`)
+      let data: TemplateTestResponse | null = null
 
-  // Fetch lesson data when topicId changes or language changes
-  useEffect(() => {
-    const user = getCurrentUser()
-    if (!user) {
-      startTransition(() => {
-        router.push("/login")
-      })
-      return
-    }
-
-    const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
-
-    if (languageChanged) {
-      clearLessonCache(topicId)
-      hasFetchedRef.current = null
-      previousLanguageRef.current = language
-    } else {
-      if (hasFetchedRef.current === topicId && !languageChanged) {
-        return
-      }
-      previousLanguageRef.current = language
-    }
-
-    hasFetchedRef.current = topicId
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const savedUserAnswers = languageChanged ? new Map(userAnswersRef.current) : new Map()
-        const savedAnsweredQuestions = languageChanged ? new Map(answeredQuestionsRef.current) : new Map()
-        const savedCurrentIndex = languageChanged ? currentQuestionIndexRef.current : 0
-        const savedScore = languageChanged ? scoreRef.current : 0
-
-        const data = await fetchQuestionsByLessonId(topicId, {
-          useCache: !languageChanged,
-          forceRefresh: languageChanged,
+      if (savedData && previousLanguageRef.current === null) {
+        // Initial load from localStorage
+        data = JSON.parse(savedData)
+        localStorage.removeItem(`templateTest_${templateId}`)
+      } else {
+        // Fetch from API (for language changes or if localStorage is empty)
+        const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates/start-test'), {
+          method: 'POST',
+          body: JSON.stringify({ testTemplateId: Number(templateId) }),
         })
 
+        if (response) {
+          const { safeJsonParse } = await import('@/lib/api-utils')
+          const apiData = await safeJsonParse<TemplateTestResponse>(response)
+          if (apiData) {
+            data = apiData
+          }
+        }
+      }
+
+      if (data) {
         startTransition(() => {
-          setLessonData(data)
+          setTestData(data)
           setQuestions(data.questions)
 
-          if (languageChanged) {
+          // Restore user answers if language changed
+          if (previousLanguageRef.current !== null && previousLanguageRef.current !== language) {
             setUserAnswers(savedUserAnswers)
             setAnsweredQuestions(savedAnsweredQuestions)
             setCurrentQuestionIndex(savedCurrentIndex)
@@ -172,19 +184,44 @@ export default function QuizClient({ topicId }: QuizClientProps) {
 
           setIsLoading(false)
         })
-      } catch (err) {
-        console.error("Error fetching lesson data:", err)
-        startTransition(() => {
-          setError(err instanceof Error ? err.message : t.quiz.notFound)
-          setIsLoading(false)
-        })
-        hasFetchedRef.current = null
+      } else {
+        setError(t.templates.dataNotFound)
+        setIsLoading(false)
+      }
+    } catch (err) {
+      console.error("Error loading test data:", err)
+      startTransition(() => {
+        setError(t.templates.loadError)
+        setIsLoading(false)
+      })
+      hasFetchedRef.current = null
+    }
+  }
+
+  // Load test data when templateId or language changes
+  useEffect(() => {
+    const user = getCurrentUser()
+    if (!user) {
+      router.push("/login")
+      return
+    }
+
+    const languageChanged = previousLanguageRef.current !== null && previousLanguageRef.current !== language
+
+    if (languageChanged) {
+      hasFetchedRef.current = null
+    } else {
+      if (hasFetchedRef.current === templateId && !languageChanged) {
+        previousLanguageRef.current = language
+        return
       }
     }
 
-    fetchData()
+    previousLanguageRef.current = language
+    hasFetchedRef.current = templateId
+    fetchTemplateTest()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId, language])
+  }, [templateId, language, router])
 
   useEffect(() => {
     const currentAnswer = userAnswers.get(currentQuestionIndex)
@@ -195,6 +232,25 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     }
   }, [currentQuestionIndex, userAnswers])
 
+  // Function to load image with cache support
+  const loadImageUrl = async (photoKey: string): Promise<string> => {
+    if (imageUrlCache.has(photoKey)) {
+      return imageUrlCache.get(photoKey)!
+    }
+
+    try {
+      const blobUrl = await loadImageWithCache(photoKey)
+      if (blobUrl) {
+        setImageUrlCache(prev => new Map(prev).set(photoKey, blobUrl))
+      }
+      return blobUrl
+    } catch (error) {
+      console.error('Error loading image:', error)
+      return ''
+    }
+  }
+
+  // Load image when question changes
   useEffect(() => {
     const loadCurrentImage = async () => {
       const currentQuestion = questions[currentQuestionIndex]
@@ -212,7 +268,6 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     if (questions.length > 0) {
       loadCurrentImage()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, questions])
 
   useEffect(() => {
@@ -231,169 +286,120 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         }
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    if (showResults && lessonData && lessonData.lessonId && questions.length > 0 && !hasSubmittedHistoryRef.current) {
-      const percentage = Math.round((score / questions.length) * 100)
-      const correctAnswersCount = score
-      const notCorrectAnswersCount = questions.length - score
+  const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
 
-      submitLessonHistory({
-        lessonId: Number(lessonData.lessonId),
-        percentage,
-        allQuestionsCount: questions.length,
-        correctAnswersCount,
-        notCorrectAnswersCount,
-      })
+  const handleAnswerSelect = (variantIndex: number) => {
+    if (isAnswered || showResults) return
 
-      hasSubmittedHistoryRef.current = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showResults, lessonData, score, questions.length])
+    const currentQuestion = questions[currentQuestionIndex]
+    if (!currentQuestion) return
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">{t.quiz.loading}</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
+    const selectedVariant = currentQuestion.variants[variantIndex]
+    const isCorrect = selectedVariant?.isCorrect || false
 
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-lg text-muted-foreground mb-4">{error}</p>
-              <div className="flex gap-4 justify-center">
-                <Button onClick={() => window.location.reload()}>{t.common.retry}</Button>
-                <Button variant="outline" asChild>
-                  <Link href="/home">{t.quiz.backToHome}</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
-
-  if (!questions || questions.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-lg text-muted-foreground">{t.quiz.notFound}</p>
-              <Button className="mt-4" asChild>
-                <Link href="/home">{t.quiz.backToHome}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
-
-  const loadImageUrl = async (photoKey: string): Promise<string> => {
-    if (imageUrlCache.has(photoKey)) {
-      return imageUrlCache.get(photoKey)!
+    const newAnswer: UserAnswer = {
+      selectedAnswer: variantIndex,
+      isCorrect,
     }
 
-    try {
-      const blobUrl = await loadImageWithCache(photoKey)
-
-      if (blobUrl) {
-        setImageUrlCache((prev) => new Map(prev).set(photoKey, blobUrl))
-      }
-
-      return blobUrl
-    } catch (error) {
-      console.error("Error loading image:", error)
-      return ""
-    }
-  }
-
-  const currentQuestion = questions[currentQuestionIndex]
-  const currentUserAnswer = userAnswers.get(currentQuestionIndex)
-
-  if (!currentQuestion) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-lg text-muted-foreground">{t.quiz.questionNotFound}</p>
-              <Button className="mt-4" asChild>
-                <Link href="/home">{t.quiz.backToHome}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
-
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (isAnswered) return
-
-    if (autoSkipTimeout) {
-      clearTimeout(autoSkipTimeout)
-    }
-
-    let isCorrect = false
-    if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
-      isCorrect = currentQuestion.answers.isCorrect[answerIndex] === true
-    } else if (currentQuestion.answers.status) {
-      isCorrect = answerIndex === currentQuestion.answers.status - 1
-    } else {
-      console.warn("[Quiz] No isCorrect array or status field found for question:", currentQuestion.questionId)
-    }
-
-    // Batch state updates with startTransition for better performance
-    startTransition(() => {
-      const newUserAnswers = new Map(userAnswers)
-      newUserAnswers.set(currentQuestionIndex, { selectedAnswer: answerIndex, isCorrect })
-      setUserAnswers(newUserAnswers)
-
-      const newAnsweredQuestions = new Map(answeredQuestions)
-      newAnsweredQuestions.set(currentQuestionIndex, isCorrect)
-      setAnsweredQuestions(newAnsweredQuestions)
-
-      setIsAnswered(true)
-
-      if (isCorrect) {
-        setScore((prev) => prev + 1)
-      }
+    setUserAnswers(prev => {
+      const newMap = new Map(prev)
+      newMap.set(currentQuestionIndex, newAnswer)
+      return newMap
     })
 
+    setAnsweredQuestions(prev => {
+      const newMap = new Map(prev)
+      newMap.set(currentQuestionIndex, isCorrect)
+      return newMap
+    })
+
+    setIsAnswered(true)
+
+    // Auto-skip to next question after 2 seconds
     const timeout = setTimeout(() => {
-      startTransition(() => {
-        if (currentQuestionIndex < questions.length - 1) {
-          setCurrentQuestionIndex((prev) => prev + 1)
-        } else {
-          setShowResults(true)
-        }
-      })
-    }, 1500)
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1)
+      } else {
+        handleFinish()
+      }
+    }, 2000)
 
     setAutoSkipTimeout(timeout)
+
+    // Update score
+    if (isCorrect) {
+      setScore(prev => prev + 1)
+    }
+  }
+
+  const handleFinish = async () => {
+    if (hasSubmittedRef.current || !testData) return
+    
+    hasSubmittedRef.current = true
+    setIsSubmitting(true)
+    
+    try {
+      const totalQuestions = questions.length
+      const correctCount = score
+      const wrongCount = totalQuestions - score
+      const percentage = Math.round((score / totalQuestions) * 100)
+      
+      const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates/finish-test'), {
+        method: 'POST',
+        body: JSON.stringify({
+          testResultId: testData.testResultId,
+          score: score,
+          correctCount: correctCount,
+          wrongCount: wrongCount,
+          percentage: percentage,
+        }),
+      })
+      
+      if (response) {
+        const { safeJsonParse } = await import('@/lib/api-utils')
+        const data = await safeJsonParse<{
+          testResultId: number
+          score: number
+          correctCount: number
+          wrongCount: number
+          startedAt: string
+          finishedAt: string
+        }>(response)
+        
+        if (data) {
+          // Successfully submitted
+          setShowResults(true)
+        } else {
+          setError(t.templates.submitError)
+        }
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error finishing test:', err)
+      }
+      setError(err instanceof Error ? err.message : t.templates.submitError)
+    } finally {
+      setIsSubmitting(false)
+      // Show results even if submission fails
+      setShowResults(true)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+    } else {
+      handleFinish()
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1)
+    }
   }
 
   const handleQuestionClick = (index: number) => {
@@ -404,48 +410,57 @@ export default function QuizClient({ topicId }: QuizClientProps) {
     setCurrentQuestionIndex(index)
   }
 
-  const handleNext = () => {
-    if (autoSkipTimeout) {
-      clearTimeout(autoSkipTimeout)
-      setAutoSkipTimeout(null)
-    }
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1)
-    } else {
-      setShowResults(true)
-    }
-  }
-
-  const handlePrevious = () => {
-    if (autoSkipTimeout) {
-      clearTimeout(autoSkipTimeout)
-      setAutoSkipTimeout(null)
-    }
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1)
-    }
-  }
-
   const handleTimeUp = () => {
-    setShowResults(true)
-  }
-
-  const handleRetry = () => {
-    setCurrentQuestionIndex(0)
-    setUserAnswers(new Map())
-    setAnsweredQuestions(new Map())
-    setIsAnswered(false)
-    setShowResults(false)
-    setScore(0)
-    hasSubmittedHistoryRef.current = false
+    handleFinish()
   }
 
   const progressPercentage = Math.round((answeredQuestions.size / questions.length) * 100)
-
   const correctAnswersCount = Array.from(answeredQuestions.values()).filter(Boolean).length
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-purple-500 dark:text-purple-400" />
+            <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">{t.templates.loading}</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error || !testData || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-destructive">{t.templates.error}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                {error || t.templates.dataNotFoundShort}
+              </p>
+              <Button onClick={() => router.push("/templates")} className="w-full">
+                {t.templates.backToTemplates}
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    )
+  }
+
+  const currentQuestion = questions[currentQuestionIndex]
+  const currentUserAnswer = userAnswers.get(currentQuestionIndex)
+  const answeredCount = answeredQuestions.size
+  const totalQuestions = questions.length
+
   if (showResults) {
-    const percentage = Math.round((score / questions.length) * 100)
+    const percentage = Math.round((score / totalQuestions) * 100)
     const passed = percentage >= 70
 
     return (
@@ -471,49 +486,40 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                     >
                       <span className="text-4xl font-bold">{percentage}%</span>
                     </div>
-                  </div>
+                </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-bold">{passed ? t.quiz.congratulations : t.quiz.unfortunately}</h3>
-                    <p className="text-muted-foreground">{passed ? t.quiz.passedMessage : t.quiz.failedMessage}</p>
+                    <h3 className="text-2xl font-bold">
+                      {passed ? t.templates.congratulations : t.templates.unfortunately}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {passed ? t.templates.passedMessage : t.templates.failedMessage}
+                    </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 text-center divide-x divide-border">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.totalQuestions}</p>
-                    <p className="text-xl font-bold">{questions.length}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t.templates.totalQuestions}</p>
+                    <p className="text-xl font-bold">{totalQuestions}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.correctAnswers}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t.templates.correctAnswers}</p>
                     <p className="text-xl font-bold text-success">{score}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{t.quiz.incorrectAnswers}</p>
-                    <p className="text-xl font-bold text-error">{questions.length - score}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t.templates.incorrectAnswers}</p>
+                    <p className="text-xl font-bold text-error">{totalQuestions - score}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3 pt-4">
-                  <Button className="w-full text-lg h-12" onClick={handleRetry}>
-                    {t.common.retry}
+                  <Button onClick={() => router.push("/templates")} className="w-full text-lg h-12">
+                    {t.templates.backToTemplates}
                   </Button>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" className="h-11 bg-transparent" asChild>
-                      <Link href="/home">{t.quiz.homePage}</Link>
-                    </Button>
-                    {canViewHistory && (
-                      <Button variant="outline" className="h-11 bg-transparent" asChild>
-                        <Link href="/history">
-                          <History className="h-4 w-4 mr-2" />
-                          {t.history?.title || "Tarix"}
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+            </CardContent>
+          </Card>
           </div>
         </main>
       </div>
@@ -525,6 +531,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
       <Header />
 
       <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
         <div className="lg:hidden bg-background border-b px-3 py-2.5 shrink-0 z-30 shadow-sm">
           <div className="flex items-center gap-2">
             {/* Menu & Back */}
@@ -533,11 +540,11 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9">
                     <Menu className="h-5 w-5" />
-                  </Button>
+              </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[85vw] sm:w-[350px] overflow-y-auto p-0">
                   <SheetHeader className="p-4 border-b">
-                    <SheetTitle className="text-left">{t.quiz.questionNavigator}</SheetTitle>
+                    <SheetTitle className="text-left">{t.templates.questionNavigator}</SheetTitle>
                   </SheetHeader>
 
                   <div className="p-4 space-y-4">
@@ -548,7 +555,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                         </div>
                         <div className="flex-1">
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            {t.quiz.timeRemaining}
+                            {t.templates.timeRemaining}
                           </p>
                           <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
                         </div>
@@ -559,17 +566,17 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                       <div className="bg-muted/50 rounded-xl p-3 text-center">
                         <div className="flex items-center justify-center gap-2 mb-1">
                           <ListChecks className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                          <span className="text-xs font-medium text-muted-foreground">{t.templates.answered}</span>
                         </div>
                         <p className="text-2xl font-bold">
                           {answeredQuestions.size}
-                          <span className="text-base text-muted-foreground">/{questions.length}</span>
+                          <span className="text-base text-muted-foreground">/{totalQuestions}</span>
                         </p>
                       </div>
                       <div className="bg-muted/50 rounded-xl p-3 text-center">
                         <div className="flex items-center justify-center gap-2 mb-1">
                           <Target className="h-4 w-4 text-success" />
-                          <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                          <span className="text-xs font-medium text-muted-foreground">{t.templates.correctAnswers}</span>
                         </div>
                         <p className="text-2xl font-bold text-success">{correctAnswersCount}</p>
                       </div>
@@ -577,19 +584,19 @@ export default function QuizClient({ topicId }: QuizClientProps) {
 
                     {/* Question Navigator */}
                     <div className="bg-background rounded-xl border p-4">
-                      <QuestionNavigator
-                        totalQuestions={questions.length}
-                        currentQuestion={currentQuestionIndex}
-                        answeredQuestions={answeredQuestions}
-                        onQuestionClick={handleQuestionClick}
-                      />
+              <QuestionNavigator
+                totalQuestions={totalQuestions}
+                currentQuestion={currentQuestionIndex}
+                answeredQuestions={answeredQuestions}
+                onQuestionClick={handleQuestionClick}
+              />
                     </div>
 
-                    {/* Back to Home button */}
+                    {/* Back to Templates button */}
                     <Button variant="outline" asChild className="w-full bg-transparent">
-                      <Link href="/home">
+                      <Link href="/templates">
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        {t.quiz.backToHome}
+                        {t.templates.backToTemplates}
                       </Link>
                     </Button>
                   </div>
@@ -597,7 +604,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
               </Sheet>
 
               <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
-                <Link href="/home">
+                <Link href="/templates">
                   <ArrowLeft className="h-5 w-5 text-muted-foreground" />
                 </Link>
               </Button>
@@ -606,7 +613,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-semibold">
-                  {currentQuestionIndex + 1}/{questions.length}
+                  {currentQuestionIndex + 1}/{totalQuestions}
                 </span>
                 <span className="text-xs text-muted-foreground">{progressPercentage}%</span>
               </div>
@@ -626,11 +633,12 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         </div>
 
         <div className="flex-1 flex gap-6 lg:p-6 overflow-hidden">
+          {/* Desktop Sidebar */}
           <aside className="hidden lg:flex lg:flex-col w-72 xl:w-80 flex-shrink-0 h-full gap-4 pb-4">
             <Button variant="outline" asChild className="w-full justify-start gap-2 bg-background shrink-0">
-              <Link href="/home">
+              <Link href="/templates">
                 <ArrowLeft className="h-4 w-4" />
-                {t.quiz.backToHome}
+                {t.templates.backToTemplates}
               </Link>
             </Button>
 
@@ -643,7 +651,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
-                      {t.quiz.timeRemaining}
+                      {t.templates.timeRemaining}
                     </p>
                     <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
                   </div>
@@ -655,17 +663,17 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                   <div className="bg-muted/40 rounded-lg p-3 text-center">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <ListChecks className="h-4 w-4 text-primary" />
-                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{t.templates.answered}</span>
                     </div>
                     <p className="text-xl font-bold">
                       {answeredQuestions.size}
-                      <span className="text-sm text-muted-foreground font-normal">/{questions.length}</span>
+                      <span className="text-sm text-muted-foreground font-normal">/{totalQuestions}</span>
                     </p>
-                  </div>
+              </div>
                   <div className="bg-success/10 rounded-lg p-3 text-center">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <Target className="h-4 w-4 text-success" />
-                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{t.templates.correctAnswers}</span>
                     </div>
                     <p className="text-xl font-bold text-success">{correctAnswersCount}</p>
                   </div>
@@ -674,7 +682,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                 {/* Progress Bar */}
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-muted-foreground">{t.quiz.progress}</span>
+                    <span className="text-muted-foreground">{t.templates.answered}</span>
                     <span className="font-medium">{progressPercentage}%</span>
                   </div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -689,15 +697,14 @@ export default function QuizClient({ topicId }: QuizClientProps) {
 
             <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
               <CardHeader className="pb-2 pt-2 px-4 shrink-0">
-                {topicName && (
+                {testData?.name && (
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-lg font-bold text-foreground line-clamp-2">
-                      {topicName}
+                      {testData.name}
                     </h3>
-                    
-                    {lessonData?.lessonIcon && (
-                      <span className="text-xl flex-shrink-0" role="img" aria-label="lesson icon">
-                        {lessonData.lessonIcon}
+                    {testData?.icon && (
+                      <span className="text-xl flex-shrink-0" role="img" aria-label="test icon">
+                        {testData.icon}
                       </span>
                     )}
                   </div>
@@ -705,7 +712,7 @@ export default function QuizClient({ topicId }: QuizClientProps) {
               </CardHeader>
               <CardContent className="px-4 pt-2 pb-4 flex-1 overflow-y-auto">
                 <QuestionNavigator
-                  totalQuestions={questions.length}
+                  totalQuestions={totalQuestions}
                   currentQuestion={currentQuestionIndex}
                   answeredQuestions={answeredQuestions}
                   onQuestionClick={handleQuestionClick}
@@ -722,13 +729,10 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                 <div className="mb-4 sm:mb-6 flex justify-between items-start gap-3">
                   <div className="space-y-1 min-w-0 flex-1">
                     <h2 className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider">
-                      {t.quiz.question} {currentQuestionIndex + 1}
+                      {t.templates.question} {currentQuestionIndex + 1}
                     </h2>
                     <h3 className="text-lg sm:text-xl lg:text-2xl font-bold leading-relaxed text-balance">
-                      {(() => {
-                        const questionText = currentQuestion.questionText[selectedLanguage]
-                        return questionText || currentQuestion.questionText.uz
-                      })()}
+                      {currentQuestion.questionText}
                     </h3>
                   </div>
                   {/* Language Badge - Clickable to change language */}
@@ -767,10 +771,10 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                       <div className="w-full h-[250px] sm:h-[350px] lg:h-[400px] flex items-center justify-center bg-muted/30">
                         <div className="flex flex-col items-center gap-3">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          <p className="text-sm text-muted-foreground">{t.quiz.imageLoading}</p>
+                          <p className="text-sm text-muted-foreground">{t.templates.imageLoading}</p>
                         </div>
-                      </div>
-                    ) : currentImageSrc ? (
+                    </div>
+                  ) : currentImageSrc ? (
                       <div
                         className="relative group cursor-zoom-in"
                         onClick={() => {
@@ -786,55 +790,45 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md w-8 h-8" />
                         </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
                 <div className="space-y-2 sm:space-y-3">
-                  {(() => {
-                    const answerOptions =
-                      currentQuestion.answers.answerText[selectedLanguage] || currentQuestion.answers.answerText.uz
-                    return answerOptions
-                  })().map((option, index) => {
-                    let isCorrect = false
-                    if (currentQuestion.answers.isCorrect && Array.isArray(currentQuestion.answers.isCorrect)) {
-                      isCorrect = currentQuestion.answers.isCorrect[index] === true
-                    } else if (currentQuestion.answers.status) {
-                      isCorrect = index === currentQuestion.answers.status - 1
-                    }
-
-                    const isSelected = currentUserAnswer?.selectedAnswer === index
-                    const showResult = isAnswered
+                {currentQuestion.variants.map((variant, index) => {
+                  const isSelected = currentUserAnswer?.selectedAnswer === index
+                  const showResult = isAnswered
+                  const isCorrect = variant.isCorrect
 
                     // Style variants
-                    let buttonStyle = "hover:border-primary/50 hover:bg-muted/30"
-                    let iconStyle = "bg-muted text-muted-foreground"
+                  let buttonStyle = "hover:border-primary/50 hover:bg-muted/30"
+                  let iconStyle = "bg-muted text-muted-foreground"
 
-                    if (showResult) {
-                      if (isCorrect) {
-                        buttonStyle = "border-success bg-success/10 text-success-foreground"
-                        iconStyle = "bg-success text-white"
-                      } else if (isSelected) {
-                        buttonStyle = "border-error bg-error/10 text-error-foreground"
-                        iconStyle = "bg-error text-white"
-                      } else {
-                        buttonStyle = "opacity-50"
-                      }
+                  if (showResult) {
+                    if (isCorrect) {
+                      buttonStyle = "border-success bg-success/10 text-success-foreground"
+                      iconStyle = "bg-success text-white"
                     } else if (isSelected) {
-                      buttonStyle = "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                      iconStyle = "bg-primary text-primary-foreground"
+                      buttonStyle = "border-error bg-error/10 text-error-foreground"
+                      iconStyle = "bg-error text-white"
+                    } else {
+                      buttonStyle = "opacity-50"
                     }
+                  } else if (isSelected) {
+                    buttonStyle = "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                    iconStyle = "bg-primary text-primary-foreground"
+                  }
 
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleAnswerSelect(index)}
-                        disabled={isAnswered}
-                        className={cn(
+                  return (
+                    <button
+                      key={variant.variantId}
+                      onClick={() => handleAnswerSelect(index)}
+                      disabled={isAnswered || showResults}
+                      className={cn(
                           "group w-full p-3 sm:p-4 lg:p-5 rounded-xl border-2 text-left transition-all duration-200 flex gap-3 sm:gap-4 items-start select-none",
                           "active:scale-[0.99]",
-                          buttonStyle,
+                        buttonStyle,
                         )}
                       >
                         <div
@@ -852,16 +846,16 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                             showResult && isSelected && !isCorrect && "text-error font-bold",
                           )}
                         >
-                          {option}
+                          {variant.text}
                         </span>
 
                         {showResult && isCorrect && (
                           <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-success shrink-0 ml-auto" />
                         )}
-                      </button>
-                    )
-                  })}
-                </div>
+                    </button>
+                  )
+                })}
+              </div>
 
                 {/* Navigation Buttons */}
                 <div className="flex items-center justify-between pt-4">
@@ -870,13 +864,13 @@ export default function QuizClient({ topicId }: QuizClientProps) {
                     onClick={handlePrevious}
                     disabled={currentQuestionIndex === 0}
                   >
-                    Oldingi
+                    {t.common.previous}
                   </Button>
                   <Button
                     onClick={handleNext}
-                    disabled={currentQuestionIndex === questions.length - 1}
+                    disabled={currentQuestionIndex === totalQuestions - 1}
                   >
-                    Keyingi
+                    {t.common.next}
                   </Button>
                 </div>
               </div>
@@ -885,12 +879,13 @@ export default function QuizClient({ topicId }: QuizClientProps) {
         </div>
       </main>
 
+      {/* Image Modal */}
       <ImageModal
         isOpen={isImageModalOpen}
         onClose={() => setIsImageModalOpen(false)}
         imageUrl={currentImageUrl}
-        alt={t.quiz.questionImage}
       />
     </div>
   )
 }
+
