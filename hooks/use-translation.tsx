@@ -17,11 +17,13 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Load language from localStorage after hydration
-    const savedLanguage = localStorage.getItem('language') as Language | null
-    if (savedLanguage && ['uz', 'cyr', 'ru'].includes(savedLanguage)) {
-      setLanguageState(savedLanguage)
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('language') as Language | null
+      if (savedLanguage && ['uz', 'cyr', 'ru'].includes(savedLanguage)) {
+        setLanguageState(savedLanguage)
+      }
+      setIsHydrated(true)
     }
-    setIsHydrated(true)
   }, [])
 
   const setLanguage = (lang: Language) => {
@@ -37,10 +39,10 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     t: translations[language],
   }
 
-  return React.createElement(
-    TranslationContext.Provider,
-    { value },
-    children
+  return (
+    <TranslationContext.Provider value={value}>
+      {children}
+    </TranslationContext.Provider>
   )
 }
 
@@ -58,5 +60,3 @@ export function interpolate(template: string, vars: Record<string, string | numb
     return vars[key]?.toString() || match
   })
 }
-
-

@@ -63,11 +63,11 @@ export default function HomeClient() {
     try {
       setIsLoadingTemplates(true)
       setTemplatesError(null)
-      
+
       const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates'), {
         method: 'GET',
       })
-      
+
       if (response) {
         const { safeJsonParse } = await import('@/lib/api-utils')
         const data = await safeJsonParse<Template[]>(response)
@@ -254,7 +254,7 @@ export default function HomeClient() {
                   {displayedNews.map((newsItem, index) => (
                     <div
                       key={newsItem.newsId}
-                      className="hover:scale-105 transition-transform duration-200"
+                      className="hover:scale-[1.02] transition-transform duration-200"
                     >
                       <NewsCard news={newsItem} />
                     </div>
@@ -264,152 +264,151 @@ export default function HomeClient() {
             </section>
           )}
 
-      {/* Learning Hub Section - Minimalist & Premium */}
-{(canViewRandom || canViewTrafficSigns || canViewTemplates) && (
-  <section className="container mx-auto px-4 py-16 mb-8">
-    
-    {/* Section Header - Clean & Centered */}
-    <div className="text-center max-w-2xl mx-auto mb-10">
-      <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white animate-gradient-x mb-4">
-        Maxsus bo'limlar
-      </h2>
-      <p className="text-slate-600 dark:text-slate-400 text-lg">
-        Yo'l harakati qoidalarini o'rganishning interaktiv usullari
-      </p>
-    </div>
+          {/* Learning Hub Section - Minimalist & Premium */}
+          {(canViewRandom || canViewTrafficSigns || canViewTemplates) && (
+            <section className="container mx-auto px-4 py-16 mb-8">
 
-    {/* Cards Grid */}
-    <div className={`grid gap-6 ${
-      (canViewRandom && canViewTrafficSigns && canViewTemplates) 
-        ? 'md:grid-cols-2 lg:grid-cols-3' 
-        : (canViewRandom && canViewTrafficSigns) || (canViewRandom && canViewTemplates) || (canViewTrafficSigns && canViewTemplates)
-        ? 'md:grid-cols-2'
-        : 'max-w-3xl mx-auto'
-    }`}>
-      
-      {/* 1. Random Quiz Card (Blue Theme) */}
-      {canViewRandom && (
-        <Link href="/quiz/random" className="group block h-full outline-none">
-          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10">
-            
-            <div className="flex flex-col h-full">
-              {/* Icon & Badge */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 dark:group-hover:bg-blue-600 dark:group-hover:border-blue-600 transition-colors duration-300">
-                  <Sparkles className="h-7 w-7 text-blue-600 dark:text-blue-400 dark:group-hover:text-white transition-colors duration-300" />
-                </div>
-                <span className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100 dark:border-blue-800">
-                  Test
-                </span>
-              </div>
-
-              {/* Text Content */}
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                  {t.home.randomQuiz.title}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {(t as any).home.randomQuiz?.description || "Tasodifiy savollar orqali bilimingizni sinang va imtihonga tayyorlaning."}
+              {/* Section Header - Clean & Centered */}
+              <div className="text-center max-w-2xl mx-auto mb-10">
+                <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white animate-gradient-x mb-4">
+                  Maxsus bo'limlar
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 text-lg">
+                  Yo'l harakati qoidalarini o'rganishning interaktiv usullari
                 </p>
               </div>
 
-              {/* Bottom Action Area */}
-              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {t.home.randomQuiz.randomQuizButton}
-                <Shuffle className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </div>
-            </div>
-          </div>
-        </Link>
-      )}
+              {/* Cards Grid */}
+              <div className={`grid gap-6 ${(canViewRandom && canViewTrafficSigns && canViewTemplates)
+                  ? 'md:grid-cols-2 lg:grid-cols-3'
+                  : (canViewRandom && canViewTrafficSigns) || (canViewRandom && canViewTemplates) || (canViewTrafficSigns && canViewTemplates)
+                    ? 'md:grid-cols-2'
+                    : 'max-w-3xl mx-auto'
+                }`}>
 
-      {/* 2. Traffic Signs Card (Emerald Theme) */}
-      {canViewTrafficSigns && (
-        <Link href="/traffic-signs" className="group block h-full outline-none">
-          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10">
-            
-            <div className="flex flex-col h-full">
-              {/* Icon & Badge */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-14 h-14 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 dark:group-hover:bg-emerald-600 dark:group-hover:border-emerald-600 transition-colors duration-300">
-                  <Signpost className="h-7 w-7 text-emerald-600 dark:text-emerald-400 dark:group-hover:text-white transition-colors duration-300" />
-                </div>
-                <span className="px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-full border border-emerald-100 dark:border-emerald-800">
-                  Katalog
-                </span>
-              </div>
+                {/* 1. Random Quiz Card (Blue Theme) */}
+                {canViewRandom && (
+                  <Link href="/quiz/random" className="group block h-full outline-none">
+                    <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10">
 
-              {/* Text Content */}
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                  {t.home.trafficSigns.title}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {t.home.trafficSigns.description}
-                </p>
-              </div>
+                      <div className="flex flex-col h-full">
+                        {/* Icon & Badge */}
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border border-blue-100 dark:border-blue-500/20 dark:group-hover:bg-blue-600 dark:group-hover:border-blue-600 transition-colors duration-300">
+                            <Sparkles className="h-7 w-7 text-blue-600 dark:text-blue-400 dark:group-hover:text-white transition-colors duration-300" />
+                          </div>
+                          <span className="px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-100 dark:border-blue-800">
+                            Test
+                          </span>
+                        </div>
 
-              {/* Bottom Action Area */}
-              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                {t.home.trafficSigns.button}
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </div>
-            </div>
-          </div>
-        </Link>
-      )}
+                        {/* Text Content */}
+                        <div className="mb-8">
+                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                            {t.home.randomQuiz.title}
+                          </h3>
+                          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                            {(t as any).home.randomQuiz?.description || "Tasodifiy savollar orqali bilimingizni sinang va imtihonga tayyorlaning."}
+                          </p>
+                        </div>
 
-      {/* 3. Templates Card (Purple/Indigo Theme) */}
-      {canViewTemplates && (
-        <button
-          onClick={fetchTemplates}
-          disabled={isLoadingTemplates}
-          className="group block h-full outline-none text-left disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10">
-            
-            <div className="flex flex-col h-full">
-              {/* Icon & Badge */}
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center border border-purple-100 dark:border-purple-500/20 dark:group-hover:bg-purple-600 dark:group-hover:border-purple-600 transition-colors duration-300">
-                  {isLoadingTemplates ? (
-                    <Loader2 className="h-7 w-7 text-purple-600 dark:text-purple-400 animate-spin" />
-                  ) : (
-                    <FileText className="h-7 w-7 text-purple-600 dark:text-purple-400 dark:group-hover:text-white transition-colors duration-300" />
-                  )}
-                </div>
-                <span className="px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 rounded-full border border-purple-100 dark:border-purple-800">
-                  Shablon
-                </span>
-              </div>
+                        {/* Bottom Action Area */}
+                        <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {t.home.randomQuiz.randomQuizButton}
+                          <Shuffle className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )}
 
-              {/* Text Content */}
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
-                  Shablon testlar
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {isLoadingTemplates 
-                    ? 'Yuklanmoqda...' 
-                    : templatesError 
-                    ? templatesError 
-                    : 'Tayyorlangan shablon testlar orqali bilimingizni sinang va imtihonga tayyorlaning.'}
-                </p>
-              </div>
+                {/* 2. Traffic Signs Card (Emerald Theme) */}
+                {canViewTrafficSigns && (
+                  <Link href="/traffic-signs" className="group block h-full outline-none">
+                    <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10">
 
-              {/* Bottom Action Area */}
-              <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                {isLoadingTemplates ? 'Yuklanmoqda...' : 'Shablon testlarni ko\'rish'}
-                {!isLoadingTemplates && (
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      <div className="flex flex-col h-full">
+                        {/* Icon & Badge */}
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="w-14 h-14 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20 dark:group-hover:bg-emerald-600 dark:group-hover:border-emerald-600 transition-colors duration-300">
+                            <Signpost className="h-7 w-7 text-emerald-600 dark:text-emerald-400 dark:group-hover:text-white transition-colors duration-300" />
+                          </div>
+                          <span className="px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-full border border-emerald-100 dark:border-emerald-800">
+                            Katalog
+                          </span>
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="mb-8">
+                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
+                            {t.home.trafficSigns.title}
+                          </h3>
+                          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                            {t.home.trafficSigns.description}
+                          </p>
+                        </div>
+
+                        {/* Bottom Action Area */}
+                        <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          {t.home.trafficSigns.button}
+                          <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+
+                {/* 3. Templates Card (Purple/Indigo Theme) */}
+                {canViewTemplates && (
+                  <button
+                    onClick={fetchTemplates}
+                    disabled={isLoadingTemplates}
+                    className="group block h-full outline-none text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="relative h-full bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 transition-all duration-300 hover:border-purple-500/50 dark:hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10">
+
+                      <div className="flex flex-col h-full">
+                        {/* Icon & Badge */}
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="w-14 h-14 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center border border-purple-100 dark:border-purple-500/20 dark:group-hover:bg-purple-600 dark:group-hover:border-purple-600 transition-colors duration-300">
+                            {isLoadingTemplates ? (
+                              <Loader2 className="h-7 w-7 text-purple-600 dark:text-purple-400 animate-spin" />
+                            ) : (
+                              <FileText className="h-7 w-7 text-purple-600 dark:text-purple-400 dark:group-hover:text-white transition-colors duration-300" />
+                            )}
+                          </div>
+                          <span className="px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 rounded-full border border-purple-100 dark:border-purple-800">
+                            Shablon
+                          </span>
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="mb-8">
+                          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
+                            Shablon testlar
+                          </h3>
+                          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                            {isLoadingTemplates
+                              ? 'Yuklanmoqda...'
+                              : templatesError
+                                ? templatesError
+                                : 'Tayyorlangan shablon testlar orqali bilimingizni sinang va imtihonga tayyorlaning.'}
+                          </p>
+                        </div>
+
+                        {/* Bottom Action Area */}
+                        <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          {isLoadingTemplates ? 'Yuklanmoqda...' : 'Shablon testlarni ko\'rish'}
+                          {!isLoadingTemplates && (
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
                 )}
               </div>
-            </div>
-          </div>
-        </button>
-      )}
-    </div>
-  </section>
+            </section>
           )}
 
           {/* Topics Section */}
@@ -426,14 +425,14 @@ export default function HomeClient() {
                   </div>
                 </div>
                 {canViewAllTopics && topics.length > 6 && (
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => setShowAllTopics(!showAllTopics)}
-                      className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
-                    >
-                      {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
-                    </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setShowAllTopics(!showAllTopics)}
+                    className="border-2 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400/50 dark:hover:border-slate-600/50 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-200"
+                  >
+                    {showAllTopics ? t.home.topics.showLess : t.home.topics.viewAll}
+                  </Button>
                 )}
               </div>
 
@@ -459,7 +458,7 @@ export default function HomeClient() {
                   {displayedTopics.map((topic) => (
                     <div
                       key={topic.id}
-                      className="hover:scale-105 transition-transform duration-200"
+                      className="hover:scale-[1.02] transition-transform duration-200"
                     >
                       <TopicCard topic={topic} />
                     </div>

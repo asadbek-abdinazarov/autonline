@@ -12,7 +12,7 @@ import { login, setCurrentUser } from "@/lib/auth"
 import { Loader2, CheckCircle, Eye, EyeOff } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useTranslation, interpolate } from "@/hooks/use-translation"
+import { useTranslation } from "@/hooks/use-translation"
 
 export default function LoginPage() {
   const { t } = useTranslation()

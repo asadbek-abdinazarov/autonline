@@ -158,6 +158,37 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* Disable animations on slow connections to save bandwidth and battery */
+  @media (prefers-reduced-data: reduce) {
+    .animate-pulse,
+    .animate-spin {
+      animation: none !important;
+    }
+    
+    .animate-in {
+      animation-duration: 0.01ms !important;
+    }
+  }
+
+  /* Optimize animations for low-end devices and mobile */
+  @media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+    .animate-in {
+      animation-duration: 300ms !important;
+    }
+    
+    .transition-transform,
+    .transition-all,
+    .transition-colors {
+      transition-duration: 150ms !important;
+    }
+
+    /* Reduce scale effects on mobile */
+    .group-hover\:scale-110,
+    .hover\:scale-110 {
+      transform: scale(1.05) !important;
+    }
+  }
 }
 
 @layer utilities {

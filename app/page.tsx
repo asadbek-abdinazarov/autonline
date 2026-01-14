@@ -249,19 +249,19 @@ export default function LandingPage() {
         >
           {/* Background gradient blobs */}
           <div className="absolute inset-0 -z-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-3xl opacity-90"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/10 rounded-full blur-3xl opacity-90"></div>
           </div>
 
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-5xl mx-auto space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-300 animate-in fade-in" style={{ animationDelay: '100ms', animationDuration: '600ms' }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-white text-sm font-medium shadow-lg transition-all duration-200 animate-in fade-in" style={{ animationDelay: '50ms', animationDuration: '400ms' }}>
                 <Sparkles className="h-4 w-4 text-blue-500" />
                 <span>{t.landing.hero.badge}</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '200ms', animationDuration: '800ms' }}>
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight animate-in fade-in slide-in-from-top-4" style={{ animationDelay: '100ms', animationDuration: '500ms' }}>
                 <span className="bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   {t.landing.hero.title}
                 </span>
@@ -269,11 +269,11 @@ export default function LandingPage() {
                 <span className="text-slate-900 dark:text-white">{t.landing.hero.subtitle}</span>
               </h1>
 
-              <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '400ms', animationDuration: '800ms' }}>
+              <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto text-balance animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '200ms', animationDuration: '500ms' }}>
                 {interpolate(t.landing.hero.description, { count: t.landing.hero.countText })}
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '600ms', animationDuration: '600ms' }}>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 animate-in fade-in" style={{ animationDelay: '300ms', animationDuration: '400ms' }}>
                 {isLoggedIn ? (
                   <Button size="lg" asChild className="text-base sm:text-lg px-6 py-4 sm:px-10 sm:py-7 h-auto bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 hover:shadow-blue-500/50 dark:hover:shadow-blue-500/50 transition-all duration-300">
                     <Link href="/home" className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function LandingPage() {
                   >
                     <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${feature.color} opacity-10`} />
                     <div className="relative p-6">
-                      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform duration-200`}>
                         <Icon className="h-8 w-8 text-white" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-white mb-2">{feature.title}</h3>
@@ -452,10 +452,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
               {isLoadingStats ? (
                 <div className="col-span-full flex items-center justify-center py-12">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/20 rounded-full blur-xl animate-pulse" />
-                    <Loader2 className="h-8 w-8 text-blue-500 animate-spin relative z-10" />
-                  </div>
+                  <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
                 </div>
               ) : (
                 stats.map((stat, index) => {
@@ -468,7 +465,7 @@ export default function LandingPage() {
                     >
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-blue-500/10 to-indigo-600/10" />
                       <div className="relative p-6">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20 mb-4 group-hover:scale-105 transition-transform duration-200">
                           <Icon className="h-8 w-8 text-white" />
                         </div>
                         <div className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-2">
