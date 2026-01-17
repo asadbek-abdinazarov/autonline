@@ -391,7 +391,11 @@ export function StudentsClient() {
                   value={formHook.formData.username}
                   onChange={(e) => formHook.updateFormData({ username: e.target.value })}
                   required
+                  className={formHook.usernameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
+                {formHook.usernameError && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formHook.usernameError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -542,51 +546,51 @@ export function StudentsClient() {
               <div className="space-y-6">
                 {/* Statistics */}
                 {resultsHook.lessonStats && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-stretch">
+                    <Card className="h-full flex flex-col">
+                      <CardHeader className="pb-2 text-center">
+                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 text-center">
                           {t.students.resultsTotalTests}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                      <CardContent className="flex-1 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white text-center">
                           {resultsHook.lessonStats.totalTests}
                         </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <Card className="h-full flex flex-col">
+                      <CardHeader className="pb-2 text-center">
+                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 text-center">
                           {t.students.resultsPassed}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      <CardContent className="flex-1 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400 text-center">
                           {resultsHook.lessonStats.passed}
                         </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <Card className="h-full flex flex-col">
+                      <CardHeader className="pb-2 text-center">
+                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 text-center">
                           {t.students.resultsAverageScore}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      <CardContent className="flex-1 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 text-center">
                           {formatStatNumber(resultsHook.lessonStats.averageScore)}
                         </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <Card className="h-full flex flex-col">
+                      <CardHeader className="pb-2 text-center">
+                        <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 text-center">
                           {t.students.resultsSuccessRate}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      <CardContent className="flex-1 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 text-center">
                           {formatStatNumber(resultsHook.lessonStats.successRate)}%
                         </div>
                       </CardContent>

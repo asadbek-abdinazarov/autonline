@@ -46,6 +46,7 @@ interface TemplateTestResponse {
   name: string
   description: string
   questions: TemplateQuestion[]
+  duration?: number // Duration in minutes
 }
 
 interface UserAnswer {
@@ -163,6 +164,28 @@ export default function TemplateQuizClient({ templateId }: TemplateQuizClientPro
           const apiData = await safeJsonParse<TemplateTestResponse>(response)
           if (apiData) {
             data = apiData
+            // If duration is not in API response, fetch it from templates list
+            if (!data.duration) {
+              try {
+                const templatesResponse = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates'), {
+                  method: 'GET',
+                })
+                if (templatesResponse) {
+                  const templatesData = await safeJsonParse<Array<{ id: number; duration: number }>>(templatesResponse)
+                  if (templatesData) {
+                    const template = templatesData.find(t => t.id === Number(templateId))
+                    if (template) {
+                      data.duration = template.duration
+                    }
+                  }
+                }
+              } catch (err) {
+                // If fetching templates fails, continue without duration (will use calculated time)
+                if (process.env.NODE_ENV === 'development') {
+                  console.error('Error fetching template duration:', err)
+                }
+              }
+            }
           }
         }
       }
@@ -288,7 +311,12 @@ export default function TemplateQuizClient({ templateId }: TemplateQuizClientPro
     }
   }, [])
 
-  const totalTimeInSeconds = questions.length > 0 ? Math.ceil(questions.length * 1.2 * 60) : 0
+  // Calculate total time from template duration (in minutes) or fallback to calculated time
+  const totalTimeInSeconds = testData?.duration 
+    ? testData.duration * 60 
+    : questions.length > 0 
+      ? Math.ceil(questions.length * 1.2 * 60) 
+      : 0
 
   const handleAnswerSelect = (variantIndex: number) => {
     if (isAnswered || showResults) return
@@ -343,15 +371,16 @@ export default function TemplateQuizClient({ templateId }: TemplateQuizClientPro
     
     try {
       const totalQuestions = questions.length
-      const correctCount = score
-      const wrongCount = totalQuestions - score
-      const percentage = Math.round((score / totalQuestions) * 100)
+      // Recalculate correctCount from answeredQuestionsRef to ensure accuracy (matches UI calculation)
+      const correctCount = Array.from(answeredQuestionsRef.current.values()).filter(Boolean).length
+      const wrongCount = totalQuestions - correctCount
+      const percentage = Math.round((correctCount / totalQuestions) * 100)
       
       const response = await makeAuthenticatedRequest(buildApiUrl('/api/v1/templates/finish-test'), {
         method: 'POST',
         body: JSON.stringify({
           testResultId: testData.testResultId,
-          score: score,
+          score: correctCount,
           correctCount: correctCount,
           wrongCount: wrongCount,
           percentage: percentage,
@@ -460,7 +489,9 @@ export default function TemplateQuizClient({ templateId }: TemplateQuizClientPro
   const totalQuestions = questions.length
 
   if (showResults) {
-    const percentage = Math.round((score / totalQuestions) * 100)
+    // Recalculate correctCount from answeredQuestionsRef to ensure accuracy (matches API calculation)
+    const finalCorrectCount = Array.from(answeredQuestionsRef.current.values()).filter(Boolean).length
+    const percentage = Math.round((finalCorrectCount / totalQuestions) * 100)
     const passed = percentage >= 70
 
     return (
@@ -505,11 +536,11 @@ export default function TemplateQuizClient({ templateId }: TemplateQuizClientPro
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{t.templates.correctAnswers}</p>
-                    <p className="text-xl font-bold text-success">{score}</p>
+                    <p className="text-xl font-bold text-success">{finalCorrectCount}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{t.templates.incorrectAnswers}</p>
-                    <p className="text-xl font-bold text-error">{totalQuestions - score}</p>
+                    <p className="text-xl font-bold text-error">{totalQuestions - finalCorrectCount}</p>
                   </div>
                 </div>
 

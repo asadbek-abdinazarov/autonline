@@ -28,6 +28,7 @@ export function useStudentForm() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [phoneError, setPhoneError] = useState("")
     const [passwordError, setPasswordError] = useState("")
+    const [usernameError, setUsernameError] = useState("")
 
     // Validate and normalize phone number
     const validateAndNormalizePhone = (phoneNumber: string): { isValid: boolean; normalized: string; error: string } => {
@@ -66,9 +67,34 @@ export function useStudentForm() {
         }
     }
 
+    const validateUsername = (value: string): string => {
+        // Remove spaces
+        const trimmed = value.replace(/\s/g, '')
+        
+        // Check if empty
+        if (!trimmed) {
+            return "Foydalanuvchi nomi bo'sh bo'lishi mumkin emas"
+        }
+        
+        // Check if contains only lowercase letters and numbers
+        if (!/^[a-z0-9]+$/.test(trimmed)) {
+            return "Foydalanuvchi nomi faqat kichik harflar va raqamlardan iborat bo'lishi kerak"
+        }
+        
+        return ""
+    }
+
     const validateForm = (): boolean => {
         setPhoneError("")
         setPasswordError("")
+        setUsernameError("")
+
+        // Validate username
+        const usernameValidationError = validateUsername(formData.username)
+        if (usernameValidationError) {
+            setUsernameError(usernameValidationError)
+            return false
+        }
 
         // Validate phone number
         const phoneValidation = validateAndNormalizePhone(formData.phoneNumber)
@@ -90,12 +116,35 @@ export function useStudentForm() {
         setFormData(INITIAL_FORM_STATE)
         setPhoneError("")
         setPasswordError("")
+        setUsernameError("")
         setShowPassword(false)
         setShowConfirmPassword(false)
     }
 
     const updateFormData = (updates: Partial<StudentFormData>) => {
-        setFormData(prev => ({ ...prev, ...updates }))
+        setFormData(prev => {
+            const newData = { ...prev, ...updates }
+            
+            // Auto-normalize username: convert to lowercase and remove spaces
+            if (updates.username !== undefined) {
+                newData.username = updates.username.toLowerCase().replace(/\s/g, '')
+                
+                // Clear error when user starts typing
+                if (usernameError) {
+                    setUsernameError("")
+                }
+                
+                // Real-time validation
+                if (newData.username) {
+                    const error = validateUsername(newData.username)
+                    if (error) {
+                        setUsernameError(error)
+                    }
+                }
+            }
+            
+            return newData
+        })
     }
 
     return {
@@ -110,6 +159,8 @@ export function useStudentForm() {
         setPhoneError,
         passwordError,
         setPasswordError,
+        usernameError,
+        setUsernameError,
         validateAndNormalizePhone,
         validateForm,
         resetForm

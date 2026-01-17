@@ -229,6 +229,14 @@ export const ru = {
       description: "Случайные тесты решения",
       randomQuizButton: "Начать случайный тест"
     },
+    templates: {
+      label: "Билет",
+      title: "Билеты",
+      description: "Проверьте свои знания через подготовленные билеты и подготовьтесь к экзамену.",
+      viewTemplates: "Посмотреть билеты",
+      loading: "Загрузка...",
+      loadError: "Билеты не загружены",
+    },
     trafficSigns: {
       title: "Дорожные знаки",
       description: "Изучите все дорожные знаки и подготовьтесь к экзамену",
@@ -239,6 +247,10 @@ export const ru = {
       noCategories: "Категории не найдены",
       noSigns: "Знаки не найдены",
       retry: "Повторить",
+    },
+    specialSections: {
+      title: "Специальные разделы",
+      description: "Интерактивные способы изучения правил дорожного движения",
     },
   },
 
@@ -584,8 +596,10 @@ export const ru = {
     noResults: "Пока нет результатов.",
   },
 
-  // Templates
+  // Templates (Biletlar)
   templates: {
+    title: "Билеты",
+    description: "Список подготовленных билетов",
     loading: "Загрузка...",
     error: "Ошибка",
     dataNotFound: "Данные теста не найдены. Пожалуйста, начните заново.",
@@ -608,6 +622,21 @@ export const ru = {
     failedMessage: "Вы не прошли тест. Попробуйте снова.",
     totalQuestions: "Всего вопросов",
     incorrectAnswers: "Неправильные ответы",
+    empty: "Билеты не найдены",
+    emptyDescription: "Пока нет билетов",
+    retry: "Повторить",
+    back: "Назад",
+    ticketLabel: "БИЛЕТ",
+    inProgress: "Тест в процессе...",
+    correctAnswersCount: "Количество правильных ответов",
+    time: "Время",
+    maxScore: "Максимальный балл",
+    minutes: "минут",
+    seconds: "секунд",
+    status: {
+      passed: "Успешно",
+      failed: "Неудачно",
+    },
   },
 }
 

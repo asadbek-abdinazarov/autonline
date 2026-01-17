@@ -230,6 +230,14 @@ export const uz = {
       randomQuizButton: "Tasodify testni boshlash",
       trafficSignsButton: "Yo'l harakati belgilari",
     },
+    templates: {
+      label: "Bilet",
+      title: "Biletlar",
+      description: "Tayyorlangan biletlar orqali bilimingizni sinang va imtihonga tayyorlaning.",
+      viewTemplates: "Biletlarni ko'rish",
+      loading: "Yuklanmoqda...",
+      loadError: "Biletlar yuklanmadi",
+    },
     trafficSigns: {
       title: "Yo'l harakati belgilari",
       description: "Barcha yo'l harakati belgilarini o'rganing va imtihonga tayyorlaning",
@@ -240,6 +248,10 @@ export const uz = {
       noCategories: "Kategoriyalar topilmadi",
       noSigns: "Belgilar topilmadi",
       retry: "Qayta urinish",
+    },
+    specialSections: {
+      title: "Maxsus bo'limlar",
+      description: "Yo'l harakati qoidalarini o'rganishning interaktiv usullari",
     },
   },
 
@@ -585,8 +597,10 @@ export const uz = {
     noResults: "Hozircha natijalar mavjud emas.",
   },
 
-  // Templates
+  // Templates (Biletlar)
   templates: {
+    title: "Biletlar",
+    description: "Tayyorlangan biletlar ro'yxati",
     loading: "Yuklanmoqda...",
     error: "Xatolik",
     dataNotFound: "Test ma'lumotlari topilmadi. Iltimos, qayta boshlang.",
@@ -609,6 +623,21 @@ export const uz = {
     failedMessage: "Siz testdan o'ta olmadingiz. Qayta urinib ko'ring.",
     totalQuestions: "Jami savollar",
     incorrectAnswers: "Noto'g'ri javoblar",
+    empty: "Biletlar topilmadi",
+    emptyDescription: "Hozircha biletlar mavjud emas",
+    retry: "Qayta urinish",
+    back: "Orqaga",
+    ticketLabel: "BILET",
+    inProgress: "Test jarayonda...",
+    correctAnswersCount: "To'g'ri javoblar soni",
+    time: "Vaqt",
+    maxScore: "Maksimal ball",
+    minutes: "daqiqa",
+    seconds: "soniya",
+    status: {
+      passed: "Muvaffaqiyatli",
+      failed: "Muvaffaqiyatsiz",
+    },
   },
 }
 

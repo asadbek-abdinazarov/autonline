@@ -229,6 +229,14 @@ export const cyr = {
       description: "Тасодифий Тестлар ечиш",
       randomQuizButton: "Тасодифий тестни бошлаш"
     },
+    templates: {
+      label: "Билет",
+      title: "Билетлар",
+      description: "Тайёрланган билетлар орқали билимингизни синанг ва имтиҳонга тайёрланинг.",
+      viewTemplates: "Билетларни кўриш",
+      loading: "Юкланмоқда...",
+      loadError: "Билетлар юкланмади",
+    },
     trafficSigns: {
       title: "Йўл ҳаракати белгилари",
       description: "Барча йўл ҳаракати белгиларини ўрганинг ва имтиҳонга тайёрлангинг",
@@ -239,6 +247,10 @@ export const cyr = {
       noCategories: "Категориялар топилмади",
       noSigns: "Белгилар топилмади",
       retry: "Қайта уриниш",
+    },
+    specialSections: {
+      title: "Махсус бўлимлар",
+      description: "Йўл ҳаракати қоидаларини ўрганишнинг интерактив усуллари",
     },
   },
 
@@ -584,8 +596,10 @@ export const cyr = {
     noResults: "Ҳозирча натижалар мавжуд эмас.",
   },
 
-  // Templates
+  // Templates (Biletlar)
   templates: {
+    title: "Билетлар",
+    description: "Тайёрланган билетлар рўйхати",
     loading: "Юкланмоқда...",
     error: "Хатолик",
     dataNotFound: "Тест маълумотлари топилмади. Илтимос, қайта бошланг.",
@@ -608,6 +622,21 @@ export const cyr = {
     failedMessage: "Сиз тестдан ўта олмадингиз. Қайта уриниб кўринг.",
     totalQuestions: "Жами саволлар",
     incorrectAnswers: "Нотўғри жавоблар",
+    empty: "Билетлар топилмади",
+    emptyDescription: "Ҳозирча билетлар мавжуд эмас",
+    retry: "Қайта уриниш",
+    back: "Орқага",
+    ticketLabel: "БИЛЕТ",
+    inProgress: "Тест жараёнида...",
+    correctAnswersCount: "Тўғри жавоблар сони",
+    time: "Вақт",
+    maxScore: "Максимал балл",
+    minutes: "дақиқа",
+    seconds: "сония",
+    status: {
+      passed: "Муваффақиятли",
+      failed: "Муваффақиятсиз",
+    },
   },
 }
 

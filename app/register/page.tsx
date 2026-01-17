@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("+998 ")
   const [phoneError, setPhoneError] = useState("")
   const [passwordError, setPasswordError] = useState("")
+  const [usernameError, setUsernameError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -165,11 +166,56 @@ export default function RegisterPage() {
     }
   }
 
+  const validateUsername = (value: string): string => {
+    // Remove spaces
+    const trimmed = value.replace(/\s/g, '')
+    
+    // Check if empty
+    if (!trimmed) {
+      return "Foydalanuvchi nomi bo'sh bo'lishi mumkin emas"
+    }
+    
+    // Check if contains only lowercase letters and numbers
+    if (!/^[a-z0-9]+$/.test(trimmed)) {
+      return "Foydalanuvchi nomi faqat kichik harflar va raqamlardan iborat bo'lishi kerak"
+    }
+    
+    return ""
+  }
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // Convert to lowercase and remove spaces
+    const normalized = value.toLowerCase().replace(/\s/g, '')
+    setUsername(normalized)
+    
+    // Clear error when user starts typing
+    if (usernameError) {
+      setUsernameError("")
+    }
+    
+    // Real-time validation
+    if (normalized) {
+      const error = validateUsername(normalized)
+      if (error) {
+        setUsernameError(error)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setPhoneError("")
     setPasswordError("")
+    setUsernameError("")
+    
+    // Validate username
+    const usernameValidationError = validateUsername(username)
+    if (usernameValidationError) {
+      setUsernameError(usernameValidationError)
+      return
+    }
     
     // Validate phone number
     const phoneValidation = validateAndNormalizePhone(phone)
@@ -261,10 +307,14 @@ export default function RegisterPage() {
                   type="text"
                   placeholder={t.register.usernamePlaceholder}
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={handleUsernameChange}
                   required
                   disabled={isLoading || isSuccess}
+                  className={usernameError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
+                {usernameError && (
+                  <p className="text-xs text-red-600 mt-1">{usernameError}</p>
+                )}
               </div>
 
               <div className="space-y-2">

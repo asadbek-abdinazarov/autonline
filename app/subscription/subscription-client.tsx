@@ -19,6 +19,7 @@ interface SubscriptionPlan {
   defName: string
   description: string
   price: number
+  discountedPrice?: number
   buyText: string
   features: string[]
   isActive: boolean
@@ -190,19 +191,50 @@ export function SubscriptionClient() {
               </CardDescription>
             </div>
             
-            <div className="flex items-baseline gap-1 sm:gap-2 mt-3 mb-2">
-              <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary via-blue-600 to-primary bg-clip-text text-transparent">
-                {new Intl.NumberFormat('uz-UZ', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(plan.price)}
-              </span>
-              <div className="flex flex-col justify-center">
-                <span className="text-xs sm:text-sm font-semibold text-muted-foreground">
-                  UZS
-                </span>
-              </div>
-            </div>
+            <div className="flex flex-col gap-1 sm:gap-2 mt-4 mb-2">
+  {plan.discountedPrice && plan.discountedPrice < plan.price ? (
+    <>
+      {/* Yuqori qism: Eski narx va Chegirma foizi badji */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 opacity-60">
+          <span className="text-sm sm:text-base text-muted-foreground line-through decoration-red-500/50 decoration-2">
+            {new Intl.NumberFormat('uz-UZ').format(plan.price)}
+          </span>
+          <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase">UZS</span>
+        </div>
+        
+        {/* Yangi qo'shilgan: Chegirma foizi badji */}
+        <span className="px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px] sm:text-xs font-black uppercase tracking-wider animate-pulse">
+          -{Math.round(((plan.price - plan.discountedPrice) / plan.price) * 100)}%
+        </span>
+      </div>
+
+      {/* Pastki qism: Yangi narx */}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+          {new Intl.NumberFormat('uz-UZ').format(plan.discountedPrice)}
+        </span>
+        <div className="flex flex-col">
+          <span className="text-xs sm:text-sm font-black text-red-600/90 dark:text-red-400 uppercase tracking-tight">
+            UZS
+          </span>
+        </div>
+      </div>
+    </>
+  ) : (
+    /* Chegirma bo'lmagandagi holat: Standart va xotirjam */
+    <div className="flex items-baseline gap-1.5 py-2">
+      <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white">
+        {new Intl.NumberFormat('uz-UZ').format(plan.price)}
+      </span>
+      <div className="flex flex-col">
+        <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase">
+          UZS
+        </span>
+      </div>
+    </div>
+  )}
+</div>
             
             {/* {isPopular && (
               <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 mt-2">

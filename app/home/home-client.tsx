@@ -83,7 +83,7 @@ export default function HomeClient() {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error fetching templates:', err)
       }
-      setTemplatesError(err instanceof Error ? err.message : 'Shablon testlar yuklanmadi')
+      setTemplatesError(err instanceof Error ? err.message : t.home.templates.loadError)
     } finally {
       setIsLoadingTemplates(false)
     }
@@ -271,10 +271,10 @@ export default function HomeClient() {
               {/* Section Header - Clean & Centered */}
               <div className="text-center max-w-2xl mx-auto mb-10">
                 <h2 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white animate-gradient-x mb-4">
-                  Maxsus bo'limlar
+                  {t.home.specialSections.title}
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 text-lg">
-                  Yo'l harakati qoidalarini o'rganishning interaktiv usullari
+                  {t.home.specialSections.description}
                 </p>
               </div>
 
@@ -378,27 +378,27 @@ export default function HomeClient() {
                             )}
                           </div>
                           <span className="px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 rounded-full border border-purple-100 dark:border-purple-800">
-                            Shablon
+                            {t.home.templates.label}
                           </span>
                         </div>
 
                         {/* Text Content */}
                         <div className="mb-8">
                           <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
-                            Shablon testlar
+                            {t.home.templates.title}
                           </h3>
                           <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
                             {isLoadingTemplates
-                              ? 'Yuklanmoqda...'
+                              ? t.home.templates.loading
                               : templatesError
                                 ? templatesError
-                                : 'Tayyorlangan shablon testlar orqali bilimingizni sinang va imtihonga tayyorlaning.'}
+                                : t.home.templates.description}
                           </p>
                         </div>
 
                         {/* Bottom Action Area */}
                         <div className="mt-auto flex items-center text-sm font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                          {isLoadingTemplates ? 'Yuklanmoqda...' : 'Shablon testlarni ko\'rish'}
+                          {isLoadingTemplates ? t.home.templates.loading : t.home.templates.viewTemplates}
                           {!isLoadingTemplates && (
                             <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                           )}

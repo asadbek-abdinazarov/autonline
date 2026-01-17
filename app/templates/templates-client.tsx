@@ -55,6 +55,7 @@ interface TemplateTestResponse {
   name: string
   description: string
   questions: TemplateQuestion[]
+  duration?: number // Duration in minutes
 }
 
 export default function TemplatesClient() {
@@ -93,18 +94,40 @@ export default function TemplatesClient() {
   }
 
   const formatDuration = (duration: string) => {
-    // Duration format: "PT25M" or "25" (minutes)
+    // Handle HH:MM:SS format (e.g., "00:07:49", "00:00:49")
+    if (duration.includes(':') && duration.split(':').length === 3) {
+      const parts = duration.split(':')
+      const hours = parseInt(parts[0], 10) || 0
+      const minutes = parseInt(parts[1], 10) || 0
+      const seconds = parseInt(parts[2], 10) || 0
+      const totalMinutes = hours * 60 + minutes
+      
+      if (totalMinutes > 0) {
+        if (seconds > 0) {
+          return `${totalMinutes} ${t.templates.minutes} ${seconds} ${t.templates.seconds}`
+        }
+        return `${totalMinutes} ${t.templates.minutes}`
+      } else if (seconds > 0) {
+        // Only seconds (e.g., "00:00:49")
+        return `${seconds} ${t.templates.seconds}`
+      }
+      return `0 ${t.templates.minutes}`
+    }
+    
+    // Handle ISO 8601 duration format: "PT25M"
     if (duration.includes('PT')) {
       const match = duration.match(/(\d+)M/)
       if (match) {
-        return `${match[1]} daqiqa`
+        return `${match[1]} ${t.templates.minutes}`
       }
     }
+    
     // If it's just a number, assume it's minutes
     const minutes = parseInt(duration, 10)
     if (!isNaN(minutes)) {
-      return `${minutes} daqiqa`
+      return `${minutes} ${t.templates.minutes}`
     }
+    
     return duration
   }
 
@@ -130,7 +153,7 @@ export default function TemplatesClient() {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error fetching templates:', err)
       }
-      setError(err instanceof Error ? err.message : 'Shablon testlar yuklanmadi')
+      setError(err instanceof Error ? err.message : t.templates.loadError)
     } finally {
       setIsLoading(false)
     }
@@ -149,6 +172,11 @@ export default function TemplatesClient() {
         const { safeJsonParse } = await import('@/lib/api-utils')
         const data = await safeJsonParse<TemplateTestResponse>(response)
         if (data) {
+          // Get template duration and add it to the data
+          const template = templates.find(t => t.id === templateId)
+          if (template) {
+            data.duration = template.duration
+          }
           // Save test data to localStorage for quiz page
           if (typeof window !== 'undefined') {
             localStorage.setItem(`templateTest_${templateId}`, JSON.stringify(data))
@@ -188,7 +216,7 @@ export default function TemplatesClient() {
           <Link href="/home">
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Orqaga
+              {t.templates.back}
             </Button>
           </Link>
           <div className="flex items-center gap-4">
@@ -196,8 +224,8 @@ export default function TemplatesClient() {
               <FileText className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">Shablon testlar</h1>
-              <p className="text-slate-600 dark:text-slate-400">Tayyorlangan shablon testlar ro'yxati</p>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-slate-900 dark:text-white">{t.templates.title}</h1>
+              <p className="text-slate-600 dark:text-slate-400">{t.templates.description}</p>
             </div>
           </div>
         </div>
@@ -207,7 +235,7 @@ export default function TemplatesClient() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-purple-500 dark:text-purple-400" />
-              <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">Yuklanmoqda...</p>
+              <p className="text-slate-600 dark:text-slate-400 font-medium text-lg">{t.templates.loading}</p>
             </div>
           </div>
         ) : error ? (
@@ -217,7 +245,7 @@ export default function TemplatesClient() {
             </div>
             <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">{error}</p>
             <Button onClick={fetchTemplates} size="lg">
-              Qayta urinish
+              {t.templates.retry}
             </Button>
           </div>
         ) : templates.length === 0 ? (
@@ -225,8 +253,8 @@ export default function TemplatesClient() {
             <div className="p-4 rounded-full bg-muted w-fit mx-auto mb-4">
               <FileText className="h-12 w-12 text-slate-400 dark:text-slate-500" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">Shablon testlar topilmadi</h3>
-            <p className="text-slate-600 dark:text-slate-400">Hozircha shablon testlar mavjud emas</p>
+            <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-white">{t.templates.empty}</h3>
+            <p className="text-slate-600 dark:text-slate-400">{t.templates.emptyDescription}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -250,7 +278,7 @@ export default function TemplatesClient() {
                   {/* Top Section - Title and Date */}
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                      {index + 1} SHABLON
+                      {index + 1} - {t.templates.ticketLabel}
                     </h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -314,13 +342,13 @@ export default function TemplatesClient() {
                               ) : (
                                 <XCircle className="h-4 w-4 text-red-500" />
                               )}
-                              <span>To'g'ri javoblar soni: {template.testResultResponse.score}</span>
+                              <span>{t.templates.correctAnswersCount}: {template.testResultResponse.score}</span>
                             </div>
                           )}
                           {template.testResultResponse.duration && (
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4" />
-                              <span>Vaqt: {formatDuration(template.testResultResponse.duration)}</span>
+                              <span>{t.templates.time}: {formatDuration(template.testResultResponse.duration)}</span>
                             </div>
                           )}
                           {template.testResultResponse.status && (
@@ -332,9 +360,9 @@ export default function TemplatesClient() {
                                   : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                               )}>
                                 {template.testResultResponse.status === 'PASSED' || template.testResultResponse.status === 'PASS' 
-                                  ? 'Muvaffaqiyatli' 
+                                  ? t.templates.status.passed
                                   : template.testResultResponse.status === 'FAILED' || template.testResultResponse.status === 'FAIL'
-                                  ? 'Muvaffaqiyatsiz'
+                                  ? t.templates.status.failed
                                   : template.testResultResponse.status}
                               </span>
                             </div>
@@ -343,7 +371,7 @@ export default function TemplatesClient() {
                       ) : (
                         <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
                           <Clock className="h-4 w-4" />
-                          <span>Test jarayonda...</span>
+                          <span>{t.templates.inProgress}</span>
                         </div>
                       )}
                     </div>
@@ -354,11 +382,11 @@ export default function TemplatesClient() {
                     <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        <span>Vaqt: {template.duration} daqiqa</span>
+                        <span>{t.templates.time}: {template.duration} {t.templates.minutes}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        <span>Maksimal ball: {template.maxScore}</span>
+                        <span>{t.templates.maxScore}: {template.maxScore}</span>
                       </div>
                     </div>
                   )}
