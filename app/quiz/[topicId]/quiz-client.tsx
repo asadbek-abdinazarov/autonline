@@ -625,8 +625,8 @@ export default function QuizClient({ topicId }: QuizClientProps) {
           </div>
         </div>
 
-        <div className="flex-1 flex gap-6 lg:p-6 overflow-hidden">
-          <aside className="hidden lg:flex lg:flex-col w-72 xl:w-80 flex-shrink-0 h-full gap-4 pb-4">
+        <div className="flex-1 flex gap-4 lg:gap-6 xl:gap-8 2xl:gap-10 lg:p-4 xl:p-6 2xl:p-8 overflow-hidden">
+          <aside className="hidden lg:flex lg:flex-col lg:w-72 xl:w-80 2xl:w-96 3xl:w-[420px] flex-shrink-0 h-full gap-4 pb-4">
             <Button variant="outline" asChild className="w-full justify-start gap-2 bg-background shrink-0">
               <Link href="/home">
                 <ArrowLeft className="h-4 w-4" />
@@ -634,89 +634,112 @@ export default function QuizClient({ topicId }: QuizClientProps) {
               </Link>
             </Button>
 
-            <Card className="shrink-0">
-              <CardContent className="p-4 space-y-4">
-                {/* Timer Section */}
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
-                      {t.quiz.timeRemaining}
-                    </p>
-                    <QuizTimer totalSeconds={totalTimeInSeconds} onTimeUp={handleTimeUp} isPaused={false} />
-                  </div>
-                </div>
-
-                <div className="h-px bg-border" />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-muted/40 rounded-lg p-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <ListChecks className="h-4 w-4 text-primary" />
-                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.progress}</span>
+            <div className="flex flex-col gap-3 h-[clamp(560px,90vh,980px)]">
+              {/* 1-chi Card: Timer + Statistika (zich variant) */}
+              <Card className="shrink-0">
+                <CardContent className="p-2.5 space-y-2">
+                  {/* Timer bo'limi (kompakt) */}
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Clock className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-xl font-bold">
-                      {answeredQuestions.size}
-                      <span className="text-sm text-muted-foreground font-normal">/{questions.length}</span>
-                    </p>
-                  </div>
-                  <div className="bg-success/10 rounded-lg p-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <Target className="h-4 w-4 text-success" />
-                      <span className="text-xs font-medium text-muted-foreground">{t.quiz.correctAnswers}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground tracking-wide mb-0">
+                        {t.quiz.timeRemaining}
+                      </p>
+                      <QuizTimer
+                        totalSeconds={totalTimeInSeconds}
+                        onTimeUp={handleTimeUp}
+                        isPaused={false}
+                      />
                     </div>
-                    <p className="text-xl font-bold text-success">{correctAnswersCount}</p>
                   </div>
-                </div>
 
-                {/* Progress Bar */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-muted-foreground">{t.quiz.progress}</span>
-                    <span className="font-medium">{progressPercentage}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="h-px bg-border" />
 
-            <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
-              <CardHeader className="pb-2 pt-2 px-4 shrink-0">
-                {topicName && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-bold text-foreground line-clamp-2">
-                      {topicName}
-                    </h3>
-                    
-                    {lessonData?.lessonIcon && (
-                      <span className="text-xl flex-shrink-0" role="img" aria-label="lesson icon">
-                        {lessonData.lessonIcon}
-                      </span>
-                    )}
+                  {/* Statistika grid (kam padding) */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-muted/40 rounded-md p-2 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-0.5 leading-none">
+                        <ListChecks className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {t.quiz.progress}
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold leading-tight">
+                        {answeredQuestions.size}
+                        <span className="text-xs text-muted-foreground font-normal">
+                          /{questions.length}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="bg-success/10 rounded-md p-2 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-0.5 leading-none">
+                        <Target className="h-3.5 w-3.5 text-success" />
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {t.quiz.correctAnswers}
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold text-success leading-tight">
+                        {correctAnswersCount}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </CardHeader>
-              <CardContent className="px-4 pt-2 pb-4 flex-1 overflow-y-auto">
-                <QuestionNavigator
-                  totalQuestions={questions.length}
-                  currentQuestion={currentQuestionIndex}
-                  answeredQuestions={answeredQuestions}
-                  onQuestionClick={handleQuestionClick}
-                />
-              </CardContent>
-            </Card>
+
+                  {/* Progress bar (pastroq balandlik) */}
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-0.5">
+                      <span className="text-muted-foreground">{t.quiz.progress}</span>
+                      <span className="font-medium">{progressPercentage}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 2-chi Card: Savollar (header balandligi kichik, sticky; kontent scroll) */}
+              <Card className="flex-1 overflow-hidden flex flex-col h-[clamp(350px,60vh,720px)]">
+                {/* Header: balandligi kamaytirilgan va sticky */}
+                <CardHeader className="py-1 px-3 sticky top-0 z-10 bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+                  {topicName && (
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-sm font-semibold text-foreground line-clamp-1 leading-tight">
+                        {topicName}
+                      </h3>
+                      {lessonData?.lessonIcon && (
+                        <span
+                          className="text-sm flex-shrink-0"
+                          role="img"
+                          aria-label="lesson icon"
+                        >
+                          {lessonData.lessonIcon}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </CardHeader>
+
+                {/* Kontent: ichki scroll, pastdagi raqamli elementlar ko'rinmay qolmasligi uchun min-h-0 + flex-1 */}
+                <CardContent className="px-3 pt-1 pb-3 flex-1 min-h-0 overflow-y-auto">
+                  <QuestionNavigator
+                    totalQuestions={questions.length}
+                    currentQuestion={currentQuestionIndex}
+                    answeredQuestions={answeredQuestions}
+                    onQuestionClick={handleQuestionClick}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </aside>
 
           {/* Main Question Area - Scrollable */}
-          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-4 px-4 py-4 lg:py-0">
-            <div className="max-w-3xl mx-auto space-y-4 lg:space-y-6">
+          <section className="flex-1 h-full overflow-y-auto pb-20 lg:pb-4 px-4 py-4 lg:py-6">
+            <div className="max-w-4xl xl:max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl mx-auto space-y-4 lg:space-y-6">
               {/* Question Card */}
               <div className="bg-card rounded-2xl shadow-sm border p-4 sm:p-6 lg:p-8 animate-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-4 sm:mb-6 flex justify-between items-start gap-3">
